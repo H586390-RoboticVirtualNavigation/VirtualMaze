@@ -68,8 +68,8 @@ public class TrainForwardLevelController : MonoBehaviour {
 			if(trigger){
 				// send parallel port
 				if(GameController.instance.parallelPortAddr != -1) {
-					ParallelPort.Out32 (GameController.instance.parallelPortAddr, triggerValue);	
-					ParallelPort.Out32 (GameController.instance.parallelPortAddr, 0);	
+					ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, triggerValue);	
+					ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, 0);	
 				}
 				gameController.fs.WriteLine("{0} {1:F8} {2:F2} {3:F2} {4:F2}", 
 				                            triggerValue, 

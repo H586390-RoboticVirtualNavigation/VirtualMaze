@@ -4,5 +4,16 @@ using System.Runtime.InteropServices;
 
 public class ParallelPort {
 	[DllImport("InpOutx64.dll", EntryPoint = "Out32")]
-	public static extern void Out32(int address, int value);
+	private static extern void Out32(int address, int value);
+
+    public static void TryOut32(int address, int value)
+    {
+        try
+        {
+            Out32(address, value);
+        }catch (System.DllNotFoundException e)
+        {
+            Debug.LogException(e);
+        }
+    }
 }

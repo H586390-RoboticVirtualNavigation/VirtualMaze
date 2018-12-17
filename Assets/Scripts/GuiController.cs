@@ -84,7 +84,9 @@ public class GuiController : MonoBehaviour {
 	private static Toggle enableLeftToggle;
 	private static Toggle enablePoster;
 
-	public static string experimentStatus{
+    public bool skipHardware = true;
+
+    public static string experimentStatus{
 		set{
 			ExperimentStatusText.text = value;
 		}
@@ -303,13 +305,14 @@ public class GuiController : MonoBehaviour {
 	bool parallelflip = false;
 
 	public void OnParallelTestClick(){
+
 		try{
 			int addr = int.Parse(parallelPortField.text, System.Globalization.NumberStyles.HexNumber);
 
 			if(parallelflip){
-				ParallelPort.Out32 (addr, 255);	
+				ParallelPort.TryOut32 (addr, 255);	
 			}else{
-				ParallelPort.Out32 (addr, 0);
+				ParallelPort.TryOut32 (addr, 0);
 			}
 			parallelflip = !parallelflip;
 			parallelPortField.image.color = Color.green;
