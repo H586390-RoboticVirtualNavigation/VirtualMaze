@@ -141,9 +141,22 @@ public class ScreenSaver : MonoBehaviour {
 		// hide gui stuff
 		GuiController gui = GameObject.Find ("GUI").GetComponent<GuiController> ();
 		gui.guiEnable = false;
+
+        SceneManager.sceneLoaded += this.OnSceneLoadCallback;
 	}
 
-	IEnumerator ProcessSessionData(string sessionPath, string toFolderPath){
+    private void OnApplicationQuit()
+    {
+        levelLoaded = false;
+        SceneManager.sceneLoaded -= this.OnSceneLoadCallback;
+    }
+
+    void OnSceneLoadCallback(Scene scene, LoadSceneMode sceneMode)
+    {
+        levelLoaded = true;
+    }
+
+    IEnumerator ProcessSessionData(string sessionPath, string toFolderPath){
 
 		if (!File.Exists (sessionPath)) {
 			Debug.LogError(sessionPath + " does not exist");
@@ -183,7 +196,7 @@ public class ScreenSaver : MonoBehaviour {
 		for (int counter = st; counter <= end; counter++) {
 
 			string [] parameters = allLines[counter].Split(new char[] {' '},System.StringSplitOptions.RemoveEmptyEntries);
-			float deltaTime,zpos,xpos,rot,eyex,eyey;
+			float zpos,xpos,rot,eyex,eyey;
 			
 			// no trigger
 			if(parameters.Length == 6){
@@ -225,10 +238,6 @@ public class ScreenSaver : MonoBehaviour {
 
 		//reshow gui
 		display = true;
-	}
-
-	void OnLevelWasLoaded(int level){
-		levelLoaded = true;
 	}
 
 	void MoveRobotTo(GameObject robot, float x, float z, float rot){

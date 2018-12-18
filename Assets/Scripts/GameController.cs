@@ -32,7 +32,7 @@ public class GameController : MonoBehaviour {
 
 	public string dataDirectory;
     private DirectoryInfo dataDirectoryIO;
-	public System.IO.StreamWriter fs;
+	public StreamWriter fs;
 	public int numTrials;
 	public int parallelPortAddr;
 
@@ -71,7 +71,8 @@ public class GameController : MonoBehaviour {
         try {
 			parallelPortAddr = int.Parse (guiController.parallelPortField.text, System.Globalization.NumberStyles.HexNumber);
 		} catch (System.Exception ex) {
-			parallelPortAddr = -1;	
+			parallelPortAddr = -1;
+            Debug.LogException(ex);
 		}
 
 
