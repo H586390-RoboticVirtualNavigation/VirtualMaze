@@ -1,6 +1,7 @@
 # Developer Guide
 * [Setting Up](#setting-up)
 * [Gitflow Workflow](#gitflow-workflow)
+* [Gitflow with Sourcetree](#gitflow-with-sourcetree)
 * [Documentation](#Documentation)
 
 # Setting Up
@@ -12,9 +13,8 @@
 1. Install Git and your preferred Git Gui Client. (preferably Sourcetree)
 2. Clone the VirtualMaze to a location on your laptop
 
-*Repository URL location*
-![web url location](/docs/images/web-url-location.PNG)
-
+ *Repository URL location*
+ ![web url location](/docs/images/web-url-location.PNG)
 
 3. Open up Unity, select *Open* and select folder that you just cloned.
 
@@ -47,6 +47,22 @@ This branch is created from `develop` and when completed, it will be merged into
 This branch is to quickly patch issues that occur in previous versions in the master branch.
 
 If there are errors or bugs in master, this branch is created and merged into both `develop` and `master` branches
+
+# Gitflow with Sourcetree
+1. Clone the project. See [*Setting Up*](#setting-up)
+  - Optional set up Remote Account.
+![Sourcetree cloning](/docs/images/clone-project.PNG)
+
+2. Once the VirtualMaze is cloned, click the gitflow button found on the top right.
+![gitflow button](/docs/images/gitflow-button.PNG)
+
+3. Leave all the gitflow settings as default and click ok.
+
+4. Now you are ready to start using the Gitflow workflow. Click the gitflow button again to start developing a feature.
+
+5. To work on a branch that is not in your local repository, double click on the desired branch in the `Log/History` and `Checkout New Branch`.
+
+![checkout existing branches](/docs/images/check-out-existing-branches.PNG)
 
 # Documentation
 To write this documentation, the text editor [Atom](https://atom.io/) was used as it supports syntax highlighting and preview of Markdown files(.md).
