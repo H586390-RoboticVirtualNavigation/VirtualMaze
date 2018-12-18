@@ -13,12 +13,12 @@
 2. Clone the VirtualMaze to a location on your laptop
 
 *Repository URL location*
-![web url location](/doc/images/web-url-location.PNG)
+![web url location](/docs/images/web-url-location.PNG)
 
 
 3. Open up Unity, select *Open* and select folder that you just cloned.
 
-![unity-open](/doc/images/unity-open.PNG)
+![unity-open](/docs/images/unity-open.PNG)
 
 4. You should have VirtualMaze ready for development now.
 
