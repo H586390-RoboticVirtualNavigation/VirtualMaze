@@ -64,6 +64,12 @@ If there are errors or bugs in master, this branch is created and merged into bo
 
 ![checkout existing branches](/docs/images/check-out-existing-branches.PNG)
 
+# Building VirtualMaze
+
+A folder named `out` in the root of the project folder is created for developers to build VirtualMaze into.
+
+Developers can also build their games here for convenience as then contents of the folder is ignored by Git and will not be uploaded to the remote repository.
+
 # Documentation
 To write this documentation, the text editor [Atom](https://atom.io/) was used as it supports syntax highlighting and preview of Markdown files(.md).
 
