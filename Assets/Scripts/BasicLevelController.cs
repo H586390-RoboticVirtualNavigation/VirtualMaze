@@ -9,23 +9,24 @@ using System.IO.Ports;
 
 public class BasicLevelController : MonoBehaviour
 {
+    private const String EyelinkDllLocation = "./Assets/Scripts/DLLs/eyelink_core64.dll";
 
-    [DllImport("eyelink_core64")]
+    [DllImport(EyelinkDllLocation)]
     private static extern int eyemsg_printf(string message);
 
-    [DllImport("eyelink_core64")]
+    [DllImport(EyelinkDllLocation)]
     private static extern int eyelink_is_connected();
 
-    [DllImport("eyelink_core64")]
+    [DllImport(EyelinkDllLocation)]
     private static extern int current_time();
 
-    [DllImport("eyelink_core64")]
+    [DllImport(EyelinkDllLocation)]
     private static extern int open_eyelink_connection(int mode);
 
-    [DllImport("eyelink_core64")]
+    [DllImport(EyelinkDllLocation)]
     private static extern void close_eyelink_connection();
 
-    [DllImport("eyelink_core64")]
+    [DllImport(EyelinkDllLocation)]
     private static extern int eyelink_broadcast_open();
 
 
