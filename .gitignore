@@ -64,3 +64,4 @@ Thumbs.db
 # End of acquired ignores
 
 Assets/session_*
+out/*
