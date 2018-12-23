@@ -11,7 +11,12 @@ public class SerialController : MonoBehaviour {
 
 	public int baudRate;
 
+    /// <summary>
+    ///  more than 0 is right,
+    ///  less than 0 is left
+    /// </summary>
 	public static float horizontal { get; private set;}
+
 	public static float vertical { get; private set;}
 
 	private static byte[] buffer = new byte[2]; //serial must read byte (uint8), however must convert to sbyte (int8) later

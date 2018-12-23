@@ -1,99 +1,155 @@
 ﻿using UnityEngine;
-using System.Collections;
-using UnityEngine.UI;
+using UnityEngine.Events;
 
-public class RobotMovement : MonoBehaviour {
+public class RobotMovement : MonoBehaviour, IConfigurableComponent {
 
-	private Slider rotationSpeedSlider;
-	private Slider translationSpeedSlider;
-	private Toggle useJoystickToggle;
-	private Rigidbody rigidBody;
+    /// <summary>
+    /// Wrapper class for RobotMovement settings
+    /// </summary>
+    [System.Serializable]
+    public class Settings : SerializableSettings {
+        public float rotationSpeed;
+        public float movementSpeed;
 
-	private static Toggle enableReverseToggle;
-	private static Toggle enableForwardToggle;
-	private static Toggle enableRightToggle;
-	private static Toggle enableLeftToggle;
+        public bool isJoystickEnabled;
+        public bool isReverseEnabled;
+        public bool isForwardEnabled;
+        public bool isRightEnabled;
+        public bool isLeftEnabled;
+    }
 
-	void Awake () {
-		rigidBody = GetComponent<Rigidbody> ();	
-		rotationSpeedSlider = GameObject.Find ("RotationSpeedSlider").GetComponent <Slider> ();
-		translationSpeedSlider = GameObject.Find ("TranslationSpeedSlider").GetComponent <Slider> ();
-		enableReverseToggle = GameObject.Find ("Reverse").GetComponent <Toggle> ();
-		enableForwardToggle = GameObject.Find ("Forward").GetComponent <Toggle> ();
-		enableRightToggle = GameObject.Find ("Right").GetComponent <Toggle> ();
-		enableLeftToggle = GameObject.Find ("Left").GetComponent <Toggle> ();
-		useJoystickToggle = GameObject.Find ("UseJoystick").GetComponent <Toggle> ();
-	}
+    public UnityEvent OnConfigChanged  = new UnityEvent();
 
-	// Update is called once per frame
-	void Update () {
+    private Rigidbody rigidBody;
 
-		// using joy stick
-		if (useJoystickToggle.isOn) {
+    //default values
+    private float rotationSpeed;
+    private float movementSpeed;
 
-			// rotate using horizontal axis
-			if((SerialController.horizontal < 0) && !enableLeftToggle.isOn){
-				
-			} else if((SerialController.horizontal > 0) && !enableRightToggle.isOn){
-				
-			} else {
-				Quaternion rotateBy = Quaternion.Euler (0, SerialController.horizontal * rotationSpeedSlider.value * Time.deltaTime, 0);
-				rigidBody.MoveRotation (transform.rotation * rotateBy);
-			}
+    private bool isJoystickEnabled;
+    private bool isReverseEnabled;
+    private bool isForwardEnabled;
+    private bool isRightEnabled;
+    private bool isLeftEnabled;
 
-			// translate
-			if((SerialController.vertical < 0) && !enableReverseToggle.isOn){
-				
-			} else if((SerialController.vertical > 0) && !enableForwardToggle.isOn){
+    void Awake() {
+        //Apply default settings first.
+        ApplySavableSettings(GetDefaultSettings());
 
-			} else {
-				Vector3 moveBy = transform.forward * SerialController.vertical * translationSpeedSlider.value * Time.deltaTime;
-				rigidBody.MovePosition (transform.position + moveBy);
-			}
-		} 
+        rigidBody = GetComponent<Rigidbody>();
+    }
 
-		// using keyboard
-		else {
-			float vertical = Input.GetAxis ("Vertical");
-			float horizontal = Input.GetAxis ("Horizontal");
+    // Update is called once per frame
+    void Update() {
+        float vertical;
+        float horizontal;
 
-			// rotate
-			if((horizontal < 0) && !enableLeftToggle.isOn){
-				
-			} else if((horizontal > 0) && !enableRightToggle.isOn){
-				
-			} else {
-				Quaternion rotateBy = Quaternion.Euler (0, horizontal * rotationSpeedSlider.value * Time.deltaTime, 0);
-				rigidBody.MoveRotation (transform.rotation * rotateBy);
-			}
+        // using joy stick
+        if (isJoystickEnabled) {
+            vertical = SerialController.vertical;
+            horizontal = SerialController.horizontal;
+        }
+        else {
+            vertical = Input.GetAxis("Vertical");
+            horizontal = Input.GetAxis("Horizontal");
+        }
 
-			// translate
-			if((vertical < 0) && !enableReverseToggle.isOn){
-				
-			} else if((vertical > 0) && !enableForwardToggle.isOn){
-				
-			} else {
-				Vector3 moveBy = transform.forward * vertical * translationSpeedSlider.value * Time.deltaTime;
-				rigidBody.MovePosition (transform.position + moveBy);
-			}
-		}
-	}
+        if (ShouldRotate(horizontal)) {
+            Quaternion rotateBy = Quaternion.Euler(0, SerialController.horizontal * rotationSpeed * Time.deltaTime, 0);
+            rigidBody.MoveRotation(transform.rotation * rotateBy);
+        }
+
+        if (ShouldMove(vertical)) {
+            Vector3 moveBy = transform.forward * SerialController.vertical * movementSpeed * Time.deltaTime;
+            rigidBody.MovePosition(transform.position + moveBy);
+        }
+    }
+
+    /// <summary>
+    /// Checks if object should rotate either left, right or both.
+    /// </summary>
+    /// <returns>True if should rotate, false if not</returns>
+    private bool ShouldRotate(float horizontal) {
+        return (horizontal < 0 && isLeftEnabled) ||
+            (horizontal > 0 && !isRightEnabled);
+    }
+
+    private bool ShouldMove(float vertical) {
+        return (vertical < 0 && isReverseEnabled) ||
+            (vertical > 0 && isForwardEnabled);
+    }
+
+    public SerializableSettings GetSavableSettings() {
+        Settings settings = new Settings();
+
+        settings.isJoystickEnabled = isJoystickEnabled;
+        settings.isForwardEnabled = isForwardEnabled;
+        settings.isReverseEnabled = isReverseEnabled;
+        settings.isLeftEnabled = isLeftEnabled;
+        settings.isRightEnabled = isRightEnabled;
+
+        settings.movementSpeed = movementSpeed;
+        settings.rotationSpeed = rotationSpeed;
+
+        return settings;
+    }
+
+    public void ApplySavableSettings(SerializableSettings settings) {
+        Settings applySettings = (Settings)settings;
+
+        isJoystickEnabled = applySettings.isJoystickEnabled;
+        isForwardEnabled = applySettings.isForwardEnabled;
+        isReverseEnabled = applySettings.isReverseEnabled;
+        isLeftEnabled = applySettings.isLeftEnabled;
+        isRightEnabled = applySettings.isRightEnabled;
+
+        movementSpeed = applySettings.movementSpeed;
+        rotationSpeed = applySettings.rotationSpeed;
+    }
+
+    public SerializableSettings GetDefaultSettings() {
+        return new Settings() {
+            isJoystickEnabled = true,
+            isForwardEnabled = true,
+            isReverseEnabled = true,
+            isLeftEnabled = true,
+            isRightEnabled = true,
+
+            movementSpeed = 5,
+            rotationSpeed = 5
+        };
+    }
+
+
+    public string GetConfigID() {   
+        return typeof(Settings).FullName;
+    }
+
+    public void OnRotationSpeedChanged(float value) {
+        rotationSpeed = value;
+    }
+
+    public void OnMovementSpeedChanged(float value) {
+        movementSpeed = value;
+    }
+
+    public void OnJoystickEnableToggled(bool value) {
+        isJoystickEnabled = value;
+    }
+
+    public void OnForwardEnableToggled(bool value) {
+        isForwardEnabled = value;
+    }
+
+    public void OnReverseEnableToggled(bool value) {
+        isReverseEnabled = value;
+    }
+
+    public void OnLeftEnableToggled(bool value) {
+        isLeftEnabled = value;
+    }
+
+    public void OnRightEnableToggled(bool value) {
+        isRightEnabled = value;
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
