@@ -128,8 +128,8 @@ public class GameController : MonoBehaviour
                 fs.WriteLine("TimeoutDuration: {0}", GuiController.timoutTime);
                 fs.WriteLine("IntersessionInterval: {0}", GuiController.interSessionTime);
                 fs.WriteLine("RewardTime: {0}", GuiController.rewardTime);
-                fs.WriteLine("RotationSpeed: {0}", GuiController.rotationSpeedSlider.value);
-                fs.WriteLine("TranslationSpeed: {0}", GuiController.translationSpeedSlider.value);
+                //fs.WriteLine("RotationSpeed: {0}", GuiController.rotationSpeedSlider.value);
+                //fs.WriteLine("TranslationSpeed: {0}", GuiController.translationSpeedSlider.value);
                 fs.WriteLine("JoystickDeadzone: {0}", GuiController.joystickDeadzoneSlider.value);
                 fs.WriteLine("RewardViewCriteria: {0}", GuiController.rewardViewCriteriaSlider.value);
             }
@@ -208,8 +208,8 @@ public class GameController : MonoBehaviour
                 fs.WriteLine("TimeoutDuration: {0}", GuiController.timoutTime);
                 fs.WriteLine("IntersessionInterval: {0}", GuiController.interSessionTime);
                 fs.WriteLine("RewardTime: {0}", GuiController.rewardTime);
-                fs.WriteLine("RotationSpeed: {0}", GuiController.rotationSpeedSlider.value);
-                fs.WriteLine("TranslationSpeed: {0}", GuiController.translationSpeedSlider.value);
+                //fs.WriteLine("RotationSpeed: {0}", GuiController.rotationSpeedSlider.value);
+                //fs.WriteLine("TranslationSpeed: {0}", GuiController.translationSpeedSlider.value);
                 fs.WriteLine("JoystickDeadzone: {0}", GuiController.joystickDeadzoneSlider.value);
                 fs.WriteLine("RewardViewCriteria: {0}", GuiController.rewardViewCriteriaSlider.value);
 

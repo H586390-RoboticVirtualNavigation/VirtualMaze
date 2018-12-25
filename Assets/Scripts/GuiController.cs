@@ -86,16 +86,16 @@ public class GuiController : MonoBehaviour {
     private static InputField settingsField;
     private static GameObject settingsMenu;
     private static Toggle useJoystickToggle;
-    public static Slider rotationSpeedSlider;
-    public static Slider translationSpeedSlider;
+    //public static Slider rotationSpeedSlider;
+    //public static Slider translationSpeedSlider;
     public static Slider joystickDeadzoneSlider;
     public static Slider rewardViewCriteriaSlider;
 
-    private static Toggle enableReverseToggle;
-    private static Toggle enableForwardToggle;
-    private static Toggle enableRightToggle;
-    private static Toggle enableLeftToggle;
-    private static Toggle enablePoster;
+    //private static Toggle enableReverseToggle;
+    //private static Toggle enableForwardToggle;
+    //private static Toggle enableRightToggle;
+    //private static Toggle enableLeftToggle;
+    //private static Toggle enablePoster;
 
     public static string experimentStatus {
         set {
@@ -245,17 +245,19 @@ public class GuiController : MonoBehaviour {
         settingsField = GameObject.Find("SettingsPanel/SettingsField").GetComponentInChildren<InputField>();
         settingsMenu = GameObject.Find("SettingsPanel/SettingsField/menu");
         useJoystickToggle = GameObject.Find("SettingsPanel/UseJoystick").GetComponent<Toggle>();
-        rotationSpeedSlider = GameObject.Find("RotationSpeedSlider").GetComponent<Slider>();
+        
         joystickDeadzoneSlider = GameObject.Find("JoystickDeadzoneSlider").GetComponent<Slider>();
-        translationSpeedSlider = GameObject.Find("TranslationSpeedSlider").GetComponent<Slider>();
+        
         rewardViewCriteriaSlider = GameObject.Find("RewardViewCriteriaSlider").GetComponent<Slider>();
         replayServer = GameObject.Find("PortsPanel/ReplayServer");
 
-        enableReverseToggle = GameObject.Find("Reverse").GetComponent<Toggle>();
-        enableForwardToggle = GameObject.Find("Forward").GetComponent<Toggle>();
-        enableRightToggle = GameObject.Find("Right").GetComponent<Toggle>();
-        enableLeftToggle = GameObject.Find("Left").GetComponent<Toggle>();
-        enablePoster = GameObject.Find("ShowPosters").GetComponent<Toggle>();
+        //rotationSpeedSlider = GameObject.Find("RotationSpeedSlider").GetComponent<Slider>();
+        //translationSpeedSlider = GameObject.Find("TranslationSpeedSlider").GetComponent<Slider>();
+        //enableReverseToggle = GameObject.Find("Reverse").GetComponent<Toggle>();
+        //enableForwardToggle = GameObject.Find("Forward").GetComponent<Toggle>();
+        //enableRightToggle = GameObject.Find("Right").GetComponent<Toggle>();
+        //enableLeftToggle = GameObject.Find("Left").GetComponent<Toggle>();
+        //enablePoster = GameObject.Find("ShowPosters").GetComponent<Toggle>();
     }
 
     void Start() {
@@ -382,7 +384,7 @@ public class GuiController : MonoBehaviour {
     }
 
     void OnEnable() {
-        interTrialRandomize.onValueChanged.AddListener(OnRandomize);
+        //interTrialRandomize.onValueChanged.AddListener(OnRandomize);
         EventManager.StartListening("Start Experiment", StartExperiment);
         EventManager.StartListening("Stop Experiment", StopExperiment);
     }

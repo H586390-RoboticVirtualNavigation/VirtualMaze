@@ -44,7 +44,7 @@ public class SerialController : MonoBehaviour {
 	void Awake() {
 
 		// get slider
-		joystickDeadzoneSlider = GameObject.Find ("JoystickDeadzoneSlider").GetComponent <Slider> ();
+		//joystickDeadzoneSlider = GameObject.Find ("JoystickDeadzoneSlider").GetComponent <Slider> ();
 
 		if (_instance == null) {
 			_instance = this;

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 
-public class RobotMovement : MonoBehaviour, IConfigurableComponent {
+public class RobotMovement : ConfigurableComponent {
 
     /// <summary>
     /// Wrapper class for RobotMovement settings
@@ -18,19 +18,17 @@ public class RobotMovement : MonoBehaviour, IConfigurableComponent {
         public bool isLeftEnabled;
     }
 
-    public UnityEvent OnConfigChanged  = new UnityEvent();
-
     private Rigidbody rigidBody;
 
     //default values
-    private float rotationSpeed;
-    private float movementSpeed;
+    public float rotationSpeed;
+    public float movementSpeed;
 
-    private bool isJoystickEnabled;
-    private bool isReverseEnabled;
-    private bool isForwardEnabled;
-    private bool isRightEnabled;
-    private bool isLeftEnabled;
+    public bool isJoystickEnabled;
+    public bool isReverseEnabled;
+    public bool isForwardEnabled;
+    public bool isRightEnabled;
+    public bool isLeftEnabled;
 
     void Awake() {
         //Apply default settings first.
@@ -41,6 +39,7 @@ public class RobotMovement : MonoBehaviour, IConfigurableComponent {
 
     // Update is called once per frame
     void Update() {
+
         float vertical;
         float horizontal;
 
@@ -55,12 +54,14 @@ public class RobotMovement : MonoBehaviour, IConfigurableComponent {
         }
 
         if (ShouldRotate(horizontal)) {
-            Quaternion rotateBy = Quaternion.Euler(0, SerialController.horizontal * rotationSpeed * Time.deltaTime, 0);
+            Quaternion rotateBy = Quaternion.Euler(0, horizontal * rotationSpeed * Time.deltaTime, 0);
+            Debug.Log(rotateBy);
             rigidBody.MoveRotation(transform.rotation * rotateBy);
         }
 
         if (ShouldMove(vertical)) {
-            Vector3 moveBy = transform.forward * SerialController.vertical * movementSpeed * Time.deltaTime;
+            Vector3 moveBy = transform.forward * vertical * movementSpeed * Time.deltaTime;
+            Debug.Log(moveBy);
             rigidBody.MovePosition(transform.position + moveBy);
         }
     }
@@ -71,7 +72,7 @@ public class RobotMovement : MonoBehaviour, IConfigurableComponent {
     /// <returns>True if should rotate, false if not</returns>
     private bool ShouldRotate(float horizontal) {
         return (horizontal < 0 && isLeftEnabled) ||
-            (horizontal > 0 && !isRightEnabled);
+            (horizontal > 0 && isRightEnabled);
     }
 
     private bool ShouldMove(float vertical) {
@@ -79,7 +80,7 @@ public class RobotMovement : MonoBehaviour, IConfigurableComponent {
             (vertical > 0 && isForwardEnabled);
     }
 
-    public SerializableSettings GetSavableSettings() {
+    public override SerializableSettings GetSavableSettings() {
         Settings settings = new Settings();
 
         settings.isJoystickEnabled = isJoystickEnabled;
@@ -94,7 +95,7 @@ public class RobotMovement : MonoBehaviour, IConfigurableComponent {
         return settings;
     }
 
-    public void ApplySavableSettings(SerializableSettings settings) {
+    protected override void ApplySavableSettings(SerializableSettings settings) {
         Settings applySettings = (Settings)settings;
 
         isJoystickEnabled = applySettings.isJoystickEnabled;
@@ -107,7 +108,7 @@ public class RobotMovement : MonoBehaviour, IConfigurableComponent {
         rotationSpeed = applySettings.rotationSpeed;
     }
 
-    public SerializableSettings GetDefaultSettings() {
+    public override SerializableSettings GetDefaultSettings() {
         return new Settings() {
             isJoystickEnabled = true,
             isForwardEnabled = true,
@@ -115,41 +116,12 @@ public class RobotMovement : MonoBehaviour, IConfigurableComponent {
             isLeftEnabled = true,
             isRightEnabled = true,
 
-            movementSpeed = 5,
-            rotationSpeed = 5
+            movementSpeed = 5f,
+            rotationSpeed = 5f
         };
     }
 
-
-    public string GetConfigID() {   
+    public override string GetConfigID() {
         return typeof(Settings).FullName;
-    }
-
-    public void OnRotationSpeedChanged(float value) {
-        rotationSpeed = value;
-    }
-
-    public void OnMovementSpeedChanged(float value) {
-        movementSpeed = value;
-    }
-
-    public void OnJoystickEnableToggled(bool value) {
-        isJoystickEnabled = value;
-    }
-
-    public void OnForwardEnableToggled(bool value) {
-        isForwardEnabled = value;
-    }
-
-    public void OnReverseEnableToggled(bool value) {
-        isReverseEnabled = value;
-    }
-
-    public void OnLeftEnableToggled(bool value) {
-        isLeftEnabled = value;
-    }
-
-    public void OnRightEnableToggled(bool value) {
-        isRightEnabled = value;
     }
 }
