@@ -1,94 +1,114 @@
 ﻿using UnityEngine;
-using System.Collections;
+using UnityEngine.Events;
+using System;
 using UnityEngine.UI;
 
 public class SessionPrefabScript : MonoBehaviour {
+    /// <summary>
+    /// when the level/scene is changed, the position of the item and 
+    /// the new level name is returned
+    /// </summary>
+    [Serializable]
+    public class OnValueChanged : UnityEvent<int, string> { }
 
-	private int _index = 0;
-	public int index{
-		get{
-			return _index;
-		}
-		set{
-			_index = value;
-			levelButton.GetComponentInChildren<Text> ().text = levels [_index];
-		}
-	}
+    /// <summary>
+    /// when the level/scene is changed, the position of the item and 
+    /// the new number of trials is returned
+    /// </summary>
+    [Serializable]
+    public class OnNumTrialsChanged : UnityEvent<int, int> { }
 
-	//drag from editor
-	public string[] levels;
-	public Button levelButton;
-	public InputField numTrialsField;
+    /// <summary>
+    /// When a session is deleted, the position of the deleted item will be 
+    /// provided.
+    /// </summary>
+    [Serializable]
+    public class OnItemRemove : UnityEvent<int> { }
 
-	public string numTrials{
-		get {
-			return numTrialsField.text;
-		}
-		set{
-			numTrialsField.text = value;
-			CheckValidTrialNumber (value);
-		}
-	}
+    private int index = 0;
 
-	public string level{
-		get {
-			string lv = levelButton.GetComponentInChildren<Text>().text;
+    //drag from editor
+    public string[] levels; // could have placed Sessions.AllLevels here but it will increase the coupling of the 2 classes.
+    public Button levelButton;
+    public InputField numTrialsField;
 
-			// Random level
-			while(lv.Equals("Random")){
-				lv = levels[Random.Range(0,levels.GetLength(0))];
-			}
+    public OnValueChanged onValueChanged = new OnValueChanged();
+    public OnItemRemove onItemRemove = new OnItemRemove();
+    public OnNumTrialsChanged onNumTrialsChanged = new OnNumTrialsChanged();
 
-			//Random LRF level
-			if(lv.Equals("RandLRF")){
-				string[] lrf = new string[3];
-				lrf[0] = "TrainLeft";
-				lrf[1] = "TrainRight";
-				lrf[2] = "TrainForward";
-				lv = lrf[(int)Random.Range (0,3)];
-			}
+    private Text buttonLabel;
 
-			return lv;
-		}
-	}
+    public string numTrials {
+        get {
+            return numTrialsField.text;
+        }
+        set {
+            numTrialsField.text = value;
+            CheckValidTrialNumber(value);
+        }
+    }
 
-	public bool valid { 
-		get{
-			int trialnum;
-			if (int.TryParse (numTrialsField.text, out trialnum)) {
-				return true;
-			}
-			return false;
-		} 
-	}
-	
-	public void NextLevel(){
-		index = (index + 1) % levels.Length;
-	}
+    public bool valid { get; private set; } = false;
 
-	public void PrevLevel(){
-		int temp = index - 1;
-		temp = temp < 0 ? levels.Length - 1 : temp;
-		index = temp;
-	}
+    private void Awake() {
+        buttonLabel = levelButton.GetComponentInChildren<Text>();
+    }
 
-	public void Remove() {
-		Destroy (this.gameObject);
-	}
+    public void NextLevel() {
+        if (levels == null || levels.Length == 0) return;
 
-	public void CheckValidTrialNumber(string str) {
-		int value;
-		if (int.TryParse (str, out value)) {
-			numTrialsField.GetComponent<Image>().color = Color.green;
-		} else {
-			numTrialsField.GetComponent<Image>().color = Color.red;
-		}
-	}
+        //circular array
+        index = (index + 1) % levels.Length;
 
-	// Use this for initialization
-	void Start () {
-		CheckValidTrialNumber (numTrials);
-	}
+        string level = levels[index];
+        buttonLabel.text = level;
+
+        //call onValueChanged after value is changed.
+        onValueChanged.Invoke(transform.GetSiblingIndex(), level);
+    }
+
+    public void PrevLevel() {
+        if (levels == null || levels.Length == 0) return;
+
+        //circular array
+        int temp = index - 1;
+        temp = temp < 0 ? levels.Length - 1 : temp;
+        index = temp;
+
+        string level = levels[index];
+        buttonLabel.text = level;
+        
+        //call onValueChanged after value is changed.
+        onValueChanged.Invoke(transform.GetSiblingIndex(), level);
+    }
+
+    public void Remove() {
+        //get the sibling index before the object is deleted.
+        onItemRemove.Invoke(transform.GetSiblingIndex());
+        Destroy(this.gameObject);
+    }
+
+    public void CheckValidTrialNumber(string str) {
+        int value;
+        if (int.TryParse(str, out value)) {
+            numTrialsField.GetComponent<Image>().color = Color.green;
+            valid = true;
+        }
+        else {
+            numTrialsField.GetComponent<Image>().color = Color.red;
+            valid = false;
+        }
+    }
+
+    public void SetSession(Session s) {
+        buttonLabel.text = s.level;
+        numTrialsField.text = s.numTrial.ToString();
+    }
+
+    // Use this for initialization
+    void Start() {
+        CheckValidTrialNumber(numTrials);
+    }
 }
 
 

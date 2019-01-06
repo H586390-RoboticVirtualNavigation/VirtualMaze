@@ -20,6 +20,8 @@ public class LinearLevelController : MonoBehaviour {
 	private GameObject posters;
 	private Toggle showPosters;
 
+    private ParallelPort parallelPortcontroller;
+
 	void OnEnable(){
 		EventManager.StartListening ("Entered Reward Area", EnteredReward);
 	}
@@ -35,6 +37,7 @@ public class LinearLevelController : MonoBehaviour {
 		fade = GameObject.Find ("FadeCanvas").GetComponent<Fading>();
 		robot = GameObject.Find ("Robot");
 		robotMovement = robot.GetComponent<RobotMovement> ();
+        parallelPortcontroller = GameObject.Find("ParallelPortController").GetComponent<ParallelPort>();
 	}
 
 	void Start(){
@@ -78,11 +81,16 @@ public class LinearLevelController : MonoBehaviour {
 
 				// send parallel port
 				Debug.Log(triggerValue);
-				if(GameController.instance.parallelPortAddr != -1) {
-					ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, triggerValue);	
-					ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, 0);	
-				}
-				gameController.fs.WriteLine("{0} {1:F8} {2:F2} {3:F2} {4:F2} {5:F6} {6:F6}", 
+
+                parallelPortcontroller.WriteTrigger(triggerValue);
+                parallelPortcontroller.WriteTrigger(0);
+
+                //original code
+                //if(GameController.instance.parallelPortAddr != -1) {
+                //	ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, triggerValue);	
+                //	ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, 0);	
+                //}
+                gameController.fs.WriteLine("{0} {1:F8} {2:F2} {3:F2} {4:F2} {5:F6} {6:F6}", 
 				                            triggerValue, 
 				                            Time.deltaTime, 
 				                            robot.transform.position.x, 

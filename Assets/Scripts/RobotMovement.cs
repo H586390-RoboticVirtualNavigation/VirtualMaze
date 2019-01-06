@@ -7,7 +7,7 @@ public class RobotMovement : ConfigurableComponent {
     /// Wrapper class for RobotMovement settings
     /// </summary>
     [System.Serializable]
-    public class Settings : SerializableSettings {
+    public class Settings : ComponentSettings {
         public float rotationSpeed;
         public float movementSpeed;
 
@@ -16,6 +16,26 @@ public class RobotMovement : ConfigurableComponent {
         public bool isForwardEnabled;
         public bool isRightEnabled;
         public bool isLeftEnabled;
+
+        public Settings(
+            float rotationSpeed,
+            float movementSpeed,
+            bool isJoystickEnabled,
+            bool isReverseEnabled,
+            bool isForwardEnabled,
+            bool isRightEnabled,
+            bool isLeftEnabled
+            ) {
+
+            this.rotationSpeed = rotationSpeed;
+            this.movementSpeed = movementSpeed;
+
+            this.isForwardEnabled = isForwardEnabled;
+            this.isJoystickEnabled = isJoystickEnabled;
+            this.isLeftEnabled = isLeftEnabled;
+            this.isRightEnabled = isRightEnabled;
+            this.isReverseEnabled = isReverseEnabled;
+        }
     }
 
     private Rigidbody rigidBody;
@@ -23,6 +43,7 @@ public class RobotMovement : ConfigurableComponent {
     //default values
     public float rotationSpeed;
     public float movementSpeed;
+    public float requiredViewingAngle;
 
     public bool isJoystickEnabled;
     public bool isReverseEnabled;
@@ -30,10 +51,9 @@ public class RobotMovement : ConfigurableComponent {
     public bool isRightEnabled;
     public bool isLeftEnabled;
 
-    void Awake() {
-        //Apply default settings first.
-        ApplySavableSettings(GetDefaultSettings());
-
+    
+    protected override void Awake() {
+        base.Awake();
         rigidBody = GetComponent<Rigidbody>();
     }
 
@@ -45,8 +65,8 @@ public class RobotMovement : ConfigurableComponent {
 
         // using joy stick
         if (isJoystickEnabled) {
-            vertical = SerialController.vertical;
-            horizontal = SerialController.horizontal;
+            vertical = JoystickController.vertical;
+            horizontal = JoystickController.horizontal;
         }
         else {
             vertical = Input.GetAxis("Vertical");
@@ -80,22 +100,15 @@ public class RobotMovement : ConfigurableComponent {
             (vertical > 0 && isForwardEnabled);
     }
 
-    public override SerializableSettings GetSavableSettings() {
-        Settings settings = new Settings();
-
-        settings.isJoystickEnabled = isJoystickEnabled;
-        settings.isForwardEnabled = isForwardEnabled;
-        settings.isReverseEnabled = isReverseEnabled;
-        settings.isLeftEnabled = isLeftEnabled;
-        settings.isRightEnabled = isRightEnabled;
-
-        settings.movementSpeed = movementSpeed;
-        settings.rotationSpeed = rotationSpeed;
+    public override ComponentSettings GetCurrentSettings() {
+        Settings settings = new Settings(rotationSpeed, movementSpeed, 
+            isJoystickEnabled, isReverseEnabled, isForwardEnabled, 
+            isRightEnabled, isLeftEnabled);
 
         return settings;
     }
 
-    protected override void ApplySavableSettings(SerializableSettings settings) {
+    protected override void ApplySettings(ComponentSettings settings) {
         Settings applySettings = (Settings)settings;
 
         isJoystickEnabled = applySettings.isJoystickEnabled;
@@ -108,20 +121,11 @@ public class RobotMovement : ConfigurableComponent {
         rotationSpeed = applySettings.rotationSpeed;
     }
 
-    public override SerializableSettings GetDefaultSettings() {
-        return new Settings() {
-            isJoystickEnabled = true,
-            isForwardEnabled = true,
-            isReverseEnabled = true,
-            isLeftEnabled = true,
-            isRightEnabled = true,
-
-            movementSpeed = 5f,
-            rotationSpeed = 5f
-        };
+    public override ComponentSettings GetDefaultSettings() {
+        return new Settings(5f, 5f, true, true, true, true, true);
     }
 
-    public override string GetConfigID() {
+    public override string GetSettingsID() {
         return typeof(Settings).FullName;
     }
 }

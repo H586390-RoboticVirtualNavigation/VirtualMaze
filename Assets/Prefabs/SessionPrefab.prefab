@@ -36,7 +36,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.81633633, y: 0.080000006}
   m_AnchorMax: {x: 1, y: 0.88000005}
-  m_AnchoredPosition: {x: 0, y: -0.00004339218}
+  m_AnchoredPosition: {x: 0, y: -0.00004386902}
   m_SizeDelta: {x: -8, y: -10}
   m_Pivot: {x: 0.50000024, y: 0.5}
 --- !u!222 &22292594
@@ -582,13 +582,13 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 11451568}
   m_TextComponent: {fileID: 11445220}
   m_Placeholder: {fileID: 11455722}
-  m_ContentType: 0
+  m_ContentType: 2
   m_InputType: 0
   m_AsteriskChar: 42
-  m_KeyboardType: 0
+  m_KeyboardType: 4
   m_LineType: 0
   m_HideMobileInput: 0
-  m_CharacterValidation: 0
+  m_CharacterValidation: 1
   m_CharacterLimit: 0
   m_OnEndEdit:
     m_PersistentCalls:
@@ -1105,7 +1105,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &22251728
 CanvasRenderer:
@@ -1192,6 +1192,16 @@ MonoBehaviour:
   - Back and Forth3
   levelButton: {fileID: 11436252}
   numTrialsField: {fileID: 11431032}
+  onValueChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: SessionPrefabScript+OnValueChanged, Assembly-CSharp, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  onItemDelete:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: SessionPrefabScript+OnItemDelete, Assembly-CSharp, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
 --- !u!1 &195872
 GameObject:
   m_ObjectHideFlags: 0

@@ -17,8 +17,10 @@ public class TrainRightLevelController : MonoBehaviour {
 	private bool inTrial;
 	public Reward[] rewards;
 	public Transform startWaypoint;
-	
-	void OnEnable(){
+
+    private ParallelPort parallelPortcontroller;
+
+    void OnEnable(){
 		EventManager.StartListening ("Entered Reward Area", EnteredReward);
 	}
 	
@@ -32,8 +34,9 @@ public class TrainRightLevelController : MonoBehaviour {
 		fade = GameObject.Find ("FadeCanvas").GetComponent<Fading>();
 		robot = GameObject.Find ("Robot");
 		robotMovement = robot.GetComponent<RobotMovement> ();
-		
-		if (NetworkConnection.instance.replayMode == true) {
+        parallelPortcontroller = GameObject.Find("ParallelPortController").GetComponent<ParallelPort>();
+
+        if (NetworkConnection.instance.replayMode == true) {
 			this.gameObject.SetActive(false);
 			fade.FadeIn ();
 		}
@@ -77,11 +80,15 @@ public class TrainRightLevelController : MonoBehaviour {
 			if(trigger){
 				// send parallel port
 				Debug.Log(triggerValue);
-				if(GameController.instance.parallelPortAddr != -1) {
-					ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, triggerValue);	
-					ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, 0);	
-				}
-				gameController.fs.WriteLine("{0} {1:F8} {2:F2} {3:F2} {4:F2} {5:F2} {6:F2}", 
+                parallelPortcontroller.WriteTrigger(triggerValue);
+                parallelPortcontroller.WriteTrigger(0);
+
+                //original code
+                //if(GameController.instance.parallelPortAddr != -1) {
+                //	ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, triggerValue);	
+                //	ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, 0);	
+                //}
+                gameController.fs.WriteLine("{0} {1:F8} {2:F2} {3:F2} {4:F2} {5:F2} {6:F2}", 
 				                            triggerValue, 
 				                            Time.deltaTime, 
 				                            robot.transform.position.x, 

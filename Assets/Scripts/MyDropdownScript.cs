@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -44,13 +45,21 @@ public class MyDropdownScript : Dropdown {
             AddOptions(empty);
         }
 
-        if(selectItem > 0) {
+        if (selectItem > 0) {
             value = selectItem;
         }
-        
+
         RefreshShownValue();
     }
-    
+
+    protected override GameObject CreateBlocker(Canvas rootCanvas) {
+        //override blocker's Hide to also call this custom Hide()
+        GameObject blocker = base.CreateBlocker(rootCanvas);
+        Button b = blocker.GetComponent<Button>();
+        b.onClick.AddListener(Hide);
+        return blocker;
+    }
+
     private void ToggleDropdown() {
         if (!isShown) {
             Show();

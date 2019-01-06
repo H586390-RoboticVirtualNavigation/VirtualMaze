@@ -1,22 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
 public class SaveLoad : MonoBehaviour {
-    /// <summary>
-    /// Wrapper Class for storing Component Configurations.
-    /// 
-    /// Components with their individual configurations can be easily added
-    /// and removed from the settings.
-    /// </summary>
-    [Serializable]
-    public class Settings : Dictionary<string, SerializableSettings> {
-        public Settings() { }
-        protected Settings(SerializationInfo info, StreamingContext context) : base(info, context) { }
-    }
+
 
     /// <summary>
     /// SettingNotFoundException should be thrown when the setting is not found in the _settingsDictionary.
@@ -27,7 +16,7 @@ public class SaveLoad : MonoBehaviour {
         public SettingNotFoundException(string message, Exception inner) : base(message, inner) { }
     };
 
-    public List<ConfigurableComponent> configurableComponentList =
+    public static List<ConfigurableComponent> configurableComponentList =
         new List<ConfigurableComponent>();
 
     public List<string> SettingsList {
@@ -54,7 +43,7 @@ public class SaveLoad : MonoBehaviour {
     private static string SaveFileLocation;
 
     //key: settingName, value: Settings
-    private Dictionary<string, Settings> _settingsDictionary;
+    private Dictionary<string, ExperimentSettings> _settingsDictionary;
     private BinaryFormatter bf = new BinaryFormatter();
 
     private void Awake() {
@@ -64,24 +53,38 @@ public class SaveLoad : MonoBehaviour {
         if (File.Exists(SaveFileLocation)) {
             FileStream file = File.Open(SaveFileLocation, FileMode.Open);
             try {
-                _settingsDictionary = bf.Deserialize(file) as Dictionary<string, Settings>;
+                _settingsDictionary = bf.Deserialize(file) as Dictionary<string, ExperimentSettings>;
                 if (_settingsDictionary == null) {
                     Debug.LogWarning(Msg_DeserializationWarning);
-                    _settingsDictionary = new Dictionary<string, Settings>();
+                    _settingsDictionary = new Dictionary<string, ExperimentSettings>();
                 }
             }
             catch (Exception e) {
                 // Fail with logging
                 Debug.LogException(e);
-                _settingsDictionary = new Dictionary<string, Settings>();
+                _settingsDictionary = new Dictionary<string, ExperimentSettings>();
             }
             finally {
                 file.Close();
             }
         }
         else {
-            _settingsDictionary = new Dictionary<string, Settings>();
+            _settingsDictionary = new Dictionary<string, ExperimentSettings>();
         }
+    }
+
+    public static void RegisterConfigurableComponent(ConfigurableComponent component) {
+        configurableComponentList.Add(component);
+    }
+
+    public static ExperimentSettings getCurrentConfig() {
+        ExperimentSettings s = new ExperimentSettings();
+
+        foreach (ConfigurableComponent c in configurableComponentList) {
+            s.Add(c.GetSettingsID(), c.GetCurrentSettings());
+        }
+
+        return s;
     }
 
     /// <summary>
@@ -90,11 +93,7 @@ public class SaveLoad : MonoBehaviour {
     /// </summary>
     /// <returns>true if existing settings replaced, false if is new setting</returns>
     public bool SaveSetting(string settingsName) {
-        Settings settings = new Settings();
-
-        foreach (ConfigurableComponent savable in configurableComponentList) {
-            settings.Add(savable.GetConfigID(), savable.GetSavableSettings());
-        }
+        ExperimentSettings settings = getCurrentConfig();
 
         //remove and add to update settings
         bool isReplaced = _settingsDictionary.Remove(settingsName);
@@ -120,17 +119,17 @@ public class SaveLoad : MonoBehaviour {
     }
 
     public void ApplySettings(String settingName) {
-        if (!_settingsDictionary.TryGetValue(settingName, out Settings savedSetting)) {
+        if (!_settingsDictionary.TryGetValue(settingName, out ExperimentSettings savedSetting)) {
             throw new SettingNotFoundException();
         }
 
         foreach (ConfigurableComponent component in configurableComponentList) {
             //if apply ComponentConfig if exist, else use default.
-            if (savedSetting.TryGetValue(component.GetConfigID(), out SerializableSettings componentConfig)) {
+            if (savedSetting.TryGetValue(component.GetSettingsID(), out ComponentSettings componentConfig)) {
                 component.LoadSavableSettings(componentConfig);
             }
             else {
-                Debug.LogWarning(component.GetConfigID() + Msg_DefaultValuesUsed);
+                Debug.LogWarning(component.GetSettingsID() + Msg_DefaultValuesUsed);
                 component.LoadSavableSettings(component.GetDefaultSettings());
             }
         }

@@ -24,7 +24,7 @@ public class SaveLoadGUIController : MonoBehaviour {
         bool replaced = saveloadController.SaveSetting(settingName);
 
         List<string> settingList = saveloadController.SettingsList;
-        settingListDropdown.UpdateOptions(settingList, -1);
+        settingListDropdown.UpdateOptions(settingList, settingList.FindIndex((string name)=>name.Equals(settingName)));
     }
 
     public void OnDeleteButtonClicked() {
@@ -47,10 +47,12 @@ public class SaveLoadGUIController : MonoBehaviour {
     }
 
     public void OnOptionSelectedAction(int index) {
+        Debug.Log("Selected option" + index);
         if (index == -1) {
             return;
         }
         string settingName = settingListDropdown.options[index].text;
         saveloadController.ApplySettings(settingName);
+
     }
 }

@@ -10,8 +10,7 @@ using UnityEngine.SceneManagement;
 public class Settings {
     public string settingName;
     public string rewardPort;
-    public string joyStickPort;
-    public string parallelPort;
+
     public string interTrialFixed;
     public string interTrialMin;
     public string interTrialMax;
@@ -20,20 +19,11 @@ public class Settings {
     public string timeOut;
     public string interSessionTime;
     public bool randomizeInterTrialTime;
-    public bool useJoystick;
 
-    public float rotationSpeed;
-    public float translationSpeed;
-    public float joystickDeadzone;
     public float rewardViewCriteria;
 
-    public bool enableReverse;
-    public bool enableForward;
-    public bool enableRight;
-    public bool enableLeft;
     public bool enablePoster;
 
-    public List<Dictionary<string, string>> sessionList;
 }
 
 public class GuiController : MonoBehaviour {
@@ -48,18 +38,15 @@ public class GuiController : MonoBehaviour {
 
     public UnityEvent test = new UnityEvent();
 
-    public GameObject sessionPrefab;
-    public GameObject settingsOptionPrefab;
+
     public static InputField dirField;
     public static InputField rewardPortField;
-    public InputField parallelPortField;
 
     public RobotMovement robotMovement;
-    public SaveLoad saveController;
 
     private static FileBrowser filebrowser;
     private static Toggle interTrialRandomize;
-    private static InputField joystickPortField;
+
     private static InputField interTrialMin;
     private static InputField interTrialMax;
     private static InputField interTrialFixed;
@@ -73,8 +60,6 @@ public class GuiController : MonoBehaviour {
     private static Toggle rewardValid;
     private static Toggle timeoutValid;
     private static Toggle directoryValid;
-    private static Button addSessionsButton;
-    private static GameObject verticalSessionsPanel;
     private static Text startStatus;
     private static Text dirStatus;
     private static Button startButton;
@@ -85,17 +70,10 @@ public class GuiController : MonoBehaviour {
     private static Text ExperimentStatusText;
     private static InputField settingsField;
     private static GameObject settingsMenu;
-    private static Toggle useJoystickToggle;
-    //public static Slider rotationSpeedSlider;
-    //public static Slider translationSpeedSlider;
-    public static Slider joystickDeadzoneSlider;
+
     public static Slider rewardViewCriteriaSlider;
 
-    //private static Toggle enableReverseToggle;
-    //private static Toggle enableForwardToggle;
-    //private static Toggle enableRightToggle;
-    //private static Toggle enableLeftToggle;
-    //private static Toggle enablePoster;
+    private static Toggle enablePoster;
 
     public static string experimentStatus {
         set {
@@ -194,22 +172,6 @@ public class GuiController : MonoBehaviour {
         }
     }
 
-    private bool _syncImageOn;
-    private bool syncImageOn {
-        get {
-            return _syncImageOn;
-        }
-        set {
-            if (value) {
-                syncImage.color = Color.black;
-            }
-            else {
-                syncImage.color = Color.white;
-            }
-            _syncImageOn = value;
-        }
-    }
-
     void Awake() {
 
         filebrowser = GameObject.Find("FileBrowser").GetComponent<FileBrowser>();
@@ -228,26 +190,22 @@ public class GuiController : MonoBehaviour {
         completionWindowValid = GameObject.Find("CompletionWindow/valid").GetComponent<Toggle>();
         rewardValid = GameObject.Find("Reward/valid").GetComponent<Toggle>();
         timeoutValid = GameObject.Find("Timeout/valid").GetComponent<Toggle>();
-        addSessionsButton = GameObject.Find("SessionsPanel/AddSessionButton").GetComponent<Button>();
-        verticalSessionsPanel = GameObject.Find("SessionsPanel/ScrollPanel/SessionsItemPanel");
         startStatus = GameObject.Find("StartPanel/startStatus").GetComponent<Text>();
         dirStatus = GameObject.Find("StartPanel/dirStatus").GetComponent<Text>();
         dirField = GameObject.Find("StartPanel/DirectoryField").GetComponent<InputField>();
         directoryValid = GameObject.Find("StartPanel/directoryValid").GetComponent<Toggle>();
         startButton = GameObject.Find("StartPanel/StartButton").GetComponent<Button>();
         syncImage = GameObject.Find("PhotoDiode").GetComponent<Image>();
-        joystickPortField = GameObject.Find("PortsPanel/JoystickPort").GetComponentInChildren<InputField>();
+
         rewardPortField = GameObject.Find("PortsPanel/RewardPort").GetComponentInChildren<InputField>();
-        parallelPortField = GameObject.Find("PortsPanel/ParallelPort").GetComponentInChildren<InputField>();
+
         joyStickButton = GameObject.Find("PortsPanel/JoystickPort").GetComponentInChildren<Button>();
         rewardButton = GameObject.Find("PortsPanel/RewardPort").GetComponentInChildren<Button>();
         ExperimentStatusText = GameObject.Find("PortsPanel/ExperimentStatus").GetComponent<Text>();
-        settingsField = GameObject.Find("SettingsPanel/SettingsField").GetComponentInChildren<InputField>();
+
         settingsMenu = GameObject.Find("SettingsPanel/SettingsField/menu");
-        useJoystickToggle = GameObject.Find("SettingsPanel/UseJoystick").GetComponent<Toggle>();
-        
-        joystickDeadzoneSlider = GameObject.Find("JoystickDeadzoneSlider").GetComponent<Slider>();
-        
+
+
         rewardViewCriteriaSlider = GameObject.Find("RewardViewCriteriaSlider").GetComponent<Slider>();
         replayServer = GameObject.Find("PortsPanel/ReplayServer");
 
@@ -269,10 +227,6 @@ public class GuiController : MonoBehaviour {
 
         HideIntertrialComponents(interTrialRandomize.isOn);
         InputFieldEndEdit();
-        addSessionsButton.onClick.AddListener(AddSession);
-
-        //off sync
-        syncImageOn = false;
     }
 
     public void OnCalibrate() {
@@ -292,94 +246,11 @@ public class GuiController : MonoBehaviour {
         SceneManager.LoadScene("Replay");
     }
 
-    public void OnJoystickClick() {
-
-        if (joyStickButton.GetComponentInChildren<Text>().text.Equals("Open")) {
-            if (SerialController.instance.JoystickOpen(joystickPortField.text)) {
-                joyStickButton.GetComponentInChildren<Text>().text = "Close";
-                joystickPortField.image.color = Color.green;
-            }
-            else {
-                joystickPortField.image.color = Color.red;
-            }
-        }
-        else {
-            joyStickButton.GetComponentInChildren<Text>().text = "Open";
-            joystickPortField.image.color = Color.red;
-        }
-    }
-
-    public void OnRewardClick() {
-
-        if (rewardButton.GetComponentInChildren<Text>().text.Equals("On Valve")) {
-            if (SerialController.instance.RewardValveOn(rewardPortField.text) == true) {
-                rewardButton.GetComponentInChildren<Text>().text = "Off Valve";
-                rewardPortField.image.color = Color.green;
-            }
-            else {
-                //unable to open serial
-                experimentStatus = "cant open reward serial";
-                rewardPortField.image.color = Color.red;
-            }
-        }
-        else {
-            SerialController.instance.RewardValveOff();
-            rewardButton.GetComponentInChildren<Text>().text = "On Valve";
-        }
-    }
-
-    bool parallelflip = false;
-
-    public void OnParallelTestClick() {
-
-        try {
-            int addr = int.Parse(parallelPortField.text, System.Globalization.NumberStyles.HexNumber);
-
-            if (parallelflip) {
-                ParallelPort.TryOut32(addr, 255);
-            }
-            else {
-                ParallelPort.TryOut32(addr, 0);
-            }
-            parallelflip = !parallelflip;
-            parallelPortField.image.color = Color.green;
-
-        }
-        catch (System.Exception e) {
-            experimentStatus = e.ToString();
-            parallelPortField.image.color = Color.red;
-        }
-    }
-
-    int numSyncs = 2000;
-    float timeBetweenSyncs = 0.06f;
-    float accTime = 0;
-    bool startSync = false;
-
-    public void StartPhotoDiode() {
-        startSync = true;
-        numSyncs = 2000;
-    }
-
     void FixedUpdate() {
 
         //listen for ESC
         if (Input.GetKeyDown(KeyCode.Escape)) {
             guiEnable = !guiEnable;
-        }
-        if (startSync && numSyncs > 0) {
-            accTime += Time.deltaTime;
-            if (accTime >= timeBetweenSyncs) {
-                accTime = 0;
-                syncImageOn = !syncImageOn;
-                numSyncs--;
-                OnParallelTestClick();
-            }
-        }
-        else if (startSync && numSyncs <= 0) {
-            startSync = false;
-            numSyncs = 2000;
-            accTime = 0;
         }
     }
 
@@ -390,7 +261,7 @@ public class GuiController : MonoBehaviour {
     }
 
     void OnDisable() {
-        interTrialRandomize.onValueChanged.RemoveListener(OnRandomize);
+        //interTrialRandomize.onValueChanged.RemoveListener(OnRandomize);
         EventManager.StopListening("Start Experiment", StartExperiment);
         EventManager.StopListening("Stop Experiment", StopExperiment);
     }
@@ -471,14 +342,6 @@ public class GuiController : MonoBehaviour {
     void ToggleValid(Toggle toggle, bool value) {
         toggle.isOn = value;
         toggle.GetComponentInChildren<Image>().color = value ? Color.green : Color.red;
-    }
-
-    void AddSession() {
-        GameObject session = Instantiate(sessionPrefab) as GameObject;
-        session.transform.SetParent(verticalSessionsPanel.transform);
-        session.transform.localPosition = Vector3.zero;
-        session.transform.localRotation = Quaternion.identity;
-        session.transform.localScale = new Vector3(1, 1, 1);
     }
 
     public void OpenDirectory() {
@@ -565,77 +428,11 @@ public class GuiController : MonoBehaviour {
             return false;
 
         //check each session prefab for valid
-        foreach (Transform element in verticalSessionsPanel.transform) {
-            if (element.gameObject.GetComponent<SessionPrefabScript>().valid == false)
-                return false;
-        }
+        //foreach (Transform element in verticalSessionsPanel.transform) {
+        //    if (element.gameObject.GetComponent<SessionPrefabScript>().valid == false)
+        //        return false;
+        //}
 
         return true;
-    }
-
-    public void SaveButtonClicked() {
-        string settingsName = settingsField.text;
-
-        if (string.IsNullOrEmpty(settingsName)) {
-            experimentStatus = Msg_EmptySettingsName;
-        }
-        else {
-            bool isReplaced = saveController.SaveSetting(settingsName);
-            if (isReplaced) {
-                experimentStatus = settingsName + Msg_UpdatedSettingsMsg;
-            }
-            else {
-                experimentStatus = settingsName + Msg_AddedSettings;
-            }
-        }
-    }
-
-    public void LoadSettingsButtonClicked() {
-        //load settings list
-        List<string> settingsList = saveController.SettingsList;
-
-        //remove current options
-        foreach (Transform child in settingsMenu.transform) {
-            Destroy(child.gameObject);
-        }
-
-        //Change this ui to dropdown list?
-        //create option prefabs
-        foreach (string settingName in settingsList) {
-            GameObject option = Instantiate(settingsOptionPrefab) as GameObject;
-            option.GetComponentInChildren<Text>().text = settingName;
-            option.transform.SetParent(settingsMenu.transform);
-            option.transform.localPosition = Vector3.zero;
-            option.transform.localRotation = Quaternion.identity;
-            option.transform.localScale = new Vector3(1, 1, 1);
-
-            option.GetComponent<Button>().onClick.AddListener(
-                delegate { OptionClicked(option.GetComponentInChildren<Text>().text); }
-            );
-        }
-    }
-
-    void OptionClicked(string settingName) {
-        saveController.ApplySettings(settingName);
-        settingsField.text = settingName;
-        experimentStatus = settingName + Msg_LoadedSettings;
-    }
-
-    public void DeleteSetting() {
-        string settingName = settingsField.text;
-        if (saveController.DeleteSetting(settingName)) {
-            experimentStatus = settingName + Msg_DeletedSettings;
-            settingsField.text = "";
-        }
-        else {
-            experimentStatus = settingName + Msg_DeletedSettingsFailed;
-        }
-
-    }
-
-    public void CloseSettings() {
-        foreach (Transform child in settingsMenu.transform) {
-            Destroy(child.gameObject);
-        }
     }
 }

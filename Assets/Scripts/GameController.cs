@@ -5,22 +5,17 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine.SceneManagement;
 
-public class GameController : MonoBehaviour
-{
+public class GameController : MonoBehaviour {
 
     public static string versionInfo = "20171221 Taxi Continuous v4"; //UPDATE THIS WITH EACH COMPILATION
     public static string pportInfo = "v4";
 
     private static GameController _instance;
-    public static GameController instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
+    public static GameController instance {
+        get {
+            if (_instance == null) {
                 _instance = GameObject.FindObjectOfType(typeof(GameController)) as GameController;
-                if (_instance == null)
-                {
+                if (_instance == null) {
                     Debug.LogError("need at least one GameController");
                 }
             }
@@ -33,37 +28,44 @@ public class GameController : MonoBehaviour
     //drag in from editor
     public GameObject sessions;
     public GuiController guiController;
+    public RewardsController rewardsController;
     public Fading fade;
 
     public string dataDirectory;
     private DirectoryInfo dataDirectoryIO;
     public StreamWriter fs;
     public int numTrials;
-    public int parallelPortAddr;
+    //public int parallelPortAddr;
 
     private List<Dictionary<string, string>> sessionlist = new List<Dictionary<string, string>>();
     public int sessionCounter;
 
     private string fileTime;
 
-    void OnEnable()
-    {
-        EventManager.StartListening("Reward", Reward);
+    void OnEnable() {
+        EventManager.StartListening("Reward", onLegacyReward);
         EventManager.StartListening("Start Experiment", StartExperiment);
         EventManager.StartListening("Level Ended", LevelEnd);
         EventManager.StartListening("Stop Experiment", StopExperiment);
     }
 
-    void OnDisable()
-    {
-        EventManager.StopListening("Reward", Reward);
+    void OnDisable() {
+        EventManager.StopListening("Reward", onLegacyReward);
         EventManager.StopListening("Start Experiment", StartExperiment);
         EventManager.StopListening("Stop Experiment", StopExperiment);
         EventManager.StopListening("Level Ended", LevelEnd);
     }
 
-    void StartExperiment()
-    {
+    /// <summary>
+    /// method to check if there is an area of code still blasting rewards events
+    /// 
+    /// current design will not be using Observer pattern for now.
+    /// </summary>
+    void onLegacyReward() {
+        Debug.LogError("There is still Reward events");
+    }
+
+    void StartExperiment() {
 
         GuiController.experimentStatus = "started experiment";
         Debug.Log("start");
@@ -74,36 +76,21 @@ public class GameController : MonoBehaviour
         dataDirectory = GuiController.dirField.text;
 
         sessionlist = new List<Dictionary<string, string>>();
-
-        //parallel port address
-        try
-        {
-            parallelPortAddr = int.Parse(guiController.parallelPortField.text, System.Globalization.NumberStyles.HexNumber);
-        }
-        catch (System.Exception ex)
-        {
-            parallelPortAddr = -1;
-            Debug.LogException(ex);
-        }
-
-
+        
         //get sessionlist
-        foreach (Transform transform in sessions.transform)
-        {
+        foreach (Transform transform in sessions.transform) {
             Dictionary<string, string> dict = new Dictionary<string, string>();
             SessionPrefabScript session = transform.gameObject.GetComponent<SessionPrefabScript>();
             dict.Add("numTrials", session.numTrials);
-            dict.Add("level", session.level);
+            //dict.Add("level", session.level);
             sessionlist.Add(dict);
         }
 
-        if (sessionlist.Count > 0)
-        {
+        if (sessionlist.Count > 0) {
             sessionCounter++;
 
             //create new data file for session
-            if (fs != null)
-            {
+            if (fs != null) {
                 fs.Dispose();
                 fs = null;
             }
@@ -111,13 +98,11 @@ public class GameController : MonoBehaviour
             fileTime = dateNow.Day.ToString() + dateNow.Month.ToString() + dateNow.Year.ToString() + dateNow.Hour.ToString() + dateNow.Minute.ToString() + dateNow.Second.ToString();
             fs = FileWriter.CreateFileInFolder(dataDirectory, "session_" + sessionCounter.ToString() + '_' + fileTime + ".txt");
 
-            if (fs == null)
-            {
+            if (fs == null) {
                 Debug.LogError("failed to create save files");
                 EventManager.TriggerEvent("Stop Experiment");
             }
-            else
-            {
+            else {
                 fs.WriteLine("Version: {0}", versionInfo);
                 fs.WriteLine("Trigger: {0}", pportInfo);
                 fs.WriteLine("TaskType: Continuous");
@@ -130,7 +115,7 @@ public class GameController : MonoBehaviour
                 fs.WriteLine("RewardTime: {0}", GuiController.rewardTime);
                 //fs.WriteLine("RotationSpeed: {0}", GuiController.rotationSpeedSlider.value);
                 //fs.WriteLine("TranslationSpeed: {0}", GuiController.translationSpeedSlider.value);
-                fs.WriteLine("JoystickDeadzone: {0}", GuiController.joystickDeadzoneSlider.value);
+                //fs.WriteLine("JoystickDeadzone: {0}", GuiController.joystickDeadzoneSlider.value);
                 fs.WriteLine("RewardViewCriteria: {0}", GuiController.rewardViewCriteriaSlider.value);
             }
 
@@ -141,17 +126,14 @@ public class GameController : MonoBehaviour
             StartCoroutine("StartNextSessionAfterDelay");
 
         }
-        else
-        {
+        else {
             EventManager.TriggerEvent("Stop Experiment");
         }
     }
 
-    IEnumerator StartNextSessionAfterDelay()
-    {
+    IEnumerator StartNextSessionAfterDelay() {
         float countDownTime = (float)GuiController.interSessionTime / 1000.0f;
-        while (countDownTime > 0)
-        {
+        while (countDownTime > 0) {
             GuiController.experimentStatus = string.Format("starting session {0} in {1:F2}", sessionCounter, countDownTime);
             yield return new WaitForSeconds(0.1f);
             countDownTime -= 0.1f;
@@ -161,14 +143,12 @@ public class GameController : MonoBehaviour
         GuiController.experimentStatus = string.Format("session {0} started", sessionCounter);
     }
 
-    void StopExperiment()
-    {
+    void StopExperiment() {
 
         StopCoroutine("StartNextSessionAfterDelay");
         GuiController.experimentStatus = "stopped experiment";
 
-        if (fs != null)
-        {
+        if (fs != null) {
             fs.Dispose();
             fs = null;
         }
@@ -176,28 +156,23 @@ public class GameController : MonoBehaviour
         SceneManager.LoadScene("Start");
     }
 
-    void LevelEnd()
-    {
+    void LevelEnd() {
 
-        if (sessionlist.Count > 0)
-        {
+        if (sessionlist.Count > 0) {
             sessionCounter++;
 
             //create new data file for session
-            if (fs != null)
-            {
+            if (fs != null) {
                 fs.Dispose();
                 fs = null;
             }
             Debug.Log("close file");
             fs = FileWriter.CreateFileInFolder(dataDirectory, "session_" + sessionCounter.ToString() + '_' + fileTime + ".txt");
-            if (fs == null)
-            {
+            if (fs == null) {
                 Debug.LogError("failed to create save files");
                 EventManager.TriggerEvent("Stop Experiment");
             }
-            else
-            {
+            else {
                 fs.WriteLine("Version: {0}", versionInfo);
                 fs.WriteLine("Trigger: {0}", pportInfo);
                 fs.WriteLine("TaskType: Continuous");
@@ -210,7 +185,7 @@ public class GameController : MonoBehaviour
                 fs.WriteLine("RewardTime: {0}", GuiController.rewardTime);
                 //fs.WriteLine("RotationSpeed: {0}", GuiController.rotationSpeedSlider.value);
                 //fs.WriteLine("TranslationSpeed: {0}", GuiController.translationSpeedSlider.value);
-                fs.WriteLine("JoystickDeadzone: {0}", GuiController.joystickDeadzoneSlider.value);
+                //fs.WriteLine("JoystickDeadzone: {0}", GuiController.joystickDeadzoneSlider.value);
                 fs.WriteLine("RewardViewCriteria: {0}", GuiController.rewardViewCriteriaSlider.value);
 
                 //set number of trials
@@ -221,27 +196,12 @@ public class GameController : MonoBehaviour
             }
 
         }
-        else
-        {
+        else {
             EventManager.TriggerEvent("Stop Experiment");
         }
     }
 
-    void Reward()
-    {
-        StartCoroutine("StartRewardRoutine");
-    }
-
-    IEnumerator StartRewardRoutine()
-    {
-        //PlayerAudio.instance.PlayRewardClip ();
-        SerialController.instance.RewardValveOn(GuiController.rewardPortField.text);
-        yield return new WaitForSeconds((float)GuiController.rewardTime / 1000.0f);
-        SerialController.instance.RewardValveOff();
-    }
-
-    private void Start()
-    {
+    private void Start() {
         Application.targetFrameRate = 30;
     }
 }

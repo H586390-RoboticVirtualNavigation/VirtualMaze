@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 
 public class RobotMovementGUIController : SettingsGUIController {
-    //drag and drop respective GameObjects with correspondinf scripts in Unity Editor.
+    //drag and drop respective GameObjects with corresponding components in Unity Editor.
     public RobotMovement robotMovement;
 
     public MySliderScript movementSpeedSlider;
@@ -25,7 +25,7 @@ public class RobotMovementGUIController : SettingsGUIController {
         isRightEnabledToggle.isOn = robotMovement.isRightEnabled;
     }
 
-    //listeners for UI GameObjects
+    //listeners for UI GameObjects, drag and drop in respective Child UI Components
     public void OnRotationSpeedChanged(float value) {
         robotMovement.rotationSpeed = value;
     }

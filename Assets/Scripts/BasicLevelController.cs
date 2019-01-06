@@ -9,7 +9,6 @@ using System.IO.Ports;
 
 public class BasicLevelController : MonoBehaviour
 {
-
     [DllImport("eyelink_core64")]
     private static extern int eyemsg_printf(string message);
 
@@ -52,6 +51,9 @@ public class BasicLevelController : MonoBehaviour
     public GameObject[] cues;
     protected bool showcue1;
     protected bool showcue2;
+
+    //drag and drop from GUI
+    public ParallelPort parallelPort;
 
     void OnEnable()
     {
@@ -185,7 +187,8 @@ public class BasicLevelController : MonoBehaviour
                     }
                 }
 
-                ParallelPort.TryOut32(GameController.instance.parallelPortAddr, triggerValue); // uncomment lines (124 and 139) to send triggers to Ripple
+                parallelPort.WriteTrigger(triggerValue);
+                //ParallelPort.TryOut32(GameController.instance.parallelPortAddr, triggerValue); // uncomment lines (124 and 139) to send triggers to Ripple
 
                 // send parallel port
                 //if (GameController.instance.parallelPortAddr != -1) {
@@ -200,7 +203,8 @@ public class BasicLevelController : MonoBehaviour
                                             robot.transform.position.z,
                                             robot.transform.eulerAngles.y);
                 trigger = false;
-                ParallelPort.TryOut32(GameController.instance.parallelPortAddr, 0); // clear parallel port
+                //ParallelPort.TryOut32(GameController.instance.parallelPortAddr, 0); // clear parallel port
+                parallelPort.WriteTrigger(0);
 
             }
             else
