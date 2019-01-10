@@ -11,24 +11,27 @@ public class RewardsGUIController : SettingsGUIController {
     public InputField portNumField;
     public InputField rewardDurationField;
     public Toggle rewardDurationValid;
+    public MySliderScript requiredViewAngleSlider;
     public Text valveStateText;
     public RewardsController rewardsController;
 
     private void Awake() {
         portNumField.onEndEdit.AddListener(OnPortNumFieldEndEdit);
         rewardDurationField.onEndEdit.AddListener(OnDurationFieldEndEdit);
+
+        requiredViewAngleSlider.OnValueChanged.AddListener(OnRequiredViewAngleChanged);
     }
 
     public void ToggleValveState() {
-        if (!rewardsController.isPortOpen) {
+        if (!rewardsController.IsPortOpen) {
             if (rewardsController.RewardValveOn()) {
                 valveStateText.text = Text_OffState;
-                portNumField.image.color = Color.green;
+                SetInputFieldValid(portNumField);
             }
             else {
                 //unable to open serial
                 //experimentStatus = "cant open reward serial";
-                portNumField.image.color = Color.red;
+                SetInputFieldInvalid(portNumField);
             }
         }
         else {
@@ -48,13 +51,19 @@ public class RewardsGUIController : SettingsGUIController {
         }
     }
 
+    public void OnRequiredViewAngleChanged(float value) {
+        rewardsController.requiredViewAngle = value;
+    }
+
     public override void UpdateSettingsGUI() {
         portNumField.text = rewardsController.portNum;
-        portNumField.image.color = Color.white;
+        SetInputFieldNeutral(portNumField);
 
         string millis = rewardsController.rewardDurationMilliSecs.ToString();
         rewardDurationField.text = millis;
         rewardDurationValid.isOn = IsDurationInputValid(millis);
+
+        requiredViewAngleSlider.value = rewardsController.requiredViewAngle;
     }
 
     private bool IsDurationInputValid(string duration) {

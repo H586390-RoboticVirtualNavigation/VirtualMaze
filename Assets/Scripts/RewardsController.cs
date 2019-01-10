@@ -8,18 +8,22 @@ public class RewardsController : ConfigurableComponent {
     public class Settings : ComponentSettings {
         public string portNum;
         public int rewardDurationMilliSecs;
+        public float requiredViewAngle;
 
-        public Settings(string portNum, int rewardDurationMilliSecs) {
+        public Settings(string portNum, int rewardDurationMilliSecs, float requiredViewAngle) {
             this.portNum = portNum;
             this.rewardDurationMilliSecs = rewardDurationMilliSecs;
+            this.requiredViewAngle = requiredViewAngle;
         }
     }
 
     public string portNum;
     public int rewardDurationMilliSecs;
+    public float requiredViewAngle;
+
     private const int buadRate = 9600;
     private static SerialPort rewardSerial;
-    public bool isPortOpen { get; private set; }
+    public bool IsPortOpen { get; private set; }
 
     public bool RewardValveOn() {
         //dispose if exists
@@ -40,7 +44,7 @@ public class RewardsController : ConfigurableComponent {
         catch {
             return false;
         }
-        isPortOpen = true;
+        IsPortOpen = true;
         return true;
     }
 
@@ -50,7 +54,7 @@ public class RewardsController : ConfigurableComponent {
             rewardSerial.Dispose();
             rewardSerial = null;
         }
-        isPortOpen = false;
+        IsPortOpen = false;
     }
 
     public void Reward() {
@@ -71,15 +75,15 @@ public class RewardsController : ConfigurableComponent {
     }
 
     public override ComponentSettings GetCurrentSettings() {
-        return new Settings(portNum, rewardDurationMilliSecs);
+        return new Settings(portNum, rewardDurationMilliSecs, requiredViewAngle);
     }
 
     public override ComponentSettings GetDefaultSettings() {
-        return new Settings("", 1000);
+        return new Settings("", 1000, 0.8f);
     }
 
-    public override String GetSettingsID() {
-        return typeof(Settings).FullName;
+    public override Type GetSettingsType() {
+        return typeof(Settings);
     }
 
     protected override void ApplySettings(ComponentSettings loadedSettings) {
@@ -90,5 +94,6 @@ public class RewardsController : ConfigurableComponent {
 
         portNum = settings.portNum;
         rewardDurationMilliSecs = settings.rewardDurationMilliSecs;
+        requiredViewAngle = settings.requiredViewAngle;
     }
 }

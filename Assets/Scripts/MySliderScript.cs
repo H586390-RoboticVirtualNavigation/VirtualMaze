@@ -31,7 +31,7 @@ public class MySliderScript : MonoBehaviour {
     /// and set value Text
     /// </summary>
     /// <param name="value"></param>
-    public void OnChildSliderChanged(float value) {
+    private void OnChildSliderChanged(float value) {
         //if(slider.value == value) {
         //    //prevents feedback loop
         //    return;

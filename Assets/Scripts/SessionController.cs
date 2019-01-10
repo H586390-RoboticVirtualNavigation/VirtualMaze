@@ -17,14 +17,14 @@ public class SessionController : ConfigurableComponent {
     }
 
     public List<Session> Sessions { get; private set; } = new List<Session>();
-    private int index = 0;
+    public int index { get; private set; } = 0;
 
-    public void RestartSessions() {
+    public void RestartIndex() {
         index = 0;
     }
 
     public bool HasNextLevel() {
-        return (index + 1) < Sessions.Count;
+        return (index + 1) <= Sessions.Count;
     }
 
     public Session NextLevel() {
@@ -43,7 +43,7 @@ public class SessionController : ConfigurableComponent {
 
         index++;
 
-        return Sessions[index];
+        return session;
     }
 
     //updates the session Name at the given position
@@ -64,8 +64,8 @@ public class SessionController : ConfigurableComponent {
         Sessions.Add(new Session());
     }
 
-    public override string GetSettingsID() {
-        return typeof(Settings).FullName;
+    public override Type GetSettingsType() {
+        return typeof(Settings);
     }
 
     public override ComponentSettings GetDefaultSettings() {

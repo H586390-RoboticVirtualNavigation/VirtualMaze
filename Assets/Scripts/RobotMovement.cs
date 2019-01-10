@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
+using System;
 using UnityEngine.Events;
 
 public class RobotMovement : ConfigurableComponent {
+    //delegate to broadcast current movement position of Robot
+    public delegate void RobotMovementEvent(Transform transform);
 
     /// <summary>
     /// Wrapper class for RobotMovement settings
@@ -51,7 +54,9 @@ public class RobotMovement : ConfigurableComponent {
     public bool isRightEnabled;
     public bool isLeftEnabled;
 
-    
+    //movement broadcaster
+    public static event RobotMovementEvent OnRobotMoved;
+
     protected override void Awake() {
         base.Awake();
         rigidBody = GetComponent<Rigidbody>();
@@ -59,7 +64,6 @@ public class RobotMovement : ConfigurableComponent {
 
     // Update is called once per frame
     void Update() {
-
         float vertical;
         float horizontal;
 
@@ -75,15 +79,20 @@ public class RobotMovement : ConfigurableComponent {
 
         if (ShouldRotate(horizontal)) {
             Quaternion rotateBy = Quaternion.Euler(0, horizontal * rotationSpeed * Time.deltaTime, 0);
-            Debug.Log(rotateBy);
             rigidBody.MoveRotation(transform.rotation * rotateBy);
         }
 
         if (ShouldMove(vertical)) {
             Vector3 moveBy = transform.forward * vertical * movementSpeed * Time.deltaTime;
-            Debug.Log(moveBy);
             rigidBody.MovePosition(transform.position + moveBy);
-        }
+        }   
+    }
+
+    //LateUpdate runs after physics(FixedUpdate()) and gamelogic (Update()) therefore should
+    //reflect the latest position of the robot
+    private void LateUpdate() {
+        //broadcast movement if there are listeners
+        OnRobotMoved?.Invoke(transform);
     }
 
     /// <summary>
@@ -125,7 +134,7 @@ public class RobotMovement : ConfigurableComponent {
         return new Settings(5f, 5f, true, true, true, true, true);
     }
 
-    public override string GetSettingsID() {
-        return typeof(Settings).FullName;
+    public override Type GetSettingsType() {
+        return typeof(Settings);
     }
 }

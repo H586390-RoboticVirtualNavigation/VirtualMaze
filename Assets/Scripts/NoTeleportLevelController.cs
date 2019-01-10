@@ -107,7 +107,7 @@ public class NoTeleportLevelController : BasicLevelController
         PlayerAudio.instance.PlayStartClip();
 
         //update experiment status
-        GuiController.experimentStatus = string.Format("session {0} trial {1}", gameController.sessionCounter, trialCounter);
+        //GuiController.experimentStatus = string.Format("session {0} trial {1}", gameController.sessionCounter, trialCounter);
 
         inTrial = true;
     }
@@ -147,9 +147,9 @@ public class NoTeleportLevelController : BasicLevelController
                 PlayerAudio.instance.PlayStartClip();
 
                 //update experiment status, considered the same trial
-                GuiController.experimentStatus = string.Format("session {0} trial {1}",
-                                                                gameController.sessionCounter,
-                                                                trialCounter);
+                //GuiController.experimentStatus = string.Format("session {0} trial {1}",
+                //                                                gameController.sessionCounter,
+                //                                                trialCounter);
 
                 //trigger - start trial
                 trigger = true;
@@ -167,10 +167,10 @@ public class NoTeleportLevelController : BasicLevelController
             else if (inTrial)
             {
                 //update experiment status, considered the same trial
-                GuiController.experimentStatus = string.Format("session {0} trial {1}\ntimeout in {2:F2}",
-                                                                gameController.sessionCounter,
-                                                                trialCounter,
-                                                                completionTime - elapsedTime);
+                //GuiController.experimentStatus = string.Format("session {0} trial {1}\ntimeout in {2:F2}",
+                //                                                gameController.sessionCounter,
+                //                                                trialCounter,
+                //                                                completionTime - elapsedTime);
             }
 
             yield return new WaitForSeconds(0.1f);

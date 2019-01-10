@@ -25,7 +25,10 @@ public class ExperimentGUIController : SettingsGUIController {
     public Toggle timeoutDurationValid;
     public Toggle timeLimitValid;
 
+    public Button browseSaveLocation;
+
     public ExperimentController experimentController;
+    public FileBrowser fileBrowser;
 
     private void Awake() {
         trialIntermissionFixedField.onEndEdit.AddListener(OnTrialIntermissionFixedEndEdit);
@@ -39,6 +42,28 @@ public class ExperimentGUIController : SettingsGUIController {
 
         fixedTrailIntermissionToggle.onValueChanged.AddListener(OnFixedTrialIntermissionToggleChanged);
         randomTrailIntermissionToggle.onValueChanged.AddListener(OnRandomTrialIntermissionToggleChanged);
+
+        browseSaveLocation.onClick.AddListener(OnBrowseSavelocationClicked);
+
+        fileBrowser.InitWithDirectory(Application.dataPath);
+    }
+
+    private void OnBrowseSavelocationClicked() {
+        fileBrowser.OnFileBrowserExit += OnFileBrowserExit;
+        gameObject.SetActive(false);
+        fileBrowser.display = true;
+    }
+
+    private void OnFileBrowserExit(string path) {
+        gameObject.SetActive(true);
+        fileBrowser.OnFileBrowserExit -= OnFileBrowserExit;
+
+        if (!string.IsNullOrEmpty(path)) {
+            saveLocationField.text = path;
+            OnSaveLocationFieldEndEdit(path);
+        }
+
+        //guiEnable = true;
     }
 
     private void OnFixedTrialIntermissionToggleChanged(bool value) {
@@ -140,8 +165,7 @@ public class ExperimentGUIController : SettingsGUIController {
         timeoutDurationField.text = experimentController.TimeoutDuration.ToString();
         timeLimitField.text = experimentController.TimeLimitDuration.ToString();
 
-        Debug.LogWarning(experimentController.IsTrialIntermissionFixed);
-
+        //to bypass ToggleGroup bug
         if (experimentController.IsTrialIntermissionFixed) {
             fixedTrailIntermissionToggle.isOn = true;
         }

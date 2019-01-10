@@ -64,20 +64,22 @@ public class ScreenSaver : MonoBehaviour {
 
 	public void onBrowseSession(){
 		fb.InitWithDirectory (Application.dataPath);
-		fb.fileBrowserChooselEvent += ChooseSession;
+		fb.OnFileBrowserExit += ChooseSession;
 		fb.display = true;
 		display = false;
 	}
 
 	public void onBrowseFolder(){
 		fb.InitWithDirectory (Application.dataPath);
-		fb.fileBrowserChooselEvent += ChooseFolder;
+		fb.OnFileBrowserExit += ChooseFolder;
 		fb.display = true;
 		display = false;
 	}
 
 	void ChooseSession(string file){
-		fb.fileBrowserChooselEvent -= ChooseSession;
+        fb.OnFileBrowserExit -= ChooseSession;
+        if (string.IsNullOrEmpty(file)) return;
+		
 		fb.display = false;
 		display = true;
 		sessionInput.text = file;
@@ -100,7 +102,9 @@ public class ScreenSaver : MonoBehaviour {
 	}
 
 	void ChooseFolder(string file){
-		fb.fileBrowserChooselEvent -= ChooseFolder;
+        fb.OnFileBrowserExit -= ChooseFolder;
+        if (string.IsNullOrEmpty(file)) { return; }
+		
 		fb.display = false;
 		display = true;
 		folderInput.text = file;
@@ -111,11 +115,10 @@ public class ScreenSaver : MonoBehaviour {
 		}
 	}
 
-	void BrowserCancel(){
-		fb.display = false;
+	void BrowserCancel(string path){
 		display = true;
-		fb.fileBrowserChooselEvent -= ChooseFolder;
-		fb.fileBrowserChooselEvent -= ChooseSession;
+		fb.OnFileBrowserExit -= ChooseFolder;
+		fb.OnFileBrowserExit -= ChooseSession;
 	}
 
 	private GameObject robot;
@@ -128,7 +131,7 @@ public class ScreenSaver : MonoBehaviour {
 		DontDestroyOnLoad(this.gameObject);
 		DontDestroyOnLoad(fb.gameObject);
 
-		fb.fileBrowserCancelEvent += BrowserCancel;
+		fb.OnFileBrowserExit += BrowserCancel;
 
 		// find robot
 		robot = GameObject.Find ("Robot");

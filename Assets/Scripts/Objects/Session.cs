@@ -123,13 +123,13 @@ public class Session {
 
 
     public static string GetRandomLRFLevel() {
-        int random = UnityEngine.Random.Range(0, RandomLRFLevels.Length - 1);
-
+        int random = UnityEngine.Random.Range(0, RandomLRFLevels.Length);
+        
         return RandomLRFLevels[random];
     }
 
     public static string GetRandomLevel() {
-        int random = UnityEngine.Random.Range(0, AllLevels.Length - 1);
+        int random = UnityEngine.Random.Range(0, AllLevels.Length);
 
         return AllLevels[random];
     }

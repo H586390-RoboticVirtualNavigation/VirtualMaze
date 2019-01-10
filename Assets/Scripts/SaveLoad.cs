@@ -5,8 +5,6 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
 public class SaveLoad : MonoBehaviour {
-
-
     /// <summary>
     /// SettingNotFoundException should be thrown when the setting is not found in the _settingsDictionary.
     /// </summary>
@@ -77,11 +75,11 @@ public class SaveLoad : MonoBehaviour {
         configurableComponentList.Add(component);
     }
 
-    public static ExperimentSettings getCurrentConfig() {
+    public static ExperimentSettings getCurrentSettings() {
         ExperimentSettings s = new ExperimentSettings();
 
         foreach (ConfigurableComponent c in configurableComponentList) {
-            s.Add(c.GetSettingsID(), c.GetCurrentSettings());
+            s.Add(c.GetSettingsType().FullName, c.GetCurrentSettings());
         }
 
         return s;
@@ -93,7 +91,7 @@ public class SaveLoad : MonoBehaviour {
     /// </summary>
     /// <returns>true if existing settings replaced, false if is new setting</returns>
     public bool SaveSetting(string settingsName) {
-        ExperimentSettings settings = getCurrentConfig();
+        ExperimentSettings settings = getCurrentSettings();
 
         //remove and add to update settings
         bool isReplaced = _settingsDictionary.Remove(settingsName);
@@ -125,11 +123,11 @@ public class SaveLoad : MonoBehaviour {
 
         foreach (ConfigurableComponent component in configurableComponentList) {
             //if apply ComponentConfig if exist, else use default.
-            if (savedSetting.TryGetValue(component.GetSettingsID(), out ComponentSettings componentConfig)) {
+            if (savedSetting.TryGetValue(component.GetSettingsType().FullName, out ComponentSettings componentConfig)) {
                 component.LoadSavableSettings(componentConfig);
             }
             else {
-                Debug.LogWarning(component.GetSettingsID() + Msg_DefaultValuesUsed);
+                Debug.LogWarning(component.GetSettingsType() + Msg_DefaultValuesUsed);
                 component.LoadSavableSettings(component.GetDefaultSettings());
             }
         }
@@ -141,7 +139,6 @@ public class SaveLoad : MonoBehaviour {
     private void WriteFile() {
         //Creates or overrides file
         FileStream file = File.Create(SaveFileLocation);
-
         bf.Serialize(file, _settingsDictionary);
         file.Close();
     }

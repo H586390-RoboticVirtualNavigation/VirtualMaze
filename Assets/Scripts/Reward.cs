@@ -15,7 +15,7 @@ public class Reward : MonoBehaviour {
     private bool blink;
 	private bool toggle;
 	private Camera cam;
-	private Slider rewardViewCriteriaSlider;
+	//private Slider rewardViewCriteriaSlider;
 	private bool inTriggerArea;
 	private bool teleportedToStart;     
 
@@ -49,7 +49,7 @@ public class Reward : MonoBehaviour {
 
 	void Awake() {
 		cam = GameObject.Find ("Left Camera").GetComponent<Camera> ();
-		rewardViewCriteriaSlider = GameObject.Find ("RewardViewCriteriaSlider").GetComponent<Slider> ();
+		//rewardViewCriteriaSlider = GameObject.Find ("RewardViewCriteriaSlider").GetComponent<Slider> ();
 	}
 
 	IEnumerator StartBlinking(){
@@ -135,12 +135,3 @@ public class Reward : MonoBehaviour {
 
 
 }
-
-
-
-
-
-
-
-
-

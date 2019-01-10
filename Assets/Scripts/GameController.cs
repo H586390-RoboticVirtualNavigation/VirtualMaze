@@ -32,7 +32,7 @@ public class GameController : MonoBehaviour {
     public Fading fade;
 
     public string dataDirectory;
-    private DirectoryInfo dataDirectoryIO;
+    //private DirectoryInfo dataDirectoryIO;
     public StreamWriter fs;
     public int numTrials;
     //public int parallelPortAddr;
@@ -45,7 +45,7 @@ public class GameController : MonoBehaviour {
     void OnEnable() {
         EventManager.StartListening("Reward", onLegacyReward);
         EventManager.StartListening("Start Experiment", StartExperiment);
-        EventManager.StartListening("Level Ended", LevelEnd);
+        //EventManager.StartListening("Level Ended", LevelEnd);
         EventManager.StartListening("Stop Experiment", StopExperiment);
     }
 
@@ -53,13 +53,13 @@ public class GameController : MonoBehaviour {
         EventManager.StopListening("Reward", onLegacyReward);
         EventManager.StopListening("Start Experiment", StartExperiment);
         EventManager.StopListening("Stop Experiment", StopExperiment);
-        EventManager.StopListening("Level Ended", LevelEnd);
+        //EventManager.StopListening("Level Ended", LevelEnd);
     }
 
     /// <summary>
     /// method to check if there is an area of code still blasting rewards events
     /// 
-    /// current design will not be using Observer pattern for now.
+    /// current design will not be using Messaging pattern for now.
     /// </summary>
     void onLegacyReward() {
         Debug.LogError("There is still Reward events");
@@ -146,7 +146,7 @@ public class GameController : MonoBehaviour {
     void StopExperiment() {
 
         StopCoroutine("StartNextSessionAfterDelay");
-        GuiController.experimentStatus = "stopped experiment";
+        //GuiController.experimentStatus = "stopped experiment";
 
         if (fs != null) {
             fs.Dispose();
@@ -202,6 +202,6 @@ public class GameController : MonoBehaviour {
     }
 
     private void Start() {
-        Application.targetFrameRate = 30;
+        Application.targetFrameRate = 60;
     }
 }

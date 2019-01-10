@@ -28,17 +28,16 @@ public abstract class ConfigurableComponent : MonoBehaviour {
     public abstract ComponentSettings GetDefaultSettings();
 
     /// <summary>
-    /// Identifies the subcomponentConfigs in the Settings
+    /// Identifies the ComponentSettings in the Settings
     /// 
     /// Recommended return statement: 
-    /// <code> return typeof(ConfigurableComponent.SerializableSettings).Fullname </code>
+    /// <code> return typeof(ConfigurableComponent.SerializableSettings) </code>
     /// 
-    /// Important: Developers must make sure this returns a unique string or bugs will occur
-    /// (data not saved or wrong data overwritten.)
+    /// Type.Fullname is used to identify the componentSettings as Type is not serializable.
     /// 
     /// </summary>
-    /// <returns>Identifier of this component's settings</returns>
-    public abstract string GetSettingsID();
+    /// <returns>Type of the inner class containing the Settings to save.</returns>
+    public abstract Type GetSettingsType();
     
     /// <summary>
     /// Applies the settings to the component.
@@ -53,9 +52,12 @@ public abstract class ConfigurableComponent : MonoBehaviour {
 
     /// <summary>
     /// Override this method to check if the current configuration values are valid.
+    /// 
+    /// Configurations critical to the should be included here.
     /// </summary>
     /// <returns>True if all configurations are valid</returns>
     public virtual bool IsValid() {
+        //nothing critical by default therefore returns true.
         return true;
     }
 

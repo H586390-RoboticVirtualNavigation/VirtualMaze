@@ -139,8 +139,8 @@ public class JoystickController : ConfigurableComponent {
         return new Settings("", 1);
     }
 
-    public override String GetSettingsID() {
-        return typeof(Settings).FullName;
+    public override Type GetSettingsType() {
+        return typeof(Settings);
     }
 
     protected override void ApplySettings(ComponentSettings loadedSettings) {

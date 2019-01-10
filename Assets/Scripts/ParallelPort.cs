@@ -43,8 +43,8 @@ public class ParallelPort : ConfigurableComponent {
         parallelflip = !parallelflip;
     }
 
-    public override String GetSettingsID() {
-        return typeof(Settings).FullName;
+    public override Type GetSettingsType() {
+        return typeof(Settings);
     }
 
     public override ComponentSettings GetDefaultSettings() {

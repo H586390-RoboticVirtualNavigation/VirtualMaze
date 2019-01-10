@@ -1,0 +1,14 @@
+Version: 20171221 Taxi Continuous v4
+Trigger: v4
+TaskType: Continuous
+PosterLocations: P1(-5,1.5,-7.55) P2(-7.55,1.5,5) P3(7.55,1.5,-5) P4(5,1.5,7.55) P5(5,1.5,2.45) P6(-5,1.5,-2.45)
+TrialType: Double Tee
+SpecifiedRewardNo: 1
+CompletionWindow: 0
+TimeoutDuration: 1
+IntersessionInterval: 1
+RewardTime: 1000
+RewardViewCriteria: 1
+RotationSpeed: 5
+TranslationSpeed: 5
+JoystickDeadzone: 1

@@ -28,54 +28,102 @@ public class ExperimentLogger {
         ExperimentID = experimentID;
     }
 
-    public bool Open(int sessionNum, string sessionName, ExperimentSettings currentConfig) {
+    public bool OpenLog(int sessionNum, Session session, ExperimentSettings currentConfig) {
         //help close fs if not previously closed
         if (fs != null) {
             Debug.LogWarning(Msg_StreamNotClosed);
-            Close();
+            CloseLog();
         }
 
         fs = new StreamWriter(Path.Combine(SaveLocation, FileName(sessionNum)));
-
+        //fs = FileWriter.CreateFileInFolder(SaveLocation, FileName(sessionNum));
         if (fs == null) {
             Debug.LogError(Msg_StreamNotOpened);
             return false;
         }
 
-        WriteHeader(fs, sessionName, currentConfig);
+        WriteHeader(fs, session, currentConfig);
 
         return true;
     }
 
-    public void Close() {
-        fs.Dispose();
+    public void CloseLog() {
+        if (fs != null) {
+            fs.Flush(); //write any lingering text to file
+            fs.Dispose();
+        }
         fs = null;
     }
 
-    public void Write(string data) {
-        fs.Write(data);
+    public void WriteLine(string data) {
+        fs.WriteLine(data);
+        fs.Flush();
     }
 
     private string FileName(int sessionNum) {
         return string.Format(Format_Filename, sessionNum, ExperimentID);
     }
 
-    private void WriteHeader(StreamWriter fs, string sessionName, ExperimentSettings s) {
+    private void WriteHeader(StreamWriter fs, Session session, ExperimentSettings settings) {
         fs.WriteLine("Version: {0}", GameController.versionInfo);
         fs.WriteLine("Trigger: {0}", GameController.pportInfo);
         fs.WriteLine("TaskType: Continuous");
         fs.WriteLine("PosterLocations: P1(-5,1.5,-7.55) P2(-7.55,1.5,5) P3(7.55,1.5,-5) P4(5,1.5,7.55) P5(5,1.5,2.45) P6(-5,1.5,-2.45)");
-        fs.WriteLine("TrialType: {0}", sessionName);
-        fs.WriteLine("SpecifiedRewardNo: {0}", InputRewardNo.inputrewardno); //session
-        fs.WriteLine("CompletionWindow: {0}", GuiController.completionWindowTime); // experiment
-        fs.WriteLine("TimeoutDuration: {0}", GuiController.timoutTime); // experiment
-        fs.WriteLine("IntersessionInterval: {0}", GuiController.interSessionTime); // experiment
-        fs.WriteLine("RewardTime: {0}", GuiController.rewardTime); // rewards
+        fs.WriteLine("TrialType: {0}", session.level);
+        fs.WriteLine("SpecifiedRewardNo: {0}", session.numTrial);
 
-        //s.TryGetValue(typeof(RobotMovement.Settings).FullName, out RobotMovement.Settings t as RobotMovement.Settings);
-        //fs.WriteLine("RotationSpeed: {0}", t.rotationSpeedSlider.value); // robotMovement
-        //fs.WriteLine("TranslationSpeed: {0}", GuiController.translationSpeedSlider.value); // robotMovement
-        //fs.WriteLine("JoystickDeadzone: {0}", GuiController.joystickDeadzoneSlider.value); // robotMovement
-        fs.WriteLine("RewardViewCriteria: {0}", GuiController.rewardViewCriteriaSlider.value); //undecided
+        LogExperimentSettings(fs, settings);
+        LogRewardSettings(fs, settings);
+        LogRobotMovementSettings(fs, settings);
+        LogJoystickSettings(fs, settings);
+
+        fs.Flush();//call flush to write to file
+    }
+
+
+    //helper methods to log required settings
+
+    private void LogJoystickSettings(StreamWriter fs, ExperimentSettings settings) {
+        if (settings.TryGetComponentSetting(out JoystickController.Settings joystickSettings)) {
+            fs.WriteLine("JoystickDeadzone: {0}", joystickSettings.deadzoneAmount);
+        }
+        else {
+            //this values are a must to be logged. Therefore an exception is thrown.
+            throw new SaveLoad.SettingNotFoundException("JoystickController.Settings not found");
+        }
+    }
+
+    private void LogRobotMovementSettings(StreamWriter fs, ExperimentSettings settings) {
+        if (settings.TryGetComponentSetting(out RobotMovement.Settings movementSettings)) {
+            fs.WriteLine("RotationSpeed: {0}", movementSettings.rotationSpeed); // robotMovement
+            fs.WriteLine("TranslationSpeed: {0}", movementSettings.movementSpeed); // robotMovement
+        }
+        else {
+            //this values are a must to be logged. Therefore an exception is thrown.
+            throw new SaveLoad.SettingNotFoundException("RobotMovement.Settings not found");
+        }
+    }
+
+    private void LogRewardSettings(StreamWriter writer, ExperimentSettings settings) {
+        if (settings.TryGetComponentSetting(out RewardsController.Settings rewardSettings)) {
+            fs.WriteLine("RewardTime: {0}", rewardSettings.rewardDurationMilliSecs);
+            fs.WriteLine("RewardViewCriteria: {0}", rewardSettings.requiredViewAngle);
+        }
+        else {
+            //this values are a must to be logged. Therefore an exception is thrown.
+            throw new SaveLoad.SettingNotFoundException("RewardsController.Settings not found");
+        }
+    }
+
+    private void LogExperimentSettings(StreamWriter writer, ExperimentSettings settings) {
+        if (settings.TryGetComponentSetting(out ExperimentController.Settings experimentSettings)) {
+            fs.WriteLine("CompletionWindow: {0}", experimentSettings.timeLimitDuration);
+            fs.WriteLine("TimeoutDuration: {0}", experimentSettings.timeoutDuration);
+            fs.WriteLine("IntersessionInterval: {0}", experimentSettings.sessionIntermissionDuration);
+        }
+        else {
+            //this values are a must to have. Therefore an exception is thrown
+            throw new SaveLoad.SettingNotFoundException("ExperimentController.Settings not found");
+        }
     }
 }

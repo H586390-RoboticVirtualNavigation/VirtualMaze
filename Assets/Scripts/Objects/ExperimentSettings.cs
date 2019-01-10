@@ -14,11 +14,13 @@ public class ExperimentSettings : Dictionary<String, ComponentSettings> {
     //required constructor to serialize properly
     protected ExperimentSettings(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
-    public void TryGetComponentSetting(Type settingType, out ComponentSettings settings) {
-        TryGetValue(settingType.FullName, out settings);
-    }
-
-    public void TryGetComponentSetting<T>(out ComponentSettings settings) where T : ComponentSettings {
-        TryGetValue(typeof(T).FullName, out settings);
+    public bool TryGetComponentSetting<T>(out T settings) where T : ComponentSettings {
+        ComponentSettings s;
+        if (TryGetValue(typeof(T).FullName, out s)) {
+            settings = (T)s;
+            return true;
+        }
+        settings = null;
+        return false;
     }
 }

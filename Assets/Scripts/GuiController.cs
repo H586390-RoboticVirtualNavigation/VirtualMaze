@@ -221,8 +221,6 @@ public class GuiController : MonoBehaviour {
     void Start() {
         Debug.Log("START");
         filebrowser.InitWithDirectory(Application.dataPath);
-        filebrowser.fileBrowserCancelEvent += FileBrowserCancel;
-        filebrowser.fileBrowserChooselEvent += FileBrowserChoose;
         filebrowser.display = false;
 
         HideIntertrialComponents(interTrialRandomize.isOn);
@@ -349,14 +347,9 @@ public class GuiController : MonoBehaviour {
         guiEnable = false;
     }
 
-    void FileBrowserCancel() {
-        filebrowser.display = false;
-        guiEnable = true;
-    }
-
-    void FileBrowserChoose(string path) {
-        filebrowser.display = false;
-        dirField.text = path;
+    void OnFileBrowserExit(string path) {
+        if (!string.IsNullOrEmpty(path))
+            dirField.text = path;
         guiEnable = true;
     }
 
