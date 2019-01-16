@@ -14,12 +14,12 @@ public class Fading : MonoBehaviour {
 		fadeOutDone = true;
 	}
 
-	public void FadeIn(){
-		StartCoroutine ("_FadeIn");
+	public Coroutine FadeIn(){
+		return StartCoroutine (_FadeIn());
 	}
 
-	public void FadeOut(){
-		StartCoroutine ("_FadeOut");
+	public Coroutine FadeOut(){
+		return StartCoroutine (_FadeOut());
 	}
 
 	IEnumerator _FadeOut(){

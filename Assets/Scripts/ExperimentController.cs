@@ -55,18 +55,18 @@ public class ExperimentController : ConfigurableComponent {
     public int TimeoutDuration { get; set; }
     public int TimeLimitDuration { get; set; }
 
-    //triggerValue, deltaTime, position x, position z, rotation y
-    private const string Format_RobotMovement = " {0} {1:F8} {2:F4} {3:F4} {4:F4}";
-
     private bool started = false;
     private ExperimentLogger logger = null;
+    private RobotMovement robot;
+    //coroutine reference for properly stopping coroutine
+    private Coroutine goNextLevelCoroutine;
 
     //drag in Unity Editor
     public SessionController sessionController;
 
     protected override void Awake() {
         base.Awake();
-
+        robot = GameObject.FindGameObjectWithTag(Tags.Player).GetComponent<RobotMovement>();
     }
 
     public void StartExperiment() {
@@ -82,10 +82,10 @@ public class ExperimentController : ConfigurableComponent {
             logger.CloseLog();
         }
 
+        //initilize ExperimentLogger
         logger = new ExperimentLogger(SaveLocation, ExperimentLogger.GenerateDefaultExperimentID());
 
-        //if started via IEnumerator, StopCroutine also must use IEnumerator.
-        StartCoroutine(GoToNextLevel(logger));
+        goNextLevelCoroutine = StartCoroutine(GoToNextLevel(logger));
     }
 
     private IEnumerator GoToNextLevel(ExperimentLogger logger) {
@@ -94,7 +94,7 @@ public class ExperimentController : ConfigurableComponent {
             int sessionIndex = sessionController.index;
 
             //if logger fails to open
-            if (!logger.OpenLog(sessionIndex, session, SaveLoad.getCurrentSettings())) {
+            if (!logger.OpenSessionLog(sessionIndex, session, SaveLoad.getCurrentSettings())) {
                 Debug.LogError("failed to create save files");
                 StopExperiment(logger);
                 yield break; // stops the coroutine
@@ -110,17 +110,16 @@ public class ExperimentController : ConfigurableComponent {
             }
 
             //prepare data for the session
-            SessionInfo.trialTimeLimit = TimeLimitDuration;
-            SessionInfo.session = session;
+            SessionInfo.SetSessionInfo(logger, TimeLimitDuration, session, TimeoutDuration);
 
             //start the scene
-            SceneManager.LoadScene(session.level);
+            SceneManager.LoadScene(session.level, LoadSceneMode.Single);
 
             //add listener to the session
             BasicLevelController.onSessionFinishEvent.AddListener(OnSessionEnd);
 
-            //log robotmovement
-            RobotMovement.OnRobotMoved += OnRobotMoved;
+            //start logging robotmovement
+            robot.OnRobotMoved += OnRobotMoved;
 
             //GuiController.experimentStatus = string.Format("session {0} started", sessionIndex);
 
@@ -133,19 +132,24 @@ public class ExperimentController : ConfigurableComponent {
 
     public void StopExperiment(ExperimentLogger logger) {
         Debug.Log("Experiment Stopped");
-        StopCoroutine(GoToNextLevel(logger));
+        //coroutine will be not be null if it is still running
+        if (goNextLevelCoroutine != null) {
+            StopCoroutine(goNextLevelCoroutine);
+        }
         started = false;
+
+        //Clean up when Experiment is stopped adruptly.
         logger.CloseLog();
     }
 
     private void OnSessionEnd() {
         logger.CloseLog();
-        RobotMovement.OnRobotMoved -= OnRobotMoved;
-        StartCoroutine(GoToNextLevel(logger));
+        robot.OnRobotMoved -= OnRobotMoved;
+        goNextLevelCoroutine = StartCoroutine(GoToNextLevel(logger));
     }
 
     private void OnRobotMoved(Transform t) {
-        logger.WriteLine(String.Format(Format_RobotMovement, 0, Time.deltaTime, t.position.x, t.position.z, t.rotation.y));
+        logger.LogMovement(t);
     }
 
     public override Type GetSettingsType() {

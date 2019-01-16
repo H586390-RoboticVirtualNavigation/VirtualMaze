@@ -4,15 +4,25 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class CueController : MonoBehaviour {
-    public Sprite hintImage { get; set; }
+    private Sprite hint;
 
     //Drag in Unity Editor
-    public Image cue;
-    public Image hint;
+    public Image cueImage;
+    public Image hintImage;
 
     private void Awake() {
-        ShowImage(cue, false);
-        ShowImage(hint, false);
+        ShowImage(cueImage, false);
+        ShowImage(hintImage, false);
+    }
+
+    public Sprite GetHint() {
+        return hint;
+    }
+
+    public void SetHint(Sprite value) {
+        hint = value;
+        cueImage.sprite = value;
+        hintImage.sprite = value;
     }
 
     private void ShowImage(Image image, bool show) {
@@ -21,18 +31,18 @@ public class CueController : MonoBehaviour {
     }
 
     public void ShowCue() {
-        ShowImage(cue, true);
+        ShowImage(cueImage, true);
     }
 
     public void HideCue() {
-        ShowImage(cue, false);
+        ShowImage(cueImage, false);
     }
 
     public void ShowHint() {
-        ShowImage(hint, true);
+        ShowImage(hintImage, true);
     }
 
     public void HideHint() {
-        ShowImage(hint, false);
+        ShowImage(hintImage, false);
     }
 }

@@ -4,7 +4,7 @@ using System.Collections;
 public class NoTeleportLevelController : BasicLevelController
 {
 
-    override protected void EnteredReward()
+    override protected void OnRewardTriggered(RewardArea rewardArea)
     {
         Reward entered = Reward.rewardTriggered;
 
@@ -23,8 +23,12 @@ public class NoTeleportLevelController : BasicLevelController
             // enable the next reward and disable all other rewards
             for (int i = 0; i < rewards.Length; i++)
             {
-                rewards[i].enableReward = false;    // disable all rewards
-                rewards[i].gameObject.SetActive(false);
+                // syy: legacy method to control blinking of BlinkReward(have not implemented properly)
+                // in RewardArea
+                //rewards[i].enableReward = false;  
+
+                // disable all rewards
+                rewards[i].SetActive(false);
                 if (rewards[i].Equals(entered))
                 {
                     thisRewardIndex = i;
@@ -38,8 +42,7 @@ public class NoTeleportLevelController : BasicLevelController
             if (nextRewardIndex > rewards.Length - 1)
             {
                 //increment trial
-                trialCounter++;
-                Debug.Log(trialCounter);
+                Debug.Log(totalTrialCounter);
 
                 //disable robot movement
                 robotMovement.enabled = false;
@@ -51,7 +54,7 @@ public class NoTeleportLevelController : BasicLevelController
             }
 
 
-            if (trialCounter >= numTrials)
+            if (totalTrialCounter >= numTrials)
             {
                 StopCoroutine("Timeout");
 
@@ -62,8 +65,12 @@ public class NoTeleportLevelController : BasicLevelController
             }
 
             // enable next
-            rewards[nextRewardIndex].gameObject.SetActive(true);
-            rewards[nextRewardIndex].enableReward = true;
+            rewards[nextRewardIndex].SetActive(true);
+
+            // syy: legacy method to control blinking of BlinkReward(have not implemented properly)
+            // in RewardArea
+            //rewards[nextRewardIndex].enableReward = true;
+
             Debug.Log(nextRewardIndex);
         }
         else if (!entered.enableReward)
@@ -72,16 +79,16 @@ public class NoTeleportLevelController : BasicLevelController
             PlayerAudio.instance.PlayErrorClip();
             if (rewards[thisRewardIndex - 1].Equals(entered))
             {
-                rewards[thisRewardIndex].enableReward = true;
-                rewards[thisRewardIndex + 1].enableReward = false;
+                // syy: legacy method to control blinking of BlinkReward(have not implemented properly)
+                // in RewardArea
+                //rewards[thisRewardIndex].enableReward = true;
+                //rewards[thisRewardIndex + 1].enableReward = false;
             }
         }
     }
 
     override protected IEnumerator InterTrial()
     {
-
-        inTrial = false;
 
         //delay for inter trial window
         float countDownTime = (float)GuiController.interTrialTime / 1000.0f;
@@ -100,7 +107,6 @@ public class NoTeleportLevelController : BasicLevelController
         triggerValue = 1;
 
         //reset elapsed time
-        elapsedTime = 0;
         StartCoroutine("Timeout");
 
         //play audio 
@@ -108,8 +114,6 @@ public class NoTeleportLevelController : BasicLevelController
 
         //update experiment status
         //GuiController.experimentStatus = string.Format("session {0} trial {1}", gameController.sessionCounter, trialCounter);
-
-        inTrial = true;
     }
 
     override protected IEnumerator Timeout()
@@ -119,10 +123,8 @@ public class NoTeleportLevelController : BasicLevelController
         {
 
             //time out
-            if (elapsedTime > completionTime)
+            if (elapsedTime > trialTimeLimit)
             {
-
-                inTrial = false;
 
                 //trigger - timeout
                 trigger = true;
@@ -158,19 +160,6 @@ public class NoTeleportLevelController : BasicLevelController
                 //disable robot movement
                 robotMovement.enabled = true;
 
-                //reset elapsed time
-                elapsedTime = 0;
-
-                inTrial = true;
-
-            }
-            else if (inTrial)
-            {
-                //update experiment status, considered the same trial
-                //GuiController.experimentStatus = string.Format("session {0} trial {1}\ntimeout in {2:F2}",
-                //                                                gameController.sessionCounter,
-                //                                                trialCounter,
-                //                                                completionTime - elapsedTime);
             }
 
             yield return new WaitForSeconds(0.1f);

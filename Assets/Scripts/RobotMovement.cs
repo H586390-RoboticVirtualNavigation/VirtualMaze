@@ -46,7 +46,6 @@ public class RobotMovement : ConfigurableComponent {
     //default values
     public float rotationSpeed;
     public float movementSpeed;
-    public float requiredViewingAngle;
 
     public bool isJoystickEnabled;
     public bool isReverseEnabled;
@@ -54,8 +53,11 @@ public class RobotMovement : ConfigurableComponent {
     public bool isRightEnabled;
     public bool isLeftEnabled;
 
+    //drag in Unity Editior
+    public Camera rayCaster;// camera to shoot the ray from.
+
     //movement broadcaster
-    public static event RobotMovementEvent OnRobotMoved;
+    public event RobotMovementEvent OnRobotMoved;
 
     protected override void Awake() {
         base.Awake();
@@ -85,7 +87,7 @@ public class RobotMovement : ConfigurableComponent {
         if (ShouldMove(vertical)) {
             Vector3 moveBy = transform.forward * vertical * movementSpeed * Time.deltaTime;
             rigidBody.MovePosition(transform.position + moveBy);
-        }   
+        }
     }
 
     //LateUpdate runs after physics(FixedUpdate()) and gamelogic (Update()) therefore should
@@ -109,9 +111,27 @@ public class RobotMovement : ConfigurableComponent {
             (vertical > 0 && isForwardEnabled);
     }
 
+    public void MoveToWaypoint(Transform waypoint) {
+        Vector3 startpos = waypoint.position;
+        //do not want to change y axis of robot
+        startpos.y = transform.position.y;
+
+        transform.position = startpos;
+
+        Quaternion startrot = transform.rotation;
+        startrot.y = waypoint.rotation.y;
+        transform.rotation = startrot;
+    }
+
+    public bool FireRaycastFromViewCenter(float maxDistance, out RaycastHit hit) {
+        Ray r = rayCaster.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        Debug.DrawRay(r.origin, r.direction, Color.blue);
+        return Physics.Raycast(r, out hit, maxDistance);
+    }
+
     public override ComponentSettings GetCurrentSettings() {
-        Settings settings = new Settings(rotationSpeed, movementSpeed, 
-            isJoystickEnabled, isReverseEnabled, isForwardEnabled, 
+        Settings settings = new Settings(rotationSpeed, movementSpeed,
+            isJoystickEnabled, isReverseEnabled, isForwardEnabled,
             isRightEnabled, isLeftEnabled);
 
         return settings;

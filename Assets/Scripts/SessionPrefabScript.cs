@@ -44,14 +44,21 @@ public class SessionPrefabScript : MonoBehaviour {
         }
         set {
             numTrialsField.text = value;
-            CheckValidTrialNumber(value);
         }
     }
 
-    public bool valid { get; private set; } = false;
+    //boolean representing the validity of this session
+    public bool isValidSession { get; private set; } = false;
 
     private void Awake() {
         buttonLabel = levelButton.GetComponentInChildren<Text>();
+        numTrialsField.onEndEdit.AddListener(OnNumTrialsFieldEndEdit);
+    }
+
+    private void OnNumTrialsFieldEndEdit(string text) {
+        if (CheckValidTrialNumber(text, out int num)) {
+            onNumTrialsChanged.Invoke(transform.GetSiblingIndex(), num);
+        }
     }
 
     public void NextLevel() {
@@ -88,15 +95,18 @@ public class SessionPrefabScript : MonoBehaviour {
         Destroy(this.gameObject);
     }
 
-    public void CheckValidTrialNumber(string str) {
-        int value;
-        if (int.TryParse(str, out value)) {
+    public bool CheckValidTrialNumber(string str, out int num) {
+        if (int.TryParse(str, out int value)) {
             numTrialsField.GetComponent<Image>().color = Color.green;
-            valid = true;
+            isValidSession = true;
+            num = value;
+            return true;
         }
         else {
             numTrialsField.GetComponent<Image>().color = Color.red;
-            valid = false;
+            isValidSession = false;
+            num = value;
+            return false;
         }
     }
 
@@ -107,18 +117,6 @@ public class SessionPrefabScript : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        CheckValidTrialNumber(numTrials);
+        CheckValidTrialNumber(numTrials, out int num);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-

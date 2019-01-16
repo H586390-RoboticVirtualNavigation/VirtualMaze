@@ -9,6 +9,8 @@ using System.IO;
 using System.IO.Ports;
 
 public class BasicLevelController : MonoBehaviour {
+    private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent";
+
     [DllImport("eyelink_core64")]
     private static extern int eyemsg_printf(string message);
 
@@ -27,28 +29,27 @@ public class BasicLevelController : MonoBehaviour {
     [DllImport("eyelink_core64")]
     private static extern int eyelink_broadcast_open();
 
-    protected int numTrials;
-    protected float completionTime;
-
-    protected int trialCounter;
+    protected int numTrials { get; private set; }
+    protected int trialCounter { get; private set; } = 0;
+    protected float trialTimeLimit { get; private set; }
+    protected float timeoutDuration { get; private set; }
+    protected int totalTrialCounter { get; private set; }
+    protected float elapsedTime { get; private set; }
+    protected ExperimentLogger logger;
     protected bool trigger;
     protected int triggerValue;
-    protected float elapsedTime;
-    protected bool inTrial;
+
+
     protected int thisRewardIndex;
     protected int nextRewardIndex;
-    protected int thisTarget;
+
+    protected int targetIndex;
 
     protected int lastValve;
 
     private int[] order;
-    //private int round;
-    public Transform startWaypoint;
-    public GameObject[] cues;
-    public static UnityEvent onSessionFinishEvent = new UnityEvent();
 
-    //protected bool showcue1;
-    //protected bool showcue2;
+    public static UnityEvent onSessionFinishEvent = new UnityEvent();
 
     //reference to coroutine to properly stop it.
     private Coroutine timeoutTimer;
@@ -60,39 +61,78 @@ public class BasicLevelController : MonoBehaviour {
     protected Fading fade;
     protected CueController cueController;
 
+    /// <summary>
+    /// Gameobjects tagged as "RewardArea" in the scene will be populated in here.
+    /// </summary>
+    protected RewardArea[] rewards;
+
     //drag and drop from Unity Editor
-    public Reward[] rewards;
-    
-
-    void OnEnable() {
-        EventManager.StartListening("Entered Reward Area", EnteredReward);
-    }
-
-    void OnDisable() {
-        EventManager.StopListening("Entered Reward Area", EnteredReward);
-    }
+    public Transform startWaypoint;
 
     void Awake() {
         parallelPort = FindObjectOfType<ParallelPort>();
-        robotMovement = FindObjectOfType<RobotMovement>();
         fade = FindObjectOfType<Fading>();
-        robot = robotMovement.gameObject;
+
+        robot = GameObject.FindGameObjectWithTag(Tags.Player);
+        robotMovement = robot.GetComponent<RobotMovement>();
         cueController = robot.GetComponentInChildren<CueController>();
     }
 
-    void Start() {
+    private void OnEnable() {
+        RewardArea.OnRewardTriggered += OnRewardTriggered;
+    }
 
-        inTrial = false;
+    private void OnDisable() {
+        RewardArea.OnRewardTriggered -= OnRewardTriggered;
+    }
+
+    /// <summary>
+    /// Helper method to populate rewards[]
+    /// </summary>
+    private void GetAllRewardsFromScene() {
+        //Find all rewardAreas in scene and populate rewards[].
+        GameObject[] objs = GameObject.FindGameObjectsWithTag(Tags.RewardArea);
+        List<RewardArea> temp = new List<RewardArea>();
+        foreach (GameObject obj in objs) {
+            RewardArea area = obj.GetComponent<RewardArea>();
+            if (area != null) {
+                temp.Add(area);
+
+                // Deactivate all rewards at the start.
+                area.SetActive(false);
+            }
+            else {
+                Debug.LogWarning(string.Format(Format_NoRewardAreaComponentFound, obj.name));
+            }
+        }
+        rewards = temp.ToArray();
+    }
+
+    void Start() {
+        GetAllRewardsFromScene();
 
         //disable robot movement
         robotMovement.enabled = false;
 
-        //get completiontime
-        completionTime = SessionInfo.trialTimeLimit / 1000.0f;
-        //set numTrials
-        numTrials = SessionInfo.session.numTrial;
+        //get settings for this session
+        SessionInfo.GetSessionInfo(
+            out logger,
+            out int trialTimeLimit,
+            out Session session,
+            out float timeoutDuration
+            );
 
-        trialCounter = 1; // start with 1st trial	
+        //convert to seconds
+        this.trialTimeLimit = trialTimeLimit / 1000f;
+        this.timeoutDuration = timeoutDuration / 1000f;
+
+        //set numTrials
+        numTrials = session.numTrial;
+
+
+
+        //Prepare BasicLevelController
+        totalTrialCounter = 1; // start with 1st trial	
         trigger = false;
         lastValve = 1000;
 
@@ -110,11 +150,6 @@ public class BasicLevelController : MonoBehaviour {
         }
 
         StartCoroutine(FadeInAndStart());
-
-        // Deactivate all rewards at the start
-        for (int i = 0; i < rewards.Length; i++) {
-            rewards[i].gameObject.SetActive(false);
-        }
 
         //Shuffle();
         GetNextTarget();
@@ -188,19 +223,6 @@ public class BasicLevelController : MonoBehaviour {
             parallelPort.WriteTrigger(0);
 
         }
-
-
-        //if (showcue1) {
-        //    var clone = Instantiate(cues[thisTarget], robot.transform.position + robot.transform.forward * 0.5f + robot.transform.up * 1.2f, robot.transform.rotation); // present cue (indicate location in space)
-        //    clone.transform.localScale = new Vector3(0.5f, 0.3f, 0.005f); // size of central cue
-        //    Destroy(clone, 0.02f); // remove cue at update rate so that cue appears to follow camera 
-        //}
-
-        //if (showcue2) {
-        //    var clone = Instantiate(cues[thisTarget], robot.transform.position + robot.transform.forward * 0.5f + robot.transform.up * 1.46f, robot.transform.rotation); // present cue (indicate location in space)
-        //    clone.transform.localScale = new Vector3(0.1f, 0.06f, 0.005f); // size of peripheral cue
-        //    Destroy(clone, 0.02f); // remove cue at update rate so that cue appears to follow camera 
-        //}
     }
 
     void GetNextTarget() {
@@ -210,14 +232,15 @@ public class BasicLevelController : MonoBehaviour {
 
         int nextTarget;
         // minimally inclusive, maximally exclusive, therefore you will get random numbers between 0 to the number of rewards
-        nextTarget = UnityEngine.Random.Range(0, cues.Length); 
-        while (nextTarget == thisTarget) // retries if the random target number generated is the same as the current target number
+        nextTarget = UnityEngine.Random.Range(0, rewards.Length);
+        while (nextTarget == targetIndex) // retries if the random target number generated is the same as the current target number
         {
-            nextTarget = UnityEngine.Random.Range(0, cues.Length);
+            nextTarget = UnityEngine.Random.Range(0, rewards.Length);
         }
-        thisTarget = nextTarget;
-        //testing only will redo this line of code
-        //cueController.hintImage = cues[thisTarget].GetComponent<MeshRenderer>().material.shader;
+        targetIndex = nextTarget;
+        //increment number of trials started.
+        trialCounter++;
+        cueController.SetHint(rewards[targetIndex].cueImage);
     }
 
     IEnumerator ShowHint() {
@@ -227,20 +250,18 @@ public class BasicLevelController : MonoBehaviour {
         cueController.ShowCue();
         //showcue1 = true; // show central cue
         trigger = true;
-        triggerValue = 11 + thisTarget;
+        triggerValue = 11 + targetIndex;
 
         yield return new WaitForSeconds(1); // duration to present central cue
         cueController.HideCue();
 
-
-        rewards[thisTarget].gameObject.SetActive(true); // enable reward
+        rewards[targetIndex].SetActive(true); // enable reward
         robotMovement.enabled = true; // enable robot
 
         cueController.ShowHint();
         trigger = true;
-        triggerValue = 21 + thisTarget;
+        triggerValue = 21 + targetIndex;
 
-        elapsedTime = 0;
         StartTimeoutTimer();
     }
 
@@ -261,19 +282,24 @@ public class BasicLevelController : MonoBehaviour {
     //    Debug.Log("random order: " + order[0] + order[1] + order[2] + order[3]);
     //}
 
-    virtual protected void EnteredReward() {
+    virtual protected void OnRewardTriggered(RewardArea rewardArea) {
+        //check if triggered reward is the reward we are looking for
+        if (!rewardArea.Equals(rewards[targetIndex])) {
+            return;
+        }
+        logger.WriteLine(string.Format(""));
         cueController.HideHint(); // remove peripheral cue
 
-        Reward entered = Reward.rewardTriggered;
-        Debug.Log(Reward.rewardTriggered); // log reward ID
-        robotMovement.enabled = false; // disable robot
-        rewards[thisTarget].gameObject.SetActive(false); // disable reward
-        //rewardCount++;
-        trialCounter++;
+        //Reward entered = Reward.rewardTriggered;
+        Debug.Log(rewardArea.target.name); // log reward name
+        robotMovement.enabled = false; // disable robot movement
+        rewardArea.SetActive(false); // disable reward
 
-        EventManager.TriggerEvent("Reward");
+        //increment total trial counter
+        totalTrialCounter++;
+
         trigger = true;
-        triggerValue = 31 + thisTarget;
+        triggerValue = 31 + targetIndex;
 
         StopTimeoutTimer();
 
@@ -336,7 +362,6 @@ public class BasicLevelController : MonoBehaviour {
         //session ends
 
         //if (nextRewardIndex > rewards.Length - 1)
-        //if (rewardCount > Convert.ToInt32(InputRewardNo.inputrewardno)-1) //end session once user-specified number of rewards is reached
         if (trialCounter >= numTrials) //end session once user-specified number of trials is reached
         {
             //increment trial
@@ -346,11 +371,9 @@ public class BasicLevelController : MonoBehaviour {
             //disable robot movement
             robotMovement.enabled = false;
 
-            nextRewardIndex = 0;
-
             //new trial
             trigger = true;
-            triggerValue = 31 + thisTarget;
+            triggerValue = 31 + targetIndex;
 
             StartCoroutine("FadeOutBeforeLevelEnd");
         }
@@ -392,20 +415,6 @@ public class BasicLevelController : MonoBehaviour {
         //}
     }
 
-    void SetPositionToStart() {
-        //set robot's position and rotation to start
-        Vector3 startpos = robot.transform.position;
-        startpos.x = startWaypoint.position.x;
-        startpos.z = startWaypoint.position.z;
-        robot.transform.position = startpos;
-
-        Quaternion startrot = robot.transform.rotation;
-        startrot.y = startWaypoint.rotation.y;
-        robot.transform.rotation = startrot;
-
-        //EventManager.TriggerEvent ("Teleported To Start");
-    }
-
     IEnumerator FadeInAndStart() {
 
         //send pport trigger
@@ -413,13 +422,11 @@ public class BasicLevelController : MonoBehaviour {
         triggerValue = 84; // 80 + version number
 
         //go to start
-        SetPositionToStart();
+        robotMovement.MoveToWaypoint(startWaypoint);
+        //EventManager.TriggerEvent ("Teleported To Start");
 
-        //fade in
-        fade.FadeIn();
-        while (fade.fadeInDone == false) {
-            yield return new WaitForSeconds(0.05f);
-        }
+        //fade in and wait for fadein to complete
+        yield return fade.FadeIn();
 
         //enable robot movement
         //robotMovement.enabled = true;
@@ -431,41 +438,23 @@ public class BasicLevelController : MonoBehaviour {
         //play start clip
         //PlayerAudio.instance.PlayStartClip ();
 
-        //update experiment status
-        //GuiController.experimentStatus = string.Format("session {0} trial {1}", gameController.sessionCounter, trialCounter);
-
-        //reset elapsed time
-        //elapsedTime = 0;
         //StartCoroutine ("Timeout");
         lastValve = 1000;
-
-        inTrial = true;
     }
 
 
     IEnumerator FadeOutBeforeLevelEnd() {
-
-        inTrial = false;
-
-
         //fade out when end
-        fade.FadeOut();
-        while (fade.fadeOutDone == false) {
-            yield return new WaitForSeconds(0.05f);
-        }
+        yield return fade.FadeOut();
 
         onSessionFinishEvent.Invoke();
     }
 
     virtual protected IEnumerator InterTrial() {
-
-        inTrial = false;
         StopTimeoutTimer();
 
-        fade.FadeOut();
-        while (fade.fadeOutDone == false) {
-            yield return new WaitForSeconds(0.05f);
-        }
+        //fadeout and wait for fade out to finish.
+        yield return fade.FadeOut();
 
         //delay for inter trial window
         float countDownTime = (float)GuiController.interTrialTime / 1000.0f;
@@ -481,12 +470,11 @@ public class BasicLevelController : MonoBehaviour {
         lastValve = 1000;
 
         //teleport back to start
-        SetPositionToStart();
+        robotMovement.MoveToWaypoint(startWaypoint);
+        //EventManager.TriggerEvent ("Teleported To Start");
 
-        fade.FadeIn();
-        while (fade.fadeInDone == false) {
-            yield return new WaitForSeconds(0.05f);
-        }
+        //fade in and wait for fade in to finish
+        yield return fade.FadeIn();
 
         //disable robot movement
         //robotMovement.enabled = true;
@@ -502,11 +490,6 @@ public class BasicLevelController : MonoBehaviour {
 
         //play audio
         //PlayerAudio.instance.PlayStartClip ();
-
-        //update experiment status
-        //GuiController.experimentStatus = string.Format("session {0} trial {1}", gameController.sessionCounter, trialCounter);
-
-        inTrial = true;
 
         //GetNextTarget();
         StartCoroutine(ShowHint()); // show cue for first target
@@ -528,14 +511,13 @@ public class BasicLevelController : MonoBehaviour {
             //}
 
             //time out
-            if (completionTime > 0) {
-                if (elapsedTime > completionTime) {
+            if (trialTimeLimit > 0) {
+                if (elapsedTime > trialTimeLimit) {
                     Debug.Log("timeout");
-                    inTrial = false;
 
                     //trigger - timeout
                     trigger = true;
-                    triggerValue = 41 + thisTarget;
+                    triggerValue = 41 + targetIndex;
 
                     //play audio
                     PlayerAudio.instance.PlayErrorClip();
@@ -543,7 +525,7 @@ public class BasicLevelController : MonoBehaviour {
                     //disable robot movement
                     robotMovement.enabled = false;
                     cueController.HideHint();
-                    rewards[thisTarget].gameObject.SetActive(false); // disable reward
+                    rewards[targetIndex].SetActive(false); // disable reward
 
                     //                    // fade out
                     //                    fade.FadeOut();
@@ -554,12 +536,9 @@ public class BasicLevelController : MonoBehaviour {
 
 
 
-                    trialCounter++;
-                    inTrial = false;
-                    yield return new WaitForSeconds(SessionInfo.timeoutDuration / 1000f);
+                    totalTrialCounter++;
+                    yield return new WaitForSeconds(timeoutDuration);
 
-
-                    inTrial = true;
                     StartCoroutine(ShowHint()); // show cue for next target
                     yield break;//stops the coroutine
 
@@ -583,7 +562,8 @@ public class BasicLevelController : MonoBehaviour {
                     //
                     //    StartCoroutine("InterTrial");
                     ////teleport back to start
-                    //SetPositionToStart();
+                    //robotMovement.MoveToWaypoint(startWaypoint);
+                    //EventManager.TriggerEvent ("Teleported To Start");
 
                     ////delay for timeout
                     //float countDownTime = (float)GuiController.timoutTime / 1000.0f;
@@ -635,6 +615,8 @@ public class BasicLevelController : MonoBehaviour {
     //helper methods to start Timer
     private void StartTimeoutTimer() {
         StopTimeoutTimer();
+        //reset elapsed time
+        elapsedTime = 0;
         timeoutTimer = StartCoroutine(Timeout());
     }
 

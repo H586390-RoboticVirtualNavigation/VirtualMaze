@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Reward
   - CalibPoint
+  - RewardArea
   layers:
   - Default
   - TransparentFX
