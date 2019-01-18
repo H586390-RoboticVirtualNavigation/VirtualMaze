@@ -13,11 +13,7 @@ public static class SessionInfo {
 
     private static float timeoutDuration;
 
-    //Reference for BasicLevelController to log session information.
-    private static ExperimentLogger logger;
-
     public static void SetSessionInfo(
-            ExperimentLogger logger, 
             int trialTimeLimit, 
             Session session, 
             float timeoutDuration
@@ -25,11 +21,9 @@ public static class SessionInfo {
         SessionInfo.trialTimeLimit = trialTimeLimit;
         SessionInfo.session = session;
         SessionInfo.timeoutDuration = timeoutDuration;
-        SessionInfo.logger = logger;
     }
 
     public static void GetSessionInfo(
-            out ExperimentLogger logger,
             out int trialTimeLimit, 
             out Session session,
             out float timeoutDuration
@@ -37,6 +31,5 @@ public static class SessionInfo {
         trialTimeLimit = SessionInfo.trialTimeLimit;
         session = SessionInfo.session;
         timeoutDuration = SessionInfo.timeoutDuration;
-        logger = SessionInfo.logger;
     }
 }

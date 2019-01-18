@@ -6,9 +6,10 @@ using System.IO;
 using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour {
-
-    public static string versionInfo = "20171221 Taxi Continuous v4"; //UPDATE THIS WITH EACH COMPILATION
-    public static string pportInfo = "v4";
+    //UPDATE THESE WITH EACH COMPILATION
+    public static readonly int versionNum = 4;
+    public static readonly string versionInfo = "20171221 Taxi Continuous v" + versionNum;
+    public static readonly string pportInfo = "v4" + versionNum;
 
     private static GameController _instance;
     public static GameController instance {
@@ -76,7 +77,7 @@ public class GameController : MonoBehaviour {
         dataDirectory = GuiController.dirField.text;
 
         sessionlist = new List<Dictionary<string, string>>();
-        
+
         //get sessionlist
         foreach (Transform transform in sessions.transform) {
             Dictionary<string, string> dict = new Dictionary<string, string>();

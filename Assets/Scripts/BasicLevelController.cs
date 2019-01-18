@@ -35,10 +35,7 @@ public class BasicLevelController : MonoBehaviour {
     protected float timeoutDuration { get; private set; }
     protected int totalTrialCounter { get; private set; }
     protected float elapsedTime { get; private set; }
-    protected ExperimentLogger logger;
-    protected bool trigger;
     protected int triggerValue;
-
 
     protected int thisRewardIndex;
     protected int nextRewardIndex;
@@ -49,7 +46,11 @@ public class BasicLevelController : MonoBehaviour {
 
     private int[] order;
 
-    public static UnityEvent onSessionFinishEvent = new UnityEvent();
+    // Broadcasts when the session is finshed.
+    public UnityEvent onSessionFinishEvent = new UnityEvent();
+
+    // Broadcasts when any sessionTriggers happens.
+    public SessionTriggerEvent onSessionTrigger = new SessionTriggerEvent();
 
     //reference to coroutine to properly stop it.
     private Coroutine timeoutTimer;
@@ -70,6 +71,7 @@ public class BasicLevelController : MonoBehaviour {
     public Transform startWaypoint;
 
     void Awake() {
+        // FindObjectOfType is computationally expensive, look for other ways to do this
         parallelPort = FindObjectOfType<ParallelPort>();
         fade = FindObjectOfType<Fading>();
 
@@ -111,12 +113,8 @@ public class BasicLevelController : MonoBehaviour {
     void Start() {
         GetAllRewardsFromScene();
 
-        //disable robot movement
-        robotMovement.enabled = false;
-
-        //get settings for this session
+        //get parameters for this session
         SessionInfo.GetSessionInfo(
-            out logger,
             out int trialTimeLimit,
             out Session session,
             out float timeoutDuration
@@ -129,11 +127,11 @@ public class BasicLevelController : MonoBehaviour {
         //set numTrials
         numTrials = session.numTrial;
 
-
-
+        //disable robot movement
+        robotMovement.SetMovementActive(false);
+        
         //Prepare BasicLevelController
         totalTrialCounter = 1; // start with 1st trial	
-        trigger = false;
         lastValve = 1000;
 
         //rewardCount = 0; // start reward counter
@@ -150,10 +148,6 @@ public class BasicLevelController : MonoBehaviour {
         }
 
         StartCoroutine(FadeInAndStart());
-
-        //Shuffle();
-        GetNextTarget();
-        StartCoroutine(ShowHint()); // show cue for first target
     }
 
     void TryEyemsg_Printf(String msg) {
@@ -184,7 +178,8 @@ public class BasicLevelController : MonoBehaviour {
         elapsedTime += Time.deltaTime;
 
         //send trigger to parallel port
-        if (trigger) {
+        if (false) {//code block to be moved. keep here as reference for now
+            //used to enter this if block after a trigger happened.
             int EL = TryGetEyelinkConnectedStatus();
             Debug.Log("EL:" + EL);
 
@@ -218,7 +213,7 @@ public class BasicLevelController : MonoBehaviour {
             //	ParallelPort.Out32 (GameController.instance.parallelPortAddr, triggerValue);	
             //	ParallelPort.Out32 (GameController.instance.parallelPortAddr, 0);	
             //}
-            trigger = false;
+
             //ParallelPort.TryOut32(GameController.instance.parallelPortAddr, 0); // clear parallel port
             parallelPort.WriteTrigger(0);
 
@@ -249,18 +244,18 @@ public class BasicLevelController : MonoBehaviour {
 
         cueController.ShowCue();
         //showcue1 = true; // show central cue
-        trigger = true;
-        triggerValue = 11 + targetIndex;
+
+        onSessionTrigger.Invoke(SessionTrigger.CueShownTrigger, targetIndex);
 
         yield return new WaitForSeconds(1); // duration to present central cue
         cueController.HideCue();
 
         rewards[targetIndex].SetActive(true); // enable reward
-        robotMovement.enabled = true; // enable robot
+        robotMovement.SetMovementActive(true); // enable robot
 
         cueController.ShowHint();
-        trigger = true;
-        triggerValue = 21 + targetIndex;
+
+        onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
 
         StartTimeoutTimer();
     }
@@ -287,19 +282,18 @@ public class BasicLevelController : MonoBehaviour {
         if (!rewardArea.Equals(rewards[targetIndex])) {
             return;
         }
-        logger.WriteLine(string.Format(""));
+
         cueController.HideHint(); // remove peripheral cue
 
         //Reward entered = Reward.rewardTriggered;
         Debug.Log(rewardArea.target.name); // log reward name
-        robotMovement.enabled = false; // disable robot movement
+        robotMovement.SetMovementActive(false); // disable robot movement
         rewardArea.SetActive(false); // disable reward
 
         //increment total trial counter
         totalTrialCounter++;
 
-        trigger = true;
-        triggerValue = 31 + targetIndex;
+        onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
 
         StopTimeoutTimer();
 
@@ -369,11 +363,10 @@ public class BasicLevelController : MonoBehaviour {
             //Debug.Log("trial = " + trialCounter);
 
             //disable robot movement
-            robotMovement.enabled = false;
+            robotMovement.SetMovementActive(false);
 
             //new trial
-            trigger = true;
-            triggerValue = 31 + targetIndex;
+            onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
 
             StartCoroutine("FadeOutBeforeLevelEnd");
         }
@@ -389,7 +382,7 @@ public class BasicLevelController : MonoBehaviour {
         //    StopCoroutine("Timeout");
 
         //disable robot movement
-        //    robotMovement.enabled = false;
+        //    robotMovement.SetMovementActive(false);
 
         //    StartCoroutine("FadeOutBeforeLevelEnd");
         //}
@@ -418,8 +411,7 @@ public class BasicLevelController : MonoBehaviour {
     IEnumerator FadeInAndStart() {
 
         //send pport trigger
-        trigger = true;
-        triggerValue = 84; // 80 + version number
+        onSessionTrigger.Invoke(SessionTrigger.ExperimentVersionTrigger, GameController.versionNum);
 
         //go to start
         robotMovement.MoveToWaypoint(startWaypoint);
@@ -429,7 +421,7 @@ public class BasicLevelController : MonoBehaviour {
         yield return fade.FadeIn();
 
         //enable robot movement
-        //robotMovement.enabled = true;
+        //robotMovement.SetMovementActive(true);
 
         //trigger - start trial
         //trigger = true;
@@ -440,6 +432,11 @@ public class BasicLevelController : MonoBehaviour {
 
         //StartCoroutine ("Timeout");
         lastValve = 1000;
+
+
+        //Shuffle();
+        GetNextTarget();
+        StartCoroutine(ShowHint()); // show cue for first target
     }
 
 
@@ -476,8 +473,8 @@ public class BasicLevelController : MonoBehaviour {
         //fade in and wait for fade in to finish
         yield return fade.FadeIn();
 
-        //disable robot movement
-        //robotMovement.enabled = true;
+        //enable robot movement
+        //robotMovement.SetMovementActive(true);
 
         //trigger - new trial
         //trigger = true;
@@ -505,7 +502,7 @@ public class BasicLevelController : MonoBehaviour {
 
             //if (elapsedTime > completionTime)
             //{
-            //    robotMovement.enabled = false;
+            //    robotMovement.SetMovementActive(false);
             //    PlayerAudio.instance.PlayErrorClip();
             //    StartCoroutine("FadeOutBeforeLevelEnd");
             //}
@@ -516,14 +513,13 @@ public class BasicLevelController : MonoBehaviour {
                     Debug.Log("timeout");
 
                     //trigger - timeout
-                    trigger = true;
-                    triggerValue = 41 + targetIndex;
+                    onSessionTrigger.Invoke(SessionTrigger.TimeoutTrigger, targetIndex);
 
                     //play audio
                     PlayerAudio.instance.PlayErrorClip();
 
                     //disable robot movement
-                    robotMovement.enabled = false;
+                    robotMovement.SetMovementActive(false);
                     cueController.HideHint();
                     rewards[targetIndex].SetActive(false); // disable reward
 
@@ -533,8 +529,6 @@ public class BasicLevelController : MonoBehaviour {
                     //                    {
                     //                        yield return new WaitForSeconds(0.05f);
                     //                    }
-
-
 
                     totalTrialCounter++;
                     yield return new WaitForSeconds(timeoutDuration);
@@ -549,14 +543,14 @@ public class BasicLevelController : MonoBehaviour {
                     //      StopTimeoutTimer();
 
                     //disable robot movement
-                    //    robotMovement.enabled = false;
+                    //robotMovement.SetMovementActive(false);
 
                     //    StartCoroutine("FadeOutBeforeLevelEnd");
                     //}
                     //else
                     //{
                     //    //disable robot movement
-                    //    robotMovement.enabled = false;
+                    //      robotMovement.SetMovementActive(false);
                     //
                     //    nextRewardIndex = 0;
                     //
@@ -598,7 +592,7 @@ public class BasicLevelController : MonoBehaviour {
                     //triggerValue = 1;
 
                     ////disable robot movement
-                    //robotMovement.enabled = true;
+                    //robotMovement.SetMovementActive(true);
 
                     ////reset elapsed time
                     //elapsedTime = 0;
@@ -626,4 +620,11 @@ public class BasicLevelController : MonoBehaviour {
             StopCoroutine(timeoutTimer);
         }
     }
+
+    //inner classes
+
+    /// <summary>
+    /// Broadcasts the SessionTrigger and the current reward index
+    /// </summary>
+    public class SessionTriggerEvent : UnityEvent<SessionTrigger, int> { }
 }

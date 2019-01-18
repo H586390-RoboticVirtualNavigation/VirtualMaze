@@ -14,8 +14,11 @@ public class NoTeleportLevelController : BasicLevelController
             if (entered.mainReward && !rewards[lastValve].Equals(entered))
             {
                 EventManager.TriggerEvent("Reward");
-                trigger = true;
-                triggerValue = 2;
+
+                //trigger = true;
+                //triggerValue = 2;
+                onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
+
                 lastValve = thisRewardIndex;
                 PlayerAudio.instance.PlayRewardClip();
             }
@@ -103,8 +106,9 @@ public class NoTeleportLevelController : BasicLevelController
         robotMovement.enabled = true;
 
         //trigger - new trial
-        trigger = true;
-        triggerValue = 1;
+        //trigger = true;
+        //triggerValue = 1;
+        onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
 
         //reset elapsed time
         StartCoroutine("Timeout");
@@ -127,8 +131,9 @@ public class NoTeleportLevelController : BasicLevelController
             {
 
                 //trigger - timeout
-                trigger = true;
-                triggerValue = 4;
+                //trigger = true;
+                //triggerValue = 4;
+                onSessionTrigger.Invoke(SessionTrigger.TimeoutTrigger, targetIndex);
 
                 //play audio
                 PlayerAudio.instance.PlayErrorClip();
@@ -154,8 +159,9 @@ public class NoTeleportLevelController : BasicLevelController
                 //                                                trialCounter);
 
                 //trigger - start trial
-                trigger = true;
-                triggerValue = 1;
+                //trigger = true;
+                //triggerValue = 1;
+                onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
 
                 //disable robot movement
                 robotMovement.enabled = true;

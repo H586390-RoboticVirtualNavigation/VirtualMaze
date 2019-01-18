@@ -2,6 +2,12 @@
 using System;
 using UnityEngine.Events;
 
+/// <summary>
+/// Script to control the movement of the robot
+/// 
+/// If robotmovement.enable = false, the script will be unable to broadcast the robot's location
+/// therefore, use SetMovmentActive(bool active)
+/// </summary>
 public class RobotMovement : ConfigurableComponent {
     //delegate to broadcast current movement position of Robot
     public delegate void RobotMovementEvent(Transform transform);
@@ -42,8 +48,8 @@ public class RobotMovement : ConfigurableComponent {
     }
 
     private Rigidbody rigidBody;
+    private bool enableMovement;
 
-    //default values
     public float rotationSpeed;
     public float movementSpeed;
 
@@ -66,6 +72,9 @@ public class RobotMovement : ConfigurableComponent {
 
     // Update is called once per frame
     void Update() {
+        //do not do anything if movement disabled
+        if (!enableMovement) return;
+
         float vertical;
         float horizontal;
 
@@ -121,6 +130,14 @@ public class RobotMovement : ConfigurableComponent {
         Quaternion startrot = transform.rotation;
         startrot.y = waypoint.rotation.y;
         transform.rotation = startrot;
+    }
+
+    /// <summary>
+    /// Enables or disables the movement of the robot
+    /// </summary>
+    /// <param name="enable"></param>
+    public void SetMovementActive(bool enable) {
+        enableMovement = enable;
     }
 
     public bool FireRaycastFromViewCenter(float maxDistance, out RaycastHit hit) {

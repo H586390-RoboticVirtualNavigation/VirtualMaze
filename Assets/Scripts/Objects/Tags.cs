@@ -2,6 +2,9 @@
 /// Static class to hold all default tags and user defined tags.
 /// 
 /// User defined tags can be added via Edit > Project Settings > Tags and Layers
+/// 
+/// Any changes to the user defined tags must be reflected in "Tags and Layers" and
+/// vice versa.
 /// </summary>
 public static class Tags {
     //default tags
@@ -19,4 +22,7 @@ public static class Tags {
     //All rewardAreas Gameobjects should be tagged as a RewardArea so that BasicLevelControllers
     //and their extended classes can find them easily.
     public static readonly string RewardArea = "RewardArea";
+
+    // BasicLevelController Gameobjects and their extended classes should be tagged with this
+    public static readonly string LevelController = "LevelController";
 }

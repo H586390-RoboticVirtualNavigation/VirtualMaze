@@ -123,23 +123,18 @@ public class ExperimentLogger {
     }
 
     /// <summary>
-    /// Log movement with trigger default to 0.
+    /// Log movement with no trigger
     /// </summary>
     /// <param name="robot">transform of the robot GameObject</param>
     public void LogMovement(Transform robot) {
-        LogMovement(0, robot);
+        LogMovement(SessionTrigger.NoTrigger, 0, robot);
     }
 
-    /// <summary>
-    /// Log movement with a trigger value.
-    /// </summary>
-    /// <param name="trigger">trigger value to log</param>
-    /// <param name="robot">transform of the robot GameObject</param>
-    public void LogMovement(int trigger, Transform robot) {
+    public void LogMovement(SessionTrigger trigger, int rewardIndex, Transform robot) {
         WriteLine(
             string.Format(
                 Format_LogRobotMovement,
-                trigger,
+                (int)trigger + rewardIndex,
                 Time.deltaTime,
                 robot.position.x,
                 robot.position.z,
