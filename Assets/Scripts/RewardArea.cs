@@ -28,8 +28,7 @@ public class RewardArea : MonoBehaviour {
     /// <summary>
     /// Minimum valid distance from the target.
     /// </summary>
-    [Range(0.1f, 2f)]
-    public float distance = 1;
+    private float distance = 2f;
 
     /// <summary>
     /// All rewards use the same trigger event. RewardArea script will be returned for extra processing
@@ -47,9 +46,7 @@ public class RewardArea : MonoBehaviour {
         GameObject robot = GameObject.FindWithTag(Tags.Player);
         robotMovement = robot.GetComponent<RobotMovement>();
     }
-    private void Update() {
-        Debug.DrawRay(transform.position, transform.forward * distance);
-    }
+
     //start listening to robot it enters trigger area
     private void OnTriggerEnter(Collider other) {
         robotMovement.OnRobotMoved += CheckFieldOfView;
@@ -65,13 +62,22 @@ public class RewardArea : MonoBehaviour {
 
         float angle = Vector3.Angle(direction, robot.forward);
 
-        Debug.DrawRay(robot.position, robot.forward * distance, Color.black);
+        //uncomment to see the required view in the scene tab
+        Vector3 left = Quaternion.AngleAxis(-fieldOfViewAngle / 2f, Vector3.up) * robot.forward * distance;
+        Vector3 right = Quaternion.AngleAxis(fieldOfViewAngle / 2f, Vector3.up) * robot.forward * distance;
+        Debug.DrawRay(robot.position, left, Color.black);
+        Debug.DrawRay(robot.position, right, Color.black);
         Debug.DrawRay(robot.position, direction.normalized * distance, Color.cyan);
 
-        //robot fires raycast to check if the robot is close enough to the target
-        if (angle < fieldOfViewAngle * 0.5f) {//only fires raycast if target is in field of view
-            if (robotMovement.FireRaycastFromViewCenter(distance, out RaycastHit hit)) {
+        //check if in angle
+        if (angle < fieldOfViewAngle * 0.5f) {
+            //checks if close enough
+            if (Vector3.Distance(target.position, robot.position) <= distance) {
+                Debug.Log("Reward!!!");
                 OnRewardTriggered?.Invoke(this);
+            }
+            else {
+                Debug.Log("inView!!!" + Vector3.Distance(target.position, robot.position) + " " + distance);
             }
         }
     }

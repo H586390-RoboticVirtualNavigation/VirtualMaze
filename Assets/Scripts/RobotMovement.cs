@@ -48,7 +48,7 @@ public class RobotMovement : ConfigurableComponent {
     }
 
     private Rigidbody rigidBody;
-    private bool enableMovement;
+    private bool enableMovement = true;
 
     public float rotationSpeed;
     public float movementSpeed;

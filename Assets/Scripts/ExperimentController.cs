@@ -189,7 +189,7 @@ public class ExperimentController : ConfigurableComponent {
                 // logs need rewardIndex to be 1 based
                 logger.LogMovement(triggerCache, rewardIndexCache + 1, t);
                 // Consume the trigger
-                triggerCache = SessionTrigger.NoTrigger; 
+                triggerCache = SessionTrigger.NoTrigger;
                 break;
         }
     }
@@ -199,6 +199,15 @@ public class ExperimentController : ConfigurableComponent {
         triggerCache = trigger;
         rewardIndexCache = targetIndex;
         Debug.Log(trigger);
+    }
+
+    public void ActivateExternalDisplay() {
+        if (Display.displays.Length > 1) {
+            Display d = Display.displays[1];
+            if (!d.active) {
+                d.Activate();
+            }
+        }
     }
 
     public override Type GetSettingsType() {

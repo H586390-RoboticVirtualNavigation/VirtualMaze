@@ -24,7 +24,7 @@ public class GameController : MonoBehaviour {
         }
     }
 
-    public GameObject[] listToDisable;
+    //public GameObject[] listToDisable;
 
     //drag in from editor
     public GameObject sessions;

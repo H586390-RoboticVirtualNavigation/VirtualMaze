@@ -1,16 +1,15 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.Events;
 using System.Runtime.InteropServices; //important for DLLs
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Ports;
+using SREyelink32;
+
 
 public class BasicLevelController : MonoBehaviour {
     private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent";
-
+    
     [DllImport("eyelink_core64")]
     private static extern int eyemsg_printf(string message);
 
@@ -119,6 +118,7 @@ public class BasicLevelController : MonoBehaviour {
             out Session session,
             out float timeoutDuration
             );
+
 
         //convert to seconds
         this.trialTimeLimit = trialTimeLimit / 1000f;
@@ -283,7 +283,7 @@ public class BasicLevelController : MonoBehaviour {
             return;
         }
 
-        cueController.HideHint(); // remove peripheral cue
+        cueController.HideHint(); // remove hint
 
         //Reward entered = Reward.rewardTriggered;
         Debug.Log(rewardArea.target.name); // log reward name

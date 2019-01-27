@@ -266,26 +266,3 @@ public class ScreenSaver : MonoBehaviour {
 		File.WriteAllBytes (filename, bytes);
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
