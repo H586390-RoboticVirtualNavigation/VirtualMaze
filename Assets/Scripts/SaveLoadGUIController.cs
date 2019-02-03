@@ -18,6 +18,7 @@ public class SaveLoadGUIController : MonoBehaviour {
 
         if (string.IsNullOrEmpty(settingName)) {
             Debug.LogWarning("settingName is empty");
+            Console.WriteError("settingName is empty");
             return;
         }
 

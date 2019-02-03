@@ -23,12 +23,12 @@ public class RewardArea : MonoBehaviour {
     /// <summary>
     /// viewing angle required to register if the target is in sight
     /// </summary>
-    public float fieldOfViewAngle = 110f;
+    public static float requiredViewAngle = 110f;
 
     /// <summary>
     /// Minimum valid distance from the target.
     /// </summary>
-    private float distance = 2f;
+    public static float requiredDistance = 2f;
 
     /// <summary>
     /// All rewards use the same trigger event. RewardArea script will be returned for extra processing
@@ -63,21 +63,21 @@ public class RewardArea : MonoBehaviour {
         float angle = Vector3.Angle(direction, robot.forward);
 
         //uncomment to see the required view in the scene tab
-        Vector3 left = Quaternion.AngleAxis(-fieldOfViewAngle / 2f, Vector3.up) * robot.forward * distance;
-        Vector3 right = Quaternion.AngleAxis(fieldOfViewAngle / 2f, Vector3.up) * robot.forward * distance;
+        Vector3 left = Quaternion.AngleAxis(-requiredViewAngle / 2f, Vector3.up) * robot.forward * requiredDistance;
+        Vector3 right = Quaternion.AngleAxis(requiredViewAngle / 2f, Vector3.up) * robot.forward * requiredDistance;
         Debug.DrawRay(robot.position, left, Color.black);
         Debug.DrawRay(robot.position, right, Color.black);
-        Debug.DrawRay(robot.position, direction.normalized * distance, Color.cyan);
+        Debug.DrawRay(robot.position, direction.normalized * requiredDistance, Color.cyan);
 
-        //check if in angle
-        if (angle < fieldOfViewAngle * 0.5f) {
+        //check if in view angle
+        if (angle < requiredViewAngle * 0.5f) {
             //checks if close enough
-            if (Vector3.Distance(target.position, robot.position) <= distance) {
+            if (Vector3.Distance(target.position, robot.position) <= requiredDistance) {
                 Debug.Log("Reward!!!");
                 OnRewardTriggered?.Invoke(this);
             }
             else {
-                Debug.Log("inView!!!" + Vector3.Distance(target.position, robot.position) + " " + distance);
+                Debug.Log("inView!!!" + Vector3.Distance(target.position, robot.position) + " " + requiredDistance);
             }
         }
     }

@@ -43,17 +43,9 @@ public class ExperimentController : ConfigurableComponent {
         }
     }
 
-    public bool IsTrialIntermissionFixed { get; set; }
     public bool PostersEnabled { get; set; }
-
-    public int FixedTrialIntermissionDuration { get; set; }
-    public int MaxTrialIntermissionDuration { get; set; }
-    public int MinTrialIntermissionDuration { get; set; }
-
     public string SaveLocation { get; set; }
     public int SessionIntermissionDuration { get; set; }
-    public int TimeoutDuration { get; set; }
-    public int TimeLimitDuration { get; set; }
 
     private bool started = false;
     private ExperimentLogger logger = null;
@@ -85,7 +77,6 @@ public class ExperimentController : ConfigurableComponent {
         if (scene.name == "Start") return;
 
         //add listener to the session
-        //BasicLevelController.onSessionFinishEvent.AddListener(OnSessionEnd);
         GameObject levelControllerObject = GameObject.FindWithTag(Tags.LevelController);
         if (levelControllerObject == null) {
             Debug.LogError("No GameObject found with the tag " + Tags.LevelController);
@@ -94,6 +85,7 @@ public class ExperimentController : ConfigurableComponent {
         else {
             BasicLevelController levelController =
                 levelControllerObject.GetComponent<BasicLevelController>();
+            Debug.Log(levelController.GetType().Name);
             levelController.onSessionFinishEvent.AddListener(OnSessionEnd);
             levelController.onSessionTrigger.AddListener(OnSessionTriggered);
         }
@@ -143,12 +135,12 @@ public class ExperimentController : ConfigurableComponent {
             }
 
             //prepare data for the session
-            SessionInfo.SetSessionInfo(TimeLimitDuration, session, TimeoutDuration);
+            SessionInfo.SetSessionInfo(session);
 
             //start the scene
             SceneManager.LoadScene(session.level, LoadSceneMode.Single);
 
-            //GuiController.experimentStatus = string.Format("session {0} started", sessionIndex);
+            Console.Write(string.Format("session {0} started", sessionIndex));
 
         }
         else {
@@ -159,7 +151,7 @@ public class ExperimentController : ConfigurableComponent {
 
     public void StopExperiment() {
         Debug.Log("Experiment Stopped");
-        //coroutine will be not be null if it is still running
+        //coroutine will be not be null if coroutine is still running
         if (goNextLevelCoroutine != null) {
             StopCoroutine(goNextLevelCoroutine);
         }
@@ -176,6 +168,7 @@ public class ExperimentController : ConfigurableComponent {
     }
 
     private void OnRobotMoved(Transform t) {
+        //needs to be cached as this thid data is logged on every robotmovement.
         switch (triggerCache) {
             case SessionTrigger.NoTrigger:
                 logger.LogMovement(t);
@@ -219,23 +212,23 @@ public class ExperimentController : ConfigurableComponent {
     }
 
     public override ComponentSettings GetCurrentSettings() {
-        return new Settings(IsTrialIntermissionFixed, PostersEnabled,
-            FixedTrialIntermissionDuration, MaxTrialIntermissionDuration,
-            MinTrialIntermissionDuration, SessionIntermissionDuration,
-            TimeoutDuration, TimeLimitDuration, SaveLocation);
+        return new Settings(Session.isTrailIntermissionRandom, PostersEnabled,
+            Session.fixedTrialIntermissionDuration, Session.maxTrialIntermissionDuration,
+            Session.minTrialIntermissionDuration, SessionIntermissionDuration,
+            Session.timeoutDuration, Session.trialTimeLimit, SaveLocation);
     }
 
     protected override void ApplySettings(ComponentSettings loadedSettings) {
         Settings settings = (Settings)loadedSettings;
 
-        IsTrialIntermissionFixed = settings.isTrialIntermissionFixed;
+        Session.isTrailIntermissionRandom = settings.isTrialIntermissionFixed;
         PostersEnabled = settings.postersEnabled;
-        FixedTrialIntermissionDuration = settings.fixedTrialIntermissionDuration;
-        MaxTrialIntermissionDuration = settings.maxTrialIntermissionDuration;
-        MinTrialIntermissionDuration = settings.minTrialIntermissionDuration;
+        Session.fixedTrialIntermissionDuration = settings.fixedTrialIntermissionDuration;
+        Session.maxTrialIntermissionDuration = settings.maxTrialIntermissionDuration;
+        Session.minTrialIntermissionDuration = settings.minTrialIntermissionDuration;
         SessionIntermissionDuration = settings.sessionIntermissionDuration;
-        TimeoutDuration = settings.timeoutDuration;
-        TimeLimitDuration = settings.timeLimitDuration;
+        Session.timeoutDuration = settings.timeoutDuration;
+        Session.trialTimeLimit = settings.timeLimitDuration;
         SaveLocation = settings.saveLocation;
     }
 

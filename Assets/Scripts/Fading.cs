@@ -5,13 +5,16 @@ using UnityEngine.UI;
 public class Fading : MonoBehaviour {
 
 	private CanvasGroup fade;
-	public bool fadeOutDone;
-	public bool fadeInDone;
+    private WaitForSecondsRealtime timeIncrements = new WaitForSecondsRealtime(0.01f);
+	public bool fadeOutDone { get; private set; }
+	public bool fadeInDone { get; private set; }
+    public bool isFadedOut { get; private set; }
 
-	void Awake() {
-		fade = this.gameObject.GetComponent<CanvasGroup> ();
+    void Awake() {
+		fade = GetComponent<CanvasGroup> ();
 		fadeInDone = true;
 		fadeOutDone = true;
+        isFadedOut = true;
 	}
 
 	public Coroutine FadeIn(){
@@ -23,27 +26,35 @@ public class Fading : MonoBehaviour {
 	}
 
 	IEnumerator _FadeOut(){
+        if (isFadedOut) {
+            yield break;
+        }
 		fadeOutDone = false;
+        isFadedOut = true;
 		//wait for any fades to be done
 		while (fadeInDone == false) {
-			yield return new WaitForSeconds(.01f);
+			yield return timeIncrements;
 		}
 		while(fade.alpha < 1.0f){
 			fade.alpha += 0.02f;
-			yield return new WaitForSeconds(.01f);
+			yield return timeIncrements;
 	
 		}
 		fadeOutDone = true;
 	}
 	
 	IEnumerator _FadeIn(){
-		fadeInDone = false;
+        if (!isFadedOut) {
+            yield break;
+        }
+        isFadedOut = false;
+        fadeInDone = false;
 		while (fadeOutDone == false) {
-			yield return new WaitForSeconds(.01f);
+			yield return timeIncrements;
 		}
 		while(fade.alpha > 0f){
 			fade.alpha -= 0.02f;
-			yield return new WaitForSeconds(.01f);
+			yield return timeIncrements;
 		}
 		fadeInDone = true;
 	}

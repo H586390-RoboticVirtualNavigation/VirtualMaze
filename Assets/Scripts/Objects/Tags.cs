@@ -15,14 +15,18 @@ public static class Tags {
     public static readonly string Player = "Player";
     public static readonly string GameController = "GameController";
 
-    //user defined tags
+    // user defined tags
     public static readonly string Reward = "Reward";
     public static readonly string CalibPoint = "CalibPoint";
 
-    //All rewardAreas Gameobjects should be tagged as a RewardArea so that BasicLevelControllers
+    // All rewardAreas Gameobjects should be tagged as a RewardArea so that BasicLevelControllers
     //and their extended classes can find them easily.
     public static readonly string RewardArea = "RewardArea";
 
     // BasicLevelController Gameobjects and their extended classes should be tagged with this
     public static readonly string LevelController = "LevelController";
+
+    // Experiement Console Tag. GameObjects with a Text Component to be used as an Experiment Console should
+    // have this tag.
+    public  static readonly string Console = "Console";
 }

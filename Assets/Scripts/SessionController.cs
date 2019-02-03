@@ -78,6 +78,8 @@ public class SessionController : ConfigurableComponent {
 
     protected override void ApplySettings(ComponentSettings loadedSettings) {
         Settings s = (Settings)loadedSettings;
-        Sessions = new List<Session>(s.sessions);
+        //fill sessions with the saved sessions.
+        Sessions.Clear();
+        Sessions.AddRange(s.sessions);
     }
 }

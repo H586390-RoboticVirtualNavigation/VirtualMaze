@@ -9,20 +9,23 @@ public class RewardsController : ConfigurableComponent {
         public string portNum;
         public int rewardDurationMilliSecs;
         public float requiredViewAngle;
+        public float requiredDistance;
 
-        public Settings(string portNum, int rewardDurationMilliSecs, float requiredViewAngle) {
+        public Settings(string portNum, int rewardDurationMilliSecs, float requiredViewAngle,
+            float requiredDistance) {
             this.portNum = portNum;
             this.rewardDurationMilliSecs = rewardDurationMilliSecs;
             this.requiredViewAngle = requiredViewAngle;
+            this.requiredDistance = requiredDistance;
         }
     }
 
     public string portNum;
     public int rewardDurationMilliSecs;
-    public float requiredViewAngle;
 
     private const int buadRate = 9600;
     private static SerialPort rewardSerial;
+    
     public bool IsPortOpen { get; private set; }
 
     public bool RewardValveOn() {
@@ -75,11 +78,11 @@ public class RewardsController : ConfigurableComponent {
     }
 
     public override ComponentSettings GetCurrentSettings() {
-        return new Settings(portNum, rewardDurationMilliSecs, requiredViewAngle);
+        return new Settings(portNum, rewardDurationMilliSecs, RewardArea.requiredViewAngle, RewardArea.requiredViewAngle);
     }
 
     public override ComponentSettings GetDefaultSettings() {
-        return new Settings("", 1000, 0.8f);
+        return new Settings("", 1000, 0.8f, 1f);
     }
 
     public override Type GetSettingsType() {
@@ -94,6 +97,7 @@ public class RewardsController : ConfigurableComponent {
 
         portNum = settings.portNum;
         rewardDurationMilliSecs = settings.rewardDurationMilliSecs;
-        requiredViewAngle = settings.requiredViewAngle;
+        RewardArea.requiredViewAngle = settings.requiredViewAngle;
+        RewardArea.requiredDistance = settings.requiredDistance;
     }
 }

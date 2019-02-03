@@ -67,18 +67,19 @@ public class ExperimentGUIController : SettingsGUIController {
     }
 
     private void OnFixedTrialIntermissionToggleChanged(bool value) {
-        experimentController.IsTrialIntermissionFixed = value;
+        Session.isTrailIntermissionRandom = !value;
     }
     private void OnRandomTrialIntermissionToggleChanged(bool value) {
-        experimentController.IsTrialIntermissionFixed = !value;
+        Session.isTrailIntermissionRandom = value;
     }
 
     private void OnTimeLimitFieldEndEdit(string text) {
         if (IsValidDuration(text, out int duration)) {
-            experimentController.TimeLimitDuration = duration;
+            Session.trialTimeLimit = duration;
         }
         else {
-            text = experimentController.TimeLimitDuration.ToString();
+            text = Session.trialTimeLimit.ToString();
+            Console.WriteError("Invalid Value");
         }
     }
 
@@ -93,37 +94,37 @@ public class ExperimentGUIController : SettingsGUIController {
 
     private void OnTimeoutDurationFieldEndEdit(string text) {
         if (IsValidDuration(text, out int duration)) {
-            experimentController.TimeoutDuration = duration;
+            Session.timeoutDuration = duration;
         }
         else {
-            text = experimentController.TimeoutDuration.ToString();
+            text = Session.timeoutDuration.ToString();
         }
     }
 
     private void OnTrialIntermissionFixedEndEdit(string text) {
         if (IsValidDuration(text, out int duration)) {
-            experimentController.FixedTrialIntermissionDuration = duration;
+            Session.fixedTrialIntermissionDuration = duration;
         }
         else {
-            text = experimentController.FixedTrialIntermissionDuration.ToString();
+            text = Session.fixedTrialIntermissionDuration.ToString();
         }
     }
 
     private void OnTrialIntermissionMaxEndEdit(string text) {
         if (IsValidDuration(text, out int duration)) {
-            experimentController.MaxTrialIntermissionDuration = duration;
+            Session.maxTrialIntermissionDuration = duration;
         }
         else {
-            text = experimentController.MaxTrialIntermissionDuration.ToString();
+            text = Session.maxTrialIntermissionDuration.ToString();
         }
     }
 
     private void OnTrialIntermissionMinEndEdit(string text) {
         if (IsValidDuration(text, out int duration)) {
-            experimentController.MinTrialIntermissionDuration = duration;
+            Session.minTrialIntermissionDuration = duration;
         }
         else {
-            text = experimentController.MinTrialIntermissionDuration.ToString();
+            text = Session.minTrialIntermissionDuration.ToString();
         }
     }
 
@@ -156,27 +157,27 @@ public class ExperimentGUIController : SettingsGUIController {
     }
 
     public override void UpdateSettingsGUI() {
-        trialIntermissionFixedField.text = experimentController.FixedTrialIntermissionDuration.ToString();
-        trialIntermissionMaxField.text = experimentController.MaxTrialIntermissionDuration.ToString();
-        trialIntermissionMinField.text = experimentController.MinTrialIntermissionDuration.ToString();
+        trialIntermissionFixedField.text = Session.fixedTrialIntermissionDuration.ToString();
+        trialIntermissionMaxField.text = Session.maxTrialIntermissionDuration.ToString();
+        trialIntermissionMinField.text = Session.minTrialIntermissionDuration.ToString();
 
         saveLocationField.text = experimentController.SaveLocation;
         sessionIntermissionDurationField.text = experimentController.SessionIntermissionDuration.ToString();
-        timeoutDurationField.text = experimentController.TimeoutDuration.ToString();
-        timeLimitField.text = experimentController.TimeLimitDuration.ToString();
+        timeoutDurationField.text = Session.timeoutDuration.ToString();
+        timeLimitField.text = Session.trialTimeLimit.ToString();
 
         //to bypass ToggleGroup bug
-        if (experimentController.IsTrialIntermissionFixed) {
-            fixedTrailIntermissionToggle.isOn = true;
+        if (Session.isTrailIntermissionRandom) {
+            randomTrailIntermissionToggle.isOn = true;
         }
         else {
-            randomTrailIntermissionToggle.isOn = true;
+            fixedTrailIntermissionToggle.isOn = true;
         }
 
         posterEnableValid.isOn = experimentController.PostersEnabled;
         saveLocationValid.isOn = IsValidSaveLocation(experimentController.SaveLocation);
         sessionIntermissionValid.isOn = IsValidDuration(experimentController.SessionIntermissionDuration);
-        timeoutDurationValid.isOn = IsValidDuration(experimentController.TimeoutDuration);
-        timeLimitValid.isOn = IsValidDuration(experimentController.TimeLimitDuration);
+        timeoutDurationValid.isOn = IsValidDuration(Session.trialTimeLimit);
+        timeLimitValid.isOn = IsValidDuration(Session.trialTimeLimit);
     }
 }

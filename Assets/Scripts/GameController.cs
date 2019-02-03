@@ -9,7 +9,7 @@ public class GameController : MonoBehaviour {
     //UPDATE THESE WITH EACH COMPILATION
     public static readonly int versionNum = 4;
     public static readonly string versionInfo = "20171221 Taxi Continuous v" + versionNum;
-    public static readonly string pportInfo = "v4" + versionNum;
+    public static readonly string pportInfo = "v" + versionNum;
 
     private static GameController _instance;
     public static GameController instance {

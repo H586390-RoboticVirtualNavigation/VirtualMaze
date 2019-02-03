@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,8 +12,9 @@ public class RewardsGUIController : SettingsGUIController {
     public InputField portNumField;
     public InputField rewardDurationField;
     public Toggle rewardDurationValid;
-    public MySliderScript requiredViewAngleSlider;
     public Text valveStateText;
+    public MySliderScript requiredViewAngleSlider;
+    public MySliderScript requiredDistanceSlider;
     public RewardsController rewardsController;
 
     private void Awake() {
@@ -20,6 +22,11 @@ public class RewardsGUIController : SettingsGUIController {
         rewardDurationField.onEndEdit.AddListener(OnDurationFieldEndEdit);
 
         requiredViewAngleSlider.OnValueChanged.AddListener(OnRequiredViewAngleChanged);
+        requiredDistanceSlider.OnValueChanged.AddListener(OnRequiredDistanceChanged);
+    }
+
+    private void OnRequiredViewAngleChanged(float value) {
+        RewardArea.requiredViewAngle = value;
     }
 
     public void ToggleValveState() {
@@ -29,8 +36,7 @@ public class RewardsGUIController : SettingsGUIController {
                 SetInputFieldValid(portNumField);
             }
             else {
-                //unable to open serial
-                //experimentStatus = "cant open reward serial";
+                Console.Write("cant open reward serial");
                 SetInputFieldInvalid(portNumField);
             }
         }
@@ -51,8 +57,8 @@ public class RewardsGUIController : SettingsGUIController {
         }
     }
 
-    public void OnRequiredViewAngleChanged(float value) {
-        rewardsController.requiredViewAngle = value;
+    public void OnRequiredDistanceChanged(float value) {
+        RewardArea.requiredDistance = value;
     }
 
     public override void UpdateSettingsGUI() {
@@ -63,7 +69,8 @@ public class RewardsGUIController : SettingsGUIController {
         rewardDurationField.text = millis;
         rewardDurationValid.isOn = IsDurationInputValid(millis);
 
-        requiredViewAngleSlider.value = rewardsController.requiredViewAngle;
+        requiredViewAngleSlider.value = RewardArea.requiredViewAngle;
+        requiredDistanceSlider.value = RewardArea.requiredDistance;
     }
 
     private bool IsDurationInputValid(string duration) {

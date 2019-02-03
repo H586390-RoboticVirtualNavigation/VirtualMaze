@@ -1,12 +1,12 @@
-﻿using UnityEngine;
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
+using Random = UnityEngine.Random;
 
 /// <summary>
-/// C# class to encapsulate the data required to define a session
-/// </summary>
+/// C# class to encapsulate the data required to define a session.
 /// 
+/// This Class represents an experiemnt session and dictates the duration
+/// to between trial runs.
+/// </summary>
 [Serializable]
 public class Session {
     /// <summary>
@@ -19,6 +19,18 @@ public class Session {
     /// Special level to signify a small random range of other levels
     /// </summary>
     public const String RandomLevel = "Random";
+
+    // Configs for all sessions (Class variables)
+    public static int timeoutDuration;
+    public static int trialTimeLimit; // time to complete each trial.
+
+    // flag to determine if trail Intermission Duration is randomised or not
+    public static bool isTrailIntermissionRandom = false;
+    public static int fixedTrialIntermissionDuration;
+
+    //Values for random trialIntermissionDuration
+    public static int maxTrialIntermissionDuration;
+    public static int minTrialIntermissionDuration;
 
     /// <summary>
     /// Array of all possible Levels to be used.
@@ -99,7 +111,7 @@ public class Session {
                 _level = value;
             }
             else {
-                throw new LevelDoesNotExistException();
+                throw new ArgumentOutOfRangeException("Level Must Exist in AllLevels array");
             }
         }
     }
@@ -121,23 +133,29 @@ public class Session {
         this.level = level;
     }
 
-
     public static string GetRandomLRFLevel() {
-        int random = UnityEngine.Random.Range(0, RandomLRFLevels.Length);
+        int random = Random.Range(0, RandomLRFLevels.Length);
         
         return RandomLRFLevels[random];
     }
 
     public static string GetRandomLevel() {
-        int random = UnityEngine.Random.Range(0, AllLevels.Length);
+        int random = Random.Range(0, AllLevels.Length);
 
         return AllLevels[random];
     }
 
-    public class LevelDoesNotExistException : Exception {
-        public LevelDoesNotExistException() { }
-        public LevelDoesNotExistException(string message) : base(message) { }
-        public LevelDoesNotExistException(string message, Exception inner) : base(message, inner) { }
+    /// <summary>
+    /// Returns the amount of time to delay, Fixed or Randomised.
+    /// </summary>
+    /// <returns></returns>
+    public static float getTrailIntermissionDuration() {
+        if (isTrailIntermissionRandom) {
+            return Random.Range(minTrialIntermissionDuration, maxTrialIntermissionDuration);
+        }
+        else {
+            return fixedTrialIntermissionDuration;
+        }
     }
 
     public override string ToString() {

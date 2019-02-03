@@ -60,7 +60,7 @@ public class RobotMovement : ConfigurableComponent {
     public bool isLeftEnabled;
 
     //drag in Unity Editior
-    public Camera rayCaster;// camera to shoot the ray from.
+    public Camera player_camera;// camera to shoot the ray from.
 
     //movement broadcaster
     public event RobotMovementEvent OnRobotMoved;
@@ -107,19 +107,31 @@ public class RobotMovement : ConfigurableComponent {
     }
 
     /// <summary>
-    /// Checks if object should rotate either left, right or both.
+    /// Checks if object should rotate either left, right, or both.
     /// </summary>
+    /// <param name="horizontal">Direction to rotate. Negative values means rotate left</param>
     /// <returns>True if should rotate, false if not</returns>
     private bool ShouldRotate(float horizontal) {
         return (horizontal < 0 && isLeftEnabled) ||
             (horizontal > 0 && isRightEnabled);
     }
 
+    /// <summary>
+    /// Checks if object should move either forward, reverse, or both.
+    /// </summary>
+    /// <param name="vertical">Direction to move. Positive values means move forward</param>
+    /// <returns>True if should move, false if not</returns>
     private bool ShouldMove(float vertical) {
         return (vertical < 0 && isReverseEnabled) ||
             (vertical > 0 && isForwardEnabled);
     }
 
+    /// <summary>
+    /// Move robot to the specified waypoint. 
+    /// 
+    /// The rotation of the robot is maintained.
+    /// </summary>
+    /// <param name="waypoint"></param>
     public void MoveToWaypoint(Transform waypoint) {
         Vector3 startpos = waypoint.position;
         //do not want to change y axis of robot
@@ -135,14 +147,20 @@ public class RobotMovement : ConfigurableComponent {
     /// <summary>
     /// Enables or disables the movement of the robot
     /// </summary>
-    /// <param name="enable"></param>
+    /// <param name="enable">true to enable</param>
     public void SetMovementActive(bool enable) {
         enableMovement = enable;
     }
 
+    /// <summary>
+    /// Fire a raycast from the center of the screen of the subject.
+    /// </summary>
+    /// <param name="maxDistance">Max distance to check for a hit</param>
+    /// <param name="hit">Resultant hit, null if raycast didnot hit anything</param>
+    /// <returns>True if somehting was hit</returns>
     public bool FireRaycastFromViewCenter(float maxDistance, out RaycastHit hit) {
-        Ray r = rayCaster.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-        Debug.DrawRay(r.origin, r.direction, Color.blue);
+        Ray r = player_camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        //Debug.DrawRay(r.origin, r.direction, Color.blue);
         return Physics.Raycast(r, out hit, maxDistance);
     }
 
