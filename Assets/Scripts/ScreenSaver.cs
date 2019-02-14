@@ -63,24 +63,21 @@ public class ScreenSaver : MonoBehaviour {
 	}
 
 	public void onBrowseSession(){
-		fb.InitWithDirectory (Application.dataPath);
 		fb.OnFileBrowserExit += ChooseSession;
-		fb.display = true;
+		fb.Show(Application.dataPath);
 		display = false;
 	}
 
 	public void onBrowseFolder(){
-		fb.InitWithDirectory (Application.dataPath);
 		fb.OnFileBrowserExit += ChooseFolder;
-		fb.display = true;
-		display = false;
+        fb.Show(Application.dataPath);
+        display = false;
 	}
 
 	void ChooseSession(string file){
         fb.OnFileBrowserExit -= ChooseSession;
         if (string.IsNullOrEmpty(file)) return;
 		
-		fb.display = false;
 		display = true;
 		sessionInput.text = file;
 		if (File.Exists (file)) {
@@ -105,7 +102,6 @@ public class ScreenSaver : MonoBehaviour {
         fb.OnFileBrowserExit -= ChooseFolder;
         if (string.IsNullOrEmpty(file)) { return; }
 		
-		fb.display = false;
 		display = true;
 		folderInput.text = file;
 		if (Directory.Exists (file)) {

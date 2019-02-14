@@ -47,7 +47,7 @@ public class ExperimentController : ConfigurableComponent {
     public string SaveLocation { get; set; }
     public int SessionIntermissionDuration { get; set; }
 
-    private bool started = false;
+    public bool started { get; private set; }  = false;
     private ExperimentLogger logger = null;
     private RobotMovement robot;
     //coroutine reference for properly stopping coroutine
@@ -56,6 +56,10 @@ public class ExperimentController : ConfigurableComponent {
     // Caches the SessionTrigger for logging the trigger with the robot movement
     private SessionTrigger triggerCache = SessionTrigger.NoTrigger;
     private int rewardIndexCache = 0; // value will be ignored when NoTrigger, 0 based
+    private BasicLevelController levelController;
+    private bool isPaused = false;
+
+    private WaitUntil waitIfPaused; 
 
     //drag in Unity Editor
     public SessionController sessionController;
@@ -63,6 +67,7 @@ public class ExperimentController : ConfigurableComponent {
     protected override void Awake() {
         base.Awake();
         robot = GameObject.FindGameObjectWithTag(Tags.Player).GetComponent<RobotMovement>();
+        waitIfPaused = new WaitUntil(() => !isPaused);
     }
 
     private void OnEnable() {
@@ -83,22 +88,41 @@ public class ExperimentController : ConfigurableComponent {
             StopExperiment();
         }
         else {
-            BasicLevelController levelController =
+            levelController =
                 levelControllerObject.GetComponent<BasicLevelController>();
             Debug.Log(levelController.GetType().Name);
             levelController.onSessionFinishEvent.AddListener(OnSessionEnd);
             levelController.onSessionTrigger.AddListener(OnSessionTriggered);
+            levelController.isPaused = isPaused;
         }
 
         //start logging robotmovement
         robot.OnRobotMoved += OnRobotMoved;
     }
 
+    /// <summary>
+    /// Toggles if the experiment should pause
+    /// </summary>
+    /// <returns>returns true if preparing to pause</returns>
+    public bool TogglePause() {
+        isPaused = !isPaused;
+
+        if (isPaused) {
+            robot.OnRobotMoved -= OnRobotMoved;
+        }
+        else {
+            robot.OnRobotMoved += OnRobotMoved;
+        }
+
+        levelController.isPaused = isPaused;
+        return isPaused;
+    }
+
     public void StartExperiment() {
         //ignore btn click if already started.
         if (started) return;
 
-        Debug.Log("Experiment Started");
+        Console.Write("Experiment Started");
         started = true;
         sessionController.RestartIndex();
 
@@ -110,10 +134,16 @@ public class ExperimentController : ConfigurableComponent {
         //initilize ExperimentLogger
         logger = new ExperimentLogger(SaveLocation, ExperimentLogger.GenerateDefaultExperimentID());
 
-        goNextLevelCoroutine = StartCoroutine(GoToNextLevel());
+        goNextLevelCoroutine = StartCoroutine(GoToNextSession());
     }
 
-    private IEnumerator GoToNextLevel() {
+    private IEnumerator GoToNextSession() {
+        // checks if should pause else continue.
+        if (isPaused) {
+            Console.Write("ExperimentPaused");
+        }
+        yield return waitIfPaused;
+
         if (sessionController.HasNextLevel()) {
             Session session = sessionController.NextLevel();
             int sessionIndex = sessionController.index;
@@ -155,8 +185,10 @@ public class ExperimentController : ConfigurableComponent {
         if (goNextLevelCoroutine != null) {
             StopCoroutine(goNextLevelCoroutine);
         }
-        started = false;
 
+        robot.OnRobotMoved -= OnRobotMoved;
+        levelController?.StopLevel();
+        started = false;
         //Clean up when Experiment is stopped adruptly.
         logger.CloseLog();
     }
@@ -164,7 +196,7 @@ public class ExperimentController : ConfigurableComponent {
     private void OnSessionEnd() {
         logger.CloseLog();
         robot.OnRobotMoved -= OnRobotMoved;
-        goNextLevelCoroutine = StartCoroutine(GoToNextLevel());
+        goNextLevelCoroutine = StartCoroutine(GoToNextSession());
     }
 
     private void OnRobotMoved(Transform t) {

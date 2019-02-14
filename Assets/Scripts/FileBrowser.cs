@@ -20,35 +20,26 @@ public class FileBrowser : MonoBehaviour {
     public InputField filePath;
     public CanvasGroup canvasGroup;
 
-    private bool _display;
-    public bool display {
-        get {
-            return _display;
-        }
-        set {
-            _display = value;
-            if (value) {
-                canvasGroup.alpha = 1f;
-                canvasGroup.interactable = true;
-                canvasGroup.blocksRaycasts = true;
-                this.gameObject.transform.SetAsLastSibling();
-            }
-            else {
-                canvasGroup.alpha = 0f;
-                canvasGroup.interactable = false;
-                canvasGroup.blocksRaycasts = false;
-                this.gameObject.transform.SetAsFirstSibling();
-            }
-        }
-    }
-
     void Awake() {
-        display = false;
+        Hide();
     }
 
     private void Exit(string path) {
-        display = false;
+        Hide();
         OnFileBrowserExit.Invoke(path);
+    }
+
+    public void Show(string initalPath) {
+        InitWithDirectory(initalPath);
+        canvasGroup.alpha = 1f;
+        canvasGroup.interactable = true;
+        canvasGroup.blocksRaycasts = true;
+    }
+
+    private void Hide() {
+        canvasGroup.alpha = 0f;
+        canvasGroup.interactable = false;
+        canvasGroup.blocksRaycasts = false;
     }
 
     public void OnChoose() {
@@ -71,8 +62,8 @@ public class FileBrowser : MonoBehaviour {
 
     }
 
-    public void InitWithDirectory(string path) {
-        directoryContents.InitWithContentsOfDirectory(path, FileClicked);
+    private void InitWithDirectory(string path) {
+        directoryContents.InitWithContentsOfDirectory(path, OnFileClicked);
         filePath.text = directoryContents.currentDirectory.FullName;
     }
 
@@ -86,7 +77,7 @@ public class FileBrowser : MonoBehaviour {
         filePath.text = directoryContents.currentDirectory.FullName;
     }
 
-    void FileClicked(FileItem item, bool wasDoubleClick) {
+    void OnFileClicked(FileItem item, bool wasDoubleClick) {
 
         //double click
         if (wasDoubleClick) {

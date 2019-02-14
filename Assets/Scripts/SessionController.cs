@@ -60,8 +60,10 @@ public class SessionController : ConfigurableComponent {
         Sessions.RemoveAt(pos);
     }
 
-    public void AddSession() {
-        Sessions.Add(new Session());
+    public Session AddSession() {
+        Session s = new Session();
+        Sessions.Add(s);
+        return s;
     }
 
     public override Type GetSettingsType() {

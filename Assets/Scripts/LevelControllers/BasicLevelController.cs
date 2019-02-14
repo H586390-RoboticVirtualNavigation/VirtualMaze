@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using UnityEngine.Events;
 using System.Collections.Generic;
@@ -14,15 +15,16 @@ using Random = UnityEngine.Random;
 /// 
 /// </summary>
 public class BasicLevelController : MonoBehaviour {
-    private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent";
-
     // Broadcasts when the session is finshed.
     public UnityEvent onSessionFinishEvent = new UnityEvent();
 
     // Broadcasts when any sessionTriggers happens.
     public SessionTriggerEvent onSessionTrigger = new SessionTriggerEvent();
 
-    protected int trialCounter { get; private set; } = 0;
+    public bool isPaused;
+
+    //drag and drop from Unity Editor
+    public Transform startWaypoint;
 
     /// <summary>
     /// Flag to decide if the trail should be restarted if the subject failed
@@ -31,30 +33,35 @@ public class BasicLevelController : MonoBehaviour {
     protected bool restartOnTaskFail = true;
     protected bool resetRobotPositionDuringInterTrial = false;
     protected bool fadeoutDuringInterTrial = false;
-
-    protected Session session { get; private set; }
-
-    protected ParallelPort parallelPort { get; private set; }
-    protected RobotMovement robotMovement { get; private set; }
-    protected CueController cueController { get; private set; }
-    protected Fading fade { get; private set; }
-    protected WaitForSecondsRealtime cueDisplayDuration { get; private set; } = new WaitForSecondsRealtime(1f);
-    //reference to coroutine to properly stop it.
-    private Coroutine timeLimitTimer;
-
-    private int targetIndex;
-    private bool firstTask = true;
+    protected int trialCounter { get; private set; } = 0;
 
     /// <summary>
     /// Gameobjects tagged as "RewardArea" in the scene will be populated in here.
     /// </summary>
     protected RewardArea[] rewards { get; private set; }
 
-    //drag and drop from Unity Editor
-    public Transform startWaypoint;
+    protected Session session { get; private set; }
+    protected RobotMovement robotMovement { get; private set; }
+    protected CueController cueController { get; private set; }
+    protected Fading fade { get; private set; }
+    protected WaitForSecondsRealtime cueDisplayDuration { get; private set; } = new WaitForSecondsRealtime(1f);
+
+    //reference to coroutine to properly stop it.
+    private Coroutine timeLimitTimer;
+
+    // cache waitForUnpause for efficiency
+    private WaitUntil waitIfPaused;
+
+    private int targetIndex;
+    private bool firstTask = true;
+
+    //Strings
+    private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent";
 
     private void Awake() {
         fade = FindObjectOfType<Fading>();
+
+        waitIfPaused = new WaitUntil(() => !isPaused);
 
         GameObject robot = GameObject.FindGameObjectWithTag(Tags.Player);
         robotMovement = robot.GetComponent<RobotMovement>();
@@ -64,7 +71,7 @@ public class BasicLevelController : MonoBehaviour {
     /// <summary>
     /// Override this to place additional commands during Awake().
     /// </summary>
-    protected virtual void Setup() {}
+    protected virtual void Setup() { }
 
     private void OnEnable() {
         RewardArea.OnRewardTriggered += OnRewardTriggered;
@@ -72,6 +79,13 @@ public class BasicLevelController : MonoBehaviour {
 
     private void OnDisable() {
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
+    }
+
+    public void StopLevel() {
+        RewardArea.OnRewardTriggered -= OnRewardTriggered;
+        StopTrialTimer();
+        StopAllCoroutines();
+        fade.FadeOut();
     }
 
     /// <summary>
@@ -165,6 +179,12 @@ public class BasicLevelController : MonoBehaviour {
 
         // check if a trial is considered cleared.
         if (IsTrialCompleteCondition()) {
+            // checks if should pause else continue.
+            if (isPaused) {
+                Console.Write("ExperimentPaused");
+            }
+            yield return waitIfPaused;
+
             trialCounter++; // increment if a trial is completed
 
             // execute intertrial only it is not the first trial

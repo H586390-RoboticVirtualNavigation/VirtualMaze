@@ -21,6 +21,11 @@ public class RewardArea : MonoBehaviour {
     public Transform target;
 
     /// <summary>
+    /// optional blinkLight
+    /// </summary>
+    public Light blinkLight;
+
+    /// <summary>
     /// viewing angle required to register if the target is in sight
     /// </summary>
     public static float requiredViewAngle = 110f;
@@ -37,14 +42,25 @@ public class RewardArea : MonoBehaviour {
     public delegate void OnRewardTriggeredEvent(RewardArea rewardArea);
     public static event OnRewardTriggeredEvent OnRewardTriggered;
 
+    private float lightIntensity = 1;
+    private bool blinkState;
+    private Coroutine blinkCoroutine; // reference to properly stop the coroutine
     private EventManager eventManager;
     private RobotMovement robotMovement;
+    private WaitForSecondsRealtime blinkHalfPeriod = new WaitForSecondsRealtime(1f);
 
 
     private void Awake() {
         eventManager = EventManager.eventManager;
         GameObject robot = GameObject.FindWithTag(Tags.Player);
         robotMovement = robot.GetComponent<RobotMovement>();
+    }
+
+    private void Start() {
+        if (blinkLight != null) {
+            blinkLight.intensity = 0;// off at the start
+            blinkState = false;
+        }
     }
 
     //start listening to robot it enters trigger area
@@ -98,5 +114,32 @@ public class RewardArea : MonoBehaviour {
     /// <param name="value"></param>
     public void SetActive(bool value) {
         gameObject.SetActive(value);
+    }
+
+    public void StartBlinking() {
+        if (blinkLight != null) {
+            blinkCoroutine = StartCoroutine(Blink());
+        }
+    }
+
+    public void StopBlinking() {
+        if (blinkCoroutine != null) {
+            StopCoroutine(blinkCoroutine);
+        }
+
+        if (blinkLight != null) {
+            blinkLight.intensity = 0;
+        }
+    }
+
+    private IEnumerator Blink() {
+        while (true) {
+            if (blinkState) {
+                blinkLight.intensity = 0;
+            }
+            else {
+                blinkLight.intensity = lightIntensity;
+            }
+        }
     }
 }
