@@ -27,7 +27,9 @@ public class ExperimentGUIController : BasicGUIController {
     public Toggle timeoutDurationValid;
     public Toggle timeLimitValid;
 
-    public Toggle willPauseAtNextTrial;
+    public Toggle willPauseAtNextTrialToggle;
+    public Toggle restartOnTrialFailToggle;
+    public Toggle resetPositionOnTrialToggle;
 
     public Button browseSaveLocation;
     public Button startStopButton;
@@ -52,10 +54,21 @@ public class ExperimentGUIController : BasicGUIController {
         pauseButton.onClick.AddListener(OnPauseButtonClicked);
         startStopButton.onClick.AddListener(OnExperimentStartStopButtonClicked);
         browseSaveLocation.onClick.AddListener(OnBrowseSavelocationClicked);
+
+        restartOnTrialFailToggle.onValueChanged.AddListener(toggleRestartOnTrialFail);
+        resetPositionOnTrialToggle.onValueChanged.AddListener(toggleResetPosition);
+    }
+
+    private void toggleRestartOnTrialFail(bool isOn) {
+        experimentController.restartOnTrialFail = isOn;
+    }
+
+    private void toggleResetPosition(bool isOn) {
+        experimentController.resetPositionOnTrial = isOn;
     }
 
     private void OnPauseButtonClicked() {
-        willPauseAtNextTrial.isOn = experimentController.TogglePause();
+        willPauseAtNextTrialToggle.isOn = experimentController.TogglePause();
     }
 
     private void OnExperimentStartStopButtonClicked() {
@@ -197,7 +210,8 @@ public class ExperimentGUIController : BasicGUIController {
             fixedTrailIntermissionToggle.isOn = true;
         }
 
-        posterEnableValid.isOn = experimentController.PostersEnabled;
+        resetPositionOnTrialToggle.isOn = experimentController.resetPositionOnTrial;
+        restartOnTrialFailToggle.isOn = experimentController.restartOnTrialFail;
         saveLocationValid.isOn = IsValidSaveLocation(experimentController.SaveLocation);
         sessionIntermissionValid.isOn = IsValidDuration(experimentController.SessionIntermissionDuration);
         timeoutDurationValid.isOn = IsValidDuration(Session.trialTimeLimit);

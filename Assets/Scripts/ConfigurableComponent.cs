@@ -51,19 +51,6 @@ public abstract class ConfigurableComponent : MonoBehaviour {
     }
 
     /// <summary>
-    /// Override this method to check if the current configuration values are valid.
-    /// 
-    /// Configurations critical to the should be included here.
-    /// </summary>
-    /// <returns>True if all configurations are valid</returns>
-    public virtual bool IsValid() {
-        //nothing critical by default therefore returns true.
-        return true;
-    }
-
-
-
-    /// <summary>
     /// If Awake is overriden, remember to call the base.Awake().
     /// </summary>
     protected virtual void Awake() {

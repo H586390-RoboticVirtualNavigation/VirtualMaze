@@ -4,31 +4,31 @@ using UnityEngine.UI;
 /// <summary>
 /// Writes information to the Console GUI.
 /// </summary>
-public class Console {
+public class Console : MonoBehaviour {
     private const string Format_NoGameObject
         = "A Gameobject with a Text Component and tagged as {0} should exist in the scene.";
 
-    private static Text _console;
+    public Text console;
 
-    private static Text console {
-        get {
-            if (_console == null) {
-                _console = GameObject.FindGameObjectWithTag(Tags.Console)?.GetComponent<Text>();
-                if (_console == null) {
-                    Debug.LogError(string.Format(Format_NoGameObject, Tags.Console));
-                }
-            }
-            return _console;
+    public static Console Instance { get; private set; }
+
+    //Singleton Implementation
+    private void Awake() {
+        if (Instance != null && Instance != this) {
+            Destroy(gameObject);
+        }
+        else {
+            Instance = this;
         }
     }
 
     public static void WriteError(string text) {
-        console.color = Color.red;
-        console.text = text;
+        Instance.console.color = Color.red;
+        Instance.console.text = text;
     }
 
     public static void Write(string text) {
-        console.color = Color.black;
-        console.text = text;
+        Instance.console.color = Color.black;
+        Instance.console.text = text;
     }
 }

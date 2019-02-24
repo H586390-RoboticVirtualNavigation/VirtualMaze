@@ -13,16 +13,16 @@ public class RewardsGUIController : BasicGUIController {
     public InputField rewardDurationField;
     public Toggle rewardDurationValid;
     public Text valveStateText;
-    public MySliderScript requiredViewAngleSlider;
-    public MySliderScript requiredDistanceSlider;
+    public DescriptiveSlider requiredViewAngleSlider;
+    public DescriptiveSlider requiredDistanceSlider;
     public RewardsController rewardsController;
 
     private void Awake() {
         portNumField.onEndEdit.AddListener(OnPortNumFieldEndEdit);
         rewardDurationField.onEndEdit.AddListener(OnDurationFieldEndEdit);
 
-        requiredViewAngleSlider.OnValueChanged.AddListener(OnRequiredViewAngleChanged);
-        requiredDistanceSlider.OnValueChanged.AddListener(OnRequiredDistanceChanged);
+        requiredViewAngleSlider.onValueChanged.AddListener(OnRequiredViewAngleChanged);
+        requiredDistanceSlider.onValueChanged.AddListener(OnRequiredDistanceChanged);
     }
 
     private void OnRequiredViewAngleChanged(float value) {

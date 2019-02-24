@@ -44,17 +44,17 @@ public class Session {
         RandomLevel,
         RandLRFLevel,
         "Linear",
-        "Tee",
         "Four-Arm",
         "TrainForward",
         "TrainRight",
         "TrainLeft",
         "Double Tee",
+        "Tee",
         "Tee Left",
         "Tee Left Block",
         "Tee Right",
         "Tee Right Block",
-        "Back and Forth 3"
+        "Back and Forth3"
     };
 
     /// <summary>
@@ -77,7 +77,7 @@ public class Session {
         "Tee Left Block",
         "Tee Right",
         "Tee Right Block",
-        "Back and Forth 3"
+        "Back and Forth3"
     };
 
     /// <summary>

@@ -1,18 +1,25 @@
 ﻿using UnityEngine;
+using SREYELINKLib;
 using UnityEngine.UI;
 
-public class RobotMovementGUIController : BasicGUIController {
+public class RobotMovementGUIController : BasicGUIController{
     //drag and drop respective GameObjects with corresponding components in Unity Editor.
     public RobotMovement robotMovement;
 
-    public MySliderScript movementSpeedSlider;
-    public MySliderScript rotationSpeedSlider;
+    public DescriptiveSlider movementSpeedSlider;
+    public DescriptiveSlider rotationSpeedSlider;
 
     public Toggle isJoystickEnabledToggle;
     public Toggle isForwardEnabledToggle;
     public Toggle isReverseEnabledToggle;
     public Toggle isLeftEnabledToggle;
     public Toggle isRightEnabledToggle;
+
+    private void Awake() {
+        rotationSpeedSlider.onValueChanged.AddListener(OnRotationSpeedChanged);
+        movementSpeedSlider.onValueChanged.AddListener(OnMovementSpeedChanged);
+        
+    }
 
     public override void UpdateSettingsGUI() {
         movementSpeedSlider.value = robotMovement.movementSpeed;

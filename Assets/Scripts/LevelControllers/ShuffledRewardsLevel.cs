@@ -19,7 +19,7 @@ public class ShuffledRewardsLevel : BasicLevelController {
         }
     }
 
-    protected override bool IsTrialCompleteCondition() {
+    protected override bool IsTrialCompleteCondition(bool currentTaskCleared) {
         bool completed = (index == order.Length);
         if (completed) {
             Shuffle(order);

@@ -73,9 +73,3 @@ public class DirectoryContents : MonoBehaviour {
 	}
 
 }
-
-
-
-
-
-

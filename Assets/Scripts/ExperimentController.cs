@@ -9,7 +9,8 @@ public class ExperimentController : ConfigurableComponent {
     [Serializable]
     public class Settings : ComponentSettings {
         public bool isTrialIntermissionFixed;
-        public bool postersEnabled;
+        public bool restartOnTrialFail;
+        public bool resetPositionOnTrial;
 
         public int fixedTrialIntermissionDuration;
         public int maxTrialIntermissionDuration;
@@ -22,7 +23,8 @@ public class ExperimentController : ConfigurableComponent {
 
         public Settings(
             bool isTrialIntermissionFixed,
-            bool postersEnabled,
+            bool restartOnTrialFail,
+            bool resetPositionOnTrial,
             int fixedTrialIntermissionDuration,
             int maxTrialIntermissionDuration,
             int minTrialIntermissionDuration,
@@ -32,7 +34,9 @@ public class ExperimentController : ConfigurableComponent {
             string saveLocation
             ) {
             this.isTrialIntermissionFixed = isTrialIntermissionFixed;
-            this.postersEnabled = postersEnabled;
+            this.restartOnTrialFail = restartOnTrialFail;
+            this.resetPositionOnTrial = resetPositionOnTrial;
+
             this.fixedTrialIntermissionDuration = fixedTrialIntermissionDuration;
             this.maxTrialIntermissionDuration = maxTrialIntermissionDuration;
             this.minTrialIntermissionDuration = minTrialIntermissionDuration;
@@ -43,11 +47,12 @@ public class ExperimentController : ConfigurableComponent {
         }
     }
 
-    public bool PostersEnabled { get; set; }
+    public bool restartOnTrialFail;
+    public bool resetPositionOnTrial;
     public string SaveLocation { get; set; }
     public int SessionIntermissionDuration { get; set; }
 
-    public bool started { get; private set; }  = false;
+    public bool started { get; private set; } = false;
     private ExperimentLogger logger = null;
     private RobotMovement robot;
     //coroutine reference for properly stopping coroutine
@@ -59,7 +64,7 @@ public class ExperimentController : ConfigurableComponent {
     private BasicLevelController levelController;
     private bool isPaused = false;
 
-    private WaitUntil waitIfPaused; 
+    private WaitUntil waitIfPaused;
 
     //drag in Unity Editor
     public SessionController sessionController;
@@ -94,6 +99,8 @@ public class ExperimentController : ConfigurableComponent {
             levelController.onSessionFinishEvent.AddListener(OnSessionEnd);
             levelController.onSessionTrigger.AddListener(OnSessionTriggered);
             levelController.isPaused = isPaused;
+            levelController.resetRobotPositionDuringInterTrial = resetPositionOnTrial;
+            levelController.restartOnTaskFail = restartOnTrialFail;
         }
 
         //start logging robotmovement
@@ -150,12 +157,9 @@ public class ExperimentController : ConfigurableComponent {
 
             //delay and display countdown
             float countDownTime = SessionIntermissionDuration / 1000.0f;
-            while (countDownTime > 0) {
-                Debug.Log("countdown" + countDownTime);
-                //GuiController.experimentStatus = string.Format("starting session {0} in {1:F2}", sessionIndex, countDownTime);
-                yield return new WaitForSeconds(0.1f);
-                countDownTime -= 0.1f;
-            }
+
+            yield return SessionStatusDisplay.Countdown("Starting Session", countDownTime);
+            SessionStatusDisplay.DisplaySessionNumber(sessionIndex);
 
             //if logger fails to open
             if (!logger.OpenSessionLog(sessionIndex, session, SaveLoad.getCurrentSettings())) {
@@ -240,11 +244,12 @@ public class ExperimentController : ConfigurableComponent {
     }
 
     public override ComponentSettings GetDefaultSettings() {
-        return new Settings(false, true, -1, -1, -1, -1, -1, -1, "");
+        return new Settings(false, true, true, -1, -1, -1, -1, -1, -1, "");
     }
 
     public override ComponentSettings GetCurrentSettings() {
-        return new Settings(Session.isTrailIntermissionRandom, PostersEnabled,
+        return new Settings(Session.isTrailIntermissionRandom, restartOnTrialFail,
+            resetPositionOnTrial,
             Session.fixedTrialIntermissionDuration, Session.maxTrialIntermissionDuration,
             Session.minTrialIntermissionDuration, SessionIntermissionDuration,
             Session.timeoutDuration, Session.trialTimeLimit, SaveLocation);
@@ -254,7 +259,8 @@ public class ExperimentController : ConfigurableComponent {
         Settings settings = (Settings)loadedSettings;
 
         Session.isTrailIntermissionRandom = settings.isTrialIntermissionFixed;
-        PostersEnabled = settings.postersEnabled;
+        restartOnTrialFail = settings.restartOnTrialFail;
+        resetPositionOnTrial = settings.resetPositionOnTrial;
         Session.fixedTrialIntermissionDuration = settings.fixedTrialIntermissionDuration;
         Session.maxTrialIntermissionDuration = settings.maxTrialIntermissionDuration;
         Session.minTrialIntermissionDuration = settings.minTrialIntermissionDuration;
@@ -262,9 +268,5 @@ public class ExperimentController : ConfigurableComponent {
         Session.timeoutDuration = settings.timeoutDuration;
         Session.trialTimeLimit = settings.timeLimitDuration;
         SaveLocation = settings.saveLocation;
-    }
-
-    public override bool IsValid() {
-        return base.IsValid();
     }
 }

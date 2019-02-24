@@ -78,9 +78,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc5c2509b9d97314882ae32e2737721e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cueImage: {fileID: 0}
+  cueImage: {fileID: 21300000, guid: 2261da023b6b8482db296ec7d08c3c18, type: 3}
   target: {fileID: 1936230905977177446}
-  fieldOfViewAngle: 110
+  blinkLight: {fileID: 0}
 --- !u!33 &4051857116899757773
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -206,6 +206,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4738331220197630618, guid: 52c307facbcb92944a3474b85b663d69,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 9dd8c458527608840ba9373aaa4b9feb, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 52c307facbcb92944a3474b85b663d69, type: 3}
 --- !u!4 &1936230905977177446 stripped

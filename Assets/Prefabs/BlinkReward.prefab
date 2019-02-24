@@ -156,7 +156,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 426442}
-  - component: {fileID: 11497916}
   m_Layer: 0
   m_Name: BlinkReward
   m_TagString: Untagged
@@ -180,24 +179,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &11497916
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 193934}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f549c7588e2244a19a02fa2d58dbb476, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  enableReward: 1
-  blinkLight: {fileID: 10861168}
-  poster: {fileID: 0}
-  intensity: 5
-  mainReward: 0
-  onScreenFx: 0
 --- !u!1001 &1936230905976719666
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -265,6 +246,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1936230905975849450, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 9dd8c458527608840ba9373aaa4b9feb, type: 3}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: blinkLight

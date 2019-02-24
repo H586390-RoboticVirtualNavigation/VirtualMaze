@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class JoystickGUIController : BasicGUIController {
     //Drag in from Unity Editor
-    public MySliderScript deadzoneSlider;
+    public DescriptiveSlider deadzoneSlider;
     public Button serialStateToggle;
     public Text serialStateText;
     public InputField joystickPortField;
@@ -13,7 +13,7 @@ public class JoystickGUIController : BasicGUIController {
 
     private void Awake() {
         joystickPortField.onEndEdit.AddListener(onPortFieldEditEnd);
-        deadzoneSlider.OnValueChanged.AddListener(onSliderValueChanged);
+        deadzoneSlider.onValueChanged.AddListener(onSliderValueChanged);
         serialStateToggle.onClick.AddListener(onSerialStateButtonClicked);
     }
 

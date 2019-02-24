@@ -30,9 +30,8 @@ public class BasicLevelController : MonoBehaviour {
     /// Flag to decide if the trail should be restarted if the subject failed
     /// the trial.
     /// </summary>
-    protected bool restartOnTaskFail = true;
-    protected bool resetRobotPositionDuringInterTrial = false;
-    protected bool fadeoutDuringInterTrial = false;
+    public bool restartOnTaskFail = true;
+    public bool resetRobotPositionDuringInterTrial = false;
     protected int trialCounter { get; private set; } = 0;
 
     /// <summary>
@@ -82,6 +81,7 @@ public class BasicLevelController : MonoBehaviour {
     }
 
     public void StopLevel() {
+        cueController.Hide();
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
         StopTrialTimer();
         StopAllCoroutines();
@@ -123,9 +123,11 @@ public class BasicLevelController : MonoBehaviour {
         //Prepare BasicLevelController
         EyeLink.Initialize();
 
-        StartCoroutine(FadeInAndStartSession());
+        // +1 since trailCounter is starts from 0
+        SessionStatusDisplay.DisplayTrialNumber(trialCounter + 1);
 
         Setup();// run any custom code from inherited members.
+        StartCoroutine(FadeInAndStartSession());
     }
 
     private IEnumerator FadeInAndStartSession() {
@@ -152,7 +154,7 @@ public class BasicLevelController : MonoBehaviour {
         int nextTarget = Random.Range(0, rewards.Length);
 
         // retries if the random target number generated is the same as the current target number
-        while (nextTarget == currentTarget) {
+        while (rewards.Length != 1 && nextTarget == currentTarget) {
             nextTarget = Random.Range(0, rewards.Length);
         }
 
@@ -167,6 +169,8 @@ public class BasicLevelController : MonoBehaviour {
         //restart trial unless indicated
         if (!currentTaskCleared && restartOnTaskFail) {
             Console.Write("Restart Trial");
+            //teleport back to start
+
             StartCoroutine(StartTask()); // show cue for same target
             yield break;
         }
@@ -178,7 +182,7 @@ public class BasicLevelController : MonoBehaviour {
         }
 
         // check if a trial is considered cleared.
-        if (IsTrialCompleteCondition()) {
+        if (IsTrialCompleteCondition(currentTaskCleared)) {
             // checks if should pause else continue.
             if (isPaused) {
                 Console.Write("ExperimentPaused");
@@ -186,24 +190,27 @@ public class BasicLevelController : MonoBehaviour {
             yield return waitIfPaused;
 
             trialCounter++; // increment if a trial is completed
+            SessionStatusDisplay.DisplayTrialNumber(trialCounter);
 
             // execute intertrial only it is not the first trial
             if (firstTask) {
                 firstTask = false;
             }
             else {
-                onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
                 yield return InterTrial(); //wait for interTrial to complete.
             }
+
+            onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
         }
 
         // prepare next 
         targetIndex = GetNextTarget(targetIndex, rewards);
+
         cueController.SetHint(rewards[targetIndex].cueImage);
         StartCoroutine(StartTask());
     }
 
-    protected virtual bool IsTrialCompleteCondition() {
+    protected virtual bool IsTrialCompleteCondition(bool currentTaskCleared) {
         return true; // 1 task per trial
     }
 
@@ -253,25 +260,18 @@ public class BasicLevelController : MonoBehaviour {
     }
 
     protected virtual IEnumerator InterTrial() {
-        if (fadeoutDuringInterTrial) {
+        if (resetRobotPositionDuringInterTrial) {
             //fadeout and wait for fade out to finish.
             yield return fade.FadeOut();
+            robotMovement.MoveToWaypoint(startWaypoint);
         }
 
         //delay for inter trial window
         float countDownTime = Session.getTrailIntermissionDuration() / 1000.0f;
-        while (countDownTime > 0) {
-            Console.Write(string.Format("Inter-trial time {0:F2}", countDownTime));
-            yield return new WaitForSeconds(0.1f);
-            countDownTime -= 0.1f;
-        }
 
-        //teleport back to start
+        yield return SessionStatusDisplay.Countdown("InterTrial Countdown", countDownTime);
+
         if (resetRobotPositionDuringInterTrial) {
-            robotMovement.MoveToWaypoint(startWaypoint);
-        }
-
-        if (fadeoutDuringInterTrial) {
             //fade in and wait for fade in to finish
             yield return fade.FadeIn();
         }
@@ -280,21 +280,38 @@ public class BasicLevelController : MonoBehaviour {
     private IEnumerator TrialTimer() {
         // convert to seconds
         float trialTimeLimit = Session.trialTimeLimit / 1000f;
+        SessionStatusDisplay.DisplaySessionStatus("Trial Running");
 
-        yield return new WaitForSeconds(trialTimeLimit);
-
-        Console.Write("Trial Timeout");
+        while (trialTimeLimit > 0) {
+            yield return SessionStatusDisplay.Tick(trialTimeLimit, out trialTimeLimit);
+        }
 
         //trigger - timeout
         onSessionTrigger.Invoke(SessionTrigger.TimeoutTrigger, targetIndex);
-
-        //play audio
-        PlayerAudio.instance.PlayErrorClip();
 
         //disable robot movement
         robotMovement.SetMovementActive(false);
         cueController.HideHint();
         rewards[targetIndex].SetActive(false); // disable reward
+
+        //play audio
+        PlayerAudio.instance.PlayErrorClip();
+
+        float timeoutDuration = Session.timeoutDuration / 1000f;
+
+        if (resetRobotPositionDuringInterTrial && restartOnTaskFail) {
+            yield return fade.FadeOut();
+            robotMovement.MoveToWaypoint(startWaypoint);
+        }
+
+        if (restartOnTaskFail) {
+            yield return SessionStatusDisplay.Countdown("Timeout", timeoutDuration);
+        }
+
+
+        if (resetRobotPositionDuringInterTrial && restartOnTaskFail) {
+            yield return fade.FadeIn();
+        }
 
         StartCoroutine(GoNextTask(false));
     }

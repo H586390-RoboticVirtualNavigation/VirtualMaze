@@ -29,8 +29,9 @@ public class PlayerAudio : MonoBehaviour {
 		audioSource.Play ();
 	}
 
-	public void PlayErrorClip(){
+	public float PlayErrorClip(){
 		audioSource.clip = errorClip;
-		audioSource.Play ();
+		audioSource.Play();
+        return errorClip.length;
 	}
 }

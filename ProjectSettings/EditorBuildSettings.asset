@@ -21,9 +21,6 @@ EditorBuildSettings:
     path: Assets/Scenes/Linear.unity
     guid: 7af32bb9669584a21a0098ee6261f538
   - enabled: 1
-    path: Assets/Scenes/Tee Left Block.unity
-    guid: 30d43c92bcbe6214fb6c55eb8ac5bb30
-  - enabled: 1
     path: Assets/Scenes/Tee Left.unity
     guid: 7b7c5df8184780641a329398f65595b4
   - enabled: 1
@@ -49,5 +46,5 @@ EditorBuildSettings:
     guid: 3666d66a99d5a46c7ba82b51b5a7bda6
   - enabled: 1
     path: Assets/Scenes/Tee Left Block.unity
-    guid: 30d43c92bcbe6214fb6c55eb8ac5bb30
+    guid: d86db4cce71531047b01c4d7f2c38977
   m_configObjects: {}

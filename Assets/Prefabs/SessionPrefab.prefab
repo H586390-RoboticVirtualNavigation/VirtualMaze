@@ -421,7 +421,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0.9, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &22226178
@@ -854,7 +854,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 
+  m_Text: 1
 --- !u!1 &161706
 GameObject:
   m_ObjectHideFlags: 0
@@ -1105,7 +1105,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 25}
+  m_SizeDelta: {x: 250, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &22251728
 CanvasRenderer:
@@ -1197,10 +1197,15 @@ MonoBehaviour:
       m_Calls: []
     m_TypeName: SessionPrefabScript+OnValueChanged, Assembly-CSharp, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-  onItemDelete:
+  onItemRemove:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: SessionPrefabScript+OnItemDelete, Assembly-CSharp, Version=0.0.0.0,
+    m_TypeName: SessionPrefabScript+OnItemRemove, Assembly-CSharp, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+  onNumTrialsChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: SessionPrefabScript+OnNumTrialsChanged, Assembly-CSharp, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!1 &195872
 GameObject:

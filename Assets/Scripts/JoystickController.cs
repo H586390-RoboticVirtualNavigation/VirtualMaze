@@ -6,7 +6,7 @@ using System;
 using UnityEngine.UI;
 
 //NOTE: static class cannot derive, but singleton can
-
+// TODO convert to Co routine?
 public class JoystickController : ConfigurableComponent {
     [Serializable]
     public class Settings : ComponentSettings {
@@ -28,7 +28,9 @@ public class JoystickController : ConfigurableComponent {
 	public static float horizontal { get; private set; }
     public static float vertical { get; private set; }
 
-    public float deadzoneAmount;
+    [Range(0, 1)]
+    public float deadzoneAmount = 0;
+
     public string portNum;
     public bool isOpen { get; private set; }
 
@@ -54,8 +56,6 @@ public class JoystickController : ConfigurableComponent {
 
     protected override void Awake() {
         base.Awake();
-        // get slider
-        //joystickDeadzoneSlider = GameObject.Find ("JoystickDeadzoneSlider").GetComponent <Slider> ();
 
         if (_instance == null) {
             _instance = this;
@@ -64,7 +64,7 @@ public class JoystickController : ConfigurableComponent {
             Destroy(this.gameObject);
         }
 
-        
+
     }
 
     public bool JoystickOpen() {
@@ -73,7 +73,7 @@ public class JoystickController : ConfigurableComponent {
 
             try {
                 serial = new SerialPort(portNum, baudRate);
-                serial.ReadTimeout = 60;
+                serial.ReadTimeout = 16;
                 serial.Open();
             }
             catch {
@@ -87,6 +87,7 @@ public class JoystickController : ConfigurableComponent {
             Debug.Log("created new timer");
             timer = new Timer();
             timer.Elapsed += TimerEvent;
+            timer.AutoReset = true;
             timer.Interval = 60;
             timer.Enabled = true;
         }
@@ -105,6 +106,7 @@ public class JoystickController : ConfigurableComponent {
             Debug.Log("Stop listening for serial joystick events");
             timer.Elapsed -= TimerEvent;
             timer.Enabled = false;
+            timer.Stop();
             timer.Dispose();
             timer = null;
         }
@@ -122,13 +124,20 @@ public class JoystickController : ConfigurableComponent {
             serial.Read(buffer, 0, 2);
 
             // get joystick axis readings
-            horizontal = (sbyte)buffer[0] / 128.0f;
-            vertical = (sbyte)buffer[1] / 128.0f;
+            horizontal = ((sbyte)buffer[0]) / 128f;
+            vertical = ((sbyte)buffer[1]) / 128f;
 
             //apply deadzone
-            horizontal = Math.Abs(horizontal) < deadzoneAmount ? 0 : horizontal;
-            vertical = Math.Abs(vertical) < deadzoneAmount ? 0 : vertical;
+            horizontal = ApplyDeadzone(horizontal);
+            vertical = ApplyDeadzone(vertical);
         }
+    }
+
+    private float ApplyDeadzone(float value) {
+        if(Math.Abs(value) > deadzoneAmount) {
+            return value;
+        }
+        return 0;
     }
 
     public override ComponentSettings GetCurrentSettings() {
