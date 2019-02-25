@@ -47,4 +47,13 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Tee Left Block.unity
     guid: d86db4cce71531047b01c4d7f2c38977
+  - enabled: 1
+    path: Assets/Scenes/Step1.unity
+    guid: 56a5f05a594cb4b4a84a6074d1fadf9e
+  - enabled: 1
+    path: Assets/Scenes/Step2.unity
+    guid: 15243f384d2145643b07c0b5f4db806d
+  - enabled: 1
+    path: Assets/Scenes/Step3.unity
+    guid: 8cec198788c77fc4e9ef2272d2998c18
   m_configObjects: {}

@@ -43,6 +43,9 @@ public class Session {
     public static readonly string[] AllLevels = {
         RandomLevel,
         RandLRFLevel,
+        "Step1",
+        "Step2",
+        "Step3",
         "Linear",
         "Four-Arm",
         "TrainForward",
