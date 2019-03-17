@@ -37,7 +37,7 @@ public class BasicLevelController : MonoBehaviour {
     /// <summary>
     /// Gameobjects tagged as "RewardArea" in the scene will be populated in here.
     /// </summary>
-    protected RewardArea[] rewards { get; private set; }
+    public RewardArea[] rewards { get; private set; }
 
     protected Session session { get; private set; }
     protected RobotMovement robotMovement { get; private set; }
@@ -81,37 +81,34 @@ public class BasicLevelController : MonoBehaviour {
     }
 
     public void StopLevel() {
-        cueController.Hide();
+        cueController.HideAll();
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
         StopTrialTimer();
         StopAllCoroutines();
         fade.FadeOut();
     }
 
-    /// <summary>
-    /// Helper method to populate rewards[]
-    /// </summary>
-    private void GetAllRewardsFromScene() {
+    public RewardArea[] GetAllRewardsFromScene() {
         //Find all rewardAreas in scene and populate rewards[].
         GameObject[] objs = GameObject.FindGameObjectsWithTag(Tags.RewardArea);
-        List<RewardArea> temp = new List<RewardArea>();
-        foreach (GameObject obj in objs) {
-            RewardArea area = obj.GetComponent<RewardArea>();
+        RewardArea[] tempArr = new RewardArea[objs.Length];
+        for (int i = 0; i < objs.Length; i++) {
+            RewardArea area = objs[i].GetComponent<RewardArea>();
             if (area != null) {
-                temp.Add(area);
+                tempArr[i] = area;
 
                 // Deactivate all rewards at the start.
                 area.SetActive(false);
             }
             else {
-                Debug.LogWarning(string.Format(Format_NoRewardAreaComponentFound, obj.name));
+                Debug.LogWarning(string.Format(Format_NoRewardAreaComponentFound, objs[0].name));
             }
         }
-        rewards = temp.ToArray();
+        return tempArr;
     }
 
     private void Start() {
-        GetAllRewardsFromScene();
+        rewards = GetAllRewardsFromScene();
 
         //cache session
         SessionInfo.GetSessionInfo(out Session session);
@@ -127,6 +124,9 @@ public class BasicLevelController : MonoBehaviour {
         SessionStatusDisplay.DisplayTrialNumber(trialCounter + 1);
 
         Setup();// run any custom code from inherited members.
+    }
+
+    public void StartSession() {
         StartCoroutine(FadeInAndStartSession());
     }
 
@@ -150,7 +150,7 @@ public class BasicLevelController : MonoBehaviour {
     /// <param name="currentTarget">Index of the current target</param>
     /// <returns>Index of the next target</returns>
     protected virtual int GetNextTarget(int currentTarget, RewardArea[] rewards) {
-        if(rewards.Length == 2) {
+        if (rewards.Length == 2) {
             return 1 - currentTarget; //returns 0 or 1
         }
 
@@ -181,6 +181,7 @@ public class BasicLevelController : MonoBehaviour {
 
         //check if all trials completed
         if (trialCounter >= session.numTrial) {
+            onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
             StartCoroutine(FadeOutBeforeLevelEnd());
             yield break;
         }
@@ -196,6 +197,8 @@ public class BasicLevelController : MonoBehaviour {
             trialCounter++; // increment if a trial is completed
             SessionStatusDisplay.DisplayTrialNumber(trialCounter);
 
+            onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
+
             // execute intertrial only it is not the first trial
             if (firstTask) {
                 firstTask = false;
@@ -203,8 +206,6 @@ public class BasicLevelController : MonoBehaviour {
             else {
                 yield return InterTrial(); //wait for interTrial to complete.
             }
-
-            onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
         }
 
         // prepare next 
@@ -308,10 +309,7 @@ public class BasicLevelController : MonoBehaviour {
             robotMovement.MoveToWaypoint(startWaypoint);
         }
 
-        if (restartOnTaskFail) {
-            yield return SessionStatusDisplay.Countdown("Timeout", timeoutDuration);
-        }
-
+        yield return SessionStatusDisplay.Countdown("Timeout", timeoutDuration);
 
         if (resetRobotPositionDuringInterTrial && restartOnTaskFail) {
             yield return fade.FadeIn();

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// Session GUI should not know anything about the session it contains. it should only be resposible for
 /// interacting with the user. Therefore SessionItems are generated based on SessionController's list.
 /// </summary>
-public class SessionConfigGUIController : BasicGUIController {
+public class SessionConfigGUIController : DataGUIController {
     //drag from Unity Editor
     public Button addSessionButton;
     public GameObject sessionItemPrefab;

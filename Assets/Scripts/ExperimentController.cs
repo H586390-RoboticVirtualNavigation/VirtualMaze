@@ -73,10 +73,9 @@ public class ExperimentController : ConfigurableComponent {
         base.Awake();
         robot = GameObject.FindGameObjectWithTag(Tags.Player).GetComponent<RobotMovement>();
         waitIfPaused = new WaitUntil(() => !isPaused);
-    }
 
-    private void OnEnable() {
-        SceneManager.sceneLoaded += SceneLoaded;
+        print(VersionInfo.MajorVersion);
+        print(VersionInfo.Version);
     }
 
     private void OnDisable() {
@@ -84,6 +83,7 @@ public class ExperimentController : ConfigurableComponent {
     }
 
     private void SceneLoaded(Scene scene, LoadSceneMode mode) {
+        SceneManager.sceneLoaded -= SceneLoaded;
         if (scene.name == "Start") return;
 
         //add listener to the session
@@ -95,12 +95,23 @@ public class ExperimentController : ConfigurableComponent {
         else {
             levelController =
                 levelControllerObject.GetComponent<BasicLevelController>();
-            Debug.Log(levelController.GetType().Name);
             levelController.onSessionFinishEvent.AddListener(OnSessionEnd);
             levelController.onSessionTrigger.AddListener(OnSessionTriggered);
             levelController.isPaused = isPaused;
             levelController.resetRobotPositionDuringInterTrial = resetPositionOnTrial;
             levelController.restartOnTaskFail = restartOnTrialFail;
+
+            //validate logger
+            int sessionIndex = sessionController.index - 1;
+            if (!logger.OpenSessionLog(
+                    sessionIndex,
+                    sessionController.Sessions[sessionIndex],
+                    SaveLoad.getCurrentSettings(),
+                    FindObjectsOfType<RewardArea>()
+                )) {
+                Console.WriteError("failed to create save files");
+                StopExperiment();
+            }
         }
 
         //start logging robotmovement
@@ -161,17 +172,11 @@ public class ExperimentController : ConfigurableComponent {
             yield return SessionStatusDisplay.Countdown("Starting Session", countDownTime);
             SessionStatusDisplay.DisplaySessionNumber(sessionIndex);
 
-            //if logger fails to open
-            if (!logger.OpenSessionLog(sessionIndex, session, SaveLoad.getCurrentSettings())) {
-                Debug.LogError("failed to create save files");
-                StopExperiment();
-                yield break; // stops the coroutine
-            }
-
             //prepare data for the session
             SessionInfo.SetSessionInfo(session);
 
             //start the scene
+            SceneManager.sceneLoaded += SceneLoaded;
             SceneManager.LoadScene(session.level, LoadSceneMode.Single);
 
             Console.Write(string.Format("session {0} started", sessionIndex));

@@ -16,6 +16,8 @@ Sourcetree can be downloaded [here](https://www.sourcetreeapp.com/).
 
 More details regarding the Gitflow can be found in the Developer guide.
 
-# Developer Guide
+# More Information
 
-[Developer Guide](./docs/DeveloperGuide.md)
+- [Developer Guide](./docs/DeveloperGuide.md)
+- [User Guide](./docs/UserGuide.md)
+- [Code Documentation](./docs/CodeDocumentation.md)

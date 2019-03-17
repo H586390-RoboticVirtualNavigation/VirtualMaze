@@ -45,16 +45,7 @@ public class RewardArea : MonoBehaviour {
     private float lightIntensity = 1;
     private bool blinkState;
     private Coroutine blinkCoroutine; // reference to properly stop the coroutine
-    private EventManager eventManager;
-    private RobotMovement robotMovement;
     private WaitForSecondsRealtime blinkHalfPeriod = new WaitForSecondsRealtime(1f);
-
-
-    private void Awake() {
-        eventManager = EventManager.eventManager;
-        GameObject robot = GameObject.FindWithTag(Tags.Player);
-        robotMovement = robot.GetComponent<RobotMovement>();
-    }
 
     private void Start() {
         if (blinkLight != null) {
@@ -63,9 +54,8 @@ public class RewardArea : MonoBehaviour {
         }
     }
 
-    //start listening to robot it enters trigger area
-    private void OnTriggerEnter(Collider other) {
-        robotMovement.OnRobotMoved += CheckFieldOfView;
+    private void OnTriggerStay(Collider other) {
+        CheckFieldOfView(other.transform);
     }
 
     /// <summary>
@@ -98,14 +88,8 @@ public class RewardArea : MonoBehaviour {
         }
     }
 
-    //stop listening to robot it enters trigger area
-    private void OnTriggerExit(Collider other) {
-        robotMovement.OnRobotMoved -= CheckFieldOfView;
-    }
-
-    private void OnDisable() {
-        //remove listener once disabled
-        robotMovement.OnRobotMoved -= CheckFieldOfView;
+    public RobotMovement.RobotMovementEvent Haha(Transform t) {
+        return null;
     }
 
     /// <summary>

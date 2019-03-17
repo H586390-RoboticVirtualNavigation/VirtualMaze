@@ -2,12 +2,15 @@
 * [Setting Up](#setting-up)
 * [Gitflow Workflow](#gitflow-workflow)
 * [Gitflow with Sourcetree](#gitflow-with-sourcetree)
+* [SR Research SDK](SR Research Eyelink SDK)
+* [Building VirtualMaze](#Building-VirtualMaze)
 * [Documentation](#Documentation)
 
 # Setting Up
 #### Prerequisites
 * Unity
 * Git
+* SR Research SDK
 
 #### Downloading project files
 1. Install Git and your preferred Git Gui Client. (preferably Sourcetree)
@@ -63,6 +66,10 @@ If there are errors or bugs in master, this branch is created and merged into bo
 5. To work on a branch that is not in your local repository, double click on the desired branch in the `Log/History` and `Checkout New Branch`.
 
 ![checkout existing branches](/docs/images/check-out-existing-branches.PNG)
+
+# SR Research Eyelink SDK
+
+This project makes use of the Eyelink SDK. Information and the SDK can be found at the [SR Research Forum](https://www.sr-support.com/forum). To gain access to the forum create a free account.
 
 # Building VirtualMaze
 

@@ -4,7 +4,7 @@ using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ParallelPortGUIController : BasicGUIController {
+public class ParallelPortGUIController : DataGUIController {
     //drag in Unity Editor
     public Button photodiodeButton;
     public InputField portNumField;
@@ -51,7 +51,8 @@ public class ParallelPortGUIController : BasicGUIController {
         }
     }
 
-    private void Start() {
+    protected override void Start() {
+        base.Start();
         state = false;
     }
 

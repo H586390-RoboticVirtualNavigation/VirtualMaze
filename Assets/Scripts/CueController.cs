@@ -46,7 +46,7 @@ public class CueController : MonoBehaviour {
         ShowImage(hintImage, false);
     }
 
-    public void Hide() {
+    public void HideAll() {
         HideHint();
         HideCue();
     }

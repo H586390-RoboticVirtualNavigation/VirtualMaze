@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class JoystickGUIController : BasicGUIController {
+public class JoystickGUIController : DataGUIController {
     //Drag in from Unity Editor
     public DescriptiveSlider deadzoneSlider;
     public Button serialStateToggle;

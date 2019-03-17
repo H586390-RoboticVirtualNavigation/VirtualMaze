@@ -13,10 +13,12 @@ public class MenuController : MonoBehaviour {
     public Button experimentMenuBtn;
     public Button hardwareControlMenuBtn;
     public Button robotMovementMenuBtn;
+    public Button dataGenerationMenuBtn;
 
     public CanvasGroup experimentMenuCanvas;
     public CanvasGroup hardwareControlMenuCanvas;
     public CanvasGroup robotMovementMenuCanvas;
+    public CanvasGroup dataGenerationMenuCanvas;
 
     private CanvasGroup currentMenu;
 
@@ -24,6 +26,7 @@ public class MenuController : MonoBehaviour {
         experimentMenuBtn.onClick.AddListener(OnExperimentButtonClicked);
         hardwareControlMenuBtn.onClick.AddListener(OnHardwareControlButtonClicked);
         robotMovementMenuBtn.onClick.AddListener(OnRobotMovementButtonClicked);
+        dataGenerationMenuBtn.onClick.AddListener(OnDataGenerationButtonClicked);
 
         //default menu is experiment
         SetVisibility( experimentMenuCanvas, true);
@@ -32,6 +35,11 @@ public class MenuController : MonoBehaviour {
         //hide others
         SetVisibility(hardwareControlMenuCanvas, false);
         SetVisibility(robotMovementMenuCanvas, false);
+        SetVisibility(dataGenerationMenuCanvas, false);
+    }
+
+    private void OnDataGenerationButtonClicked() {
+        ShowMenu(dataGenerationMenuCanvas);
     }
 
     private void OnHardwareControlButtonClicked() {

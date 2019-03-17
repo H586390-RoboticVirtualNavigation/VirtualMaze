@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class RewardsGUIController : BasicGUIController {
+public class RewardsGUIController : DataGUIController {
     private const string Text_OnState = "Valve On";
     private const string Text_OffState = "Valve Off";
 

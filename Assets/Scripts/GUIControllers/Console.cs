@@ -9,6 +9,7 @@ public class Console : MonoBehaviour {
         = "A Gameobject with a Text Component and tagged as {0} should exist in the scene.";
 
     public Text console;
+    public Text versionText;
 
     public static Console Instance { get; private set; }
 
@@ -19,6 +20,7 @@ public class Console : MonoBehaviour {
         }
         else {
             Instance = this;
+            versionText.text = VersionInfo.Version;
         }
     }
 

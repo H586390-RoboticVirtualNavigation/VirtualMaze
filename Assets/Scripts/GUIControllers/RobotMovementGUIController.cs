@@ -2,7 +2,7 @@
 using SREYELINKLib;
 using UnityEngine.UI;
 
-public class RobotMovementGUIController : BasicGUIController{
+public class RobotMovementGUIController : DataGUIController {
     //drag and drop respective GameObjects with corresponding components in Unity Editor.
     public RobotMovement robotMovement;
 
@@ -18,7 +18,7 @@ public class RobotMovementGUIController : BasicGUIController{
     private void Awake() {
         rotationSpeedSlider.onValueChanged.AddListener(OnRotationSpeedChanged);
         movementSpeedSlider.onValueChanged.AddListener(OnMovementSpeedChanged);
-        
+
     }
 
     public override void UpdateSettingsGUI() {

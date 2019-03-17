@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ExperimentGUIController : BasicGUIController {
+public class ExperimentGUIController : DataGUIController {
     private const string Msg_Start = "Experiment Started";
     private const string Msg_Stop = "Experiment Stopped";
 
@@ -22,7 +22,6 @@ public class ExperimentGUIController : BasicGUIController {
     public Toggle randomTrailIntermissionToggle;
 
     public Toggle posterEnableValid;
-    public Toggle saveLocationValid;
     public Toggle sessionIntermissionValid;
     public Toggle timeoutDurationValid;
     public Toggle timeLimitValid;
@@ -212,7 +211,7 @@ public class ExperimentGUIController : BasicGUIController {
 
         resetPositionOnTrialToggle.isOn = experimentController.resetPositionOnTrial;
         restartOnTrialFailToggle.isOn = experimentController.restartOnTrialFail;
-        saveLocationValid.isOn = IsValidSaveLocation(experimentController.SaveLocation);
+        IsValidSaveLocation(experimentController.SaveLocation);
         sessionIntermissionValid.isOn = IsValidDuration(experimentController.SessionIntermissionDuration);
         timeoutDurationValid.isOn = IsValidDuration(Session.trialTimeLimit);
         timeLimitValid.isOn = IsValidDuration(Session.trialTimeLimit);

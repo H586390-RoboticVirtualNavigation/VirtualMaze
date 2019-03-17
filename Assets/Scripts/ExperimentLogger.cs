@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Logs information regarding the Experiment in to a text file.
@@ -83,8 +84,9 @@ public class ExperimentLogger {
     /// <param name="sessionNum">Index of the current session that is currently being logged</param>
     /// <param name="session">Session object describing the current Session</param>
     /// <param name="currentSettings">Current Settings of the Experiment</param>
-    /// <returns></returns>
-    public bool OpenSessionLog(int sessionNum, Session session, ExperimentSettings currentSettings) {
+    /// <param name="rewards">Array of rewards in the level</param>
+    /// <returns>True if log is opened successfully</returns>
+    public bool OpenSessionLog(int sessionNum, Session session, ExperimentSettings currentSettings, RewardArea[] rewards) {
         //check if properly instantiated
         if (string.IsNullOrEmpty(saveLocation) || string.IsNullOrEmpty(experimentID)) {
             Debug.LogWarning(Msg_NotInitialized);
@@ -104,7 +106,7 @@ public class ExperimentLogger {
             return false;
         }
 
-        WriteHeader(fs, session, currentSettings);
+        WriteHeader(fs, session, currentSettings, rewards);
 
         return true;
     }
@@ -138,23 +140,26 @@ public class ExperimentLogger {
                 Time.deltaTime,
                 robot.position.x,
                 robot.position.z,
-                robot.rotation.y
+                robot.rotation.eulerAngles.y
             )
         );
     }
 
-    private void WriteHeader(StreamWriter fs, Session session, ExperimentSettings settings) {
-        fs.WriteLine("Version: {0}", GameController.versionInfo);
-        fs.WriteLine("Trigger: {0}", GameController.pportInfo);
-        fs.WriteLine("TaskType: Continuous");
-        fs.WriteLine("PosterLocations: P1(-5,1.5,-7.55) P2(-7.55,1.5,5) P3(7.55,1.5,-5) P4(5,1.5,7.55) P5(5,1.5,2.45) P6(-5,1.5,-2.45)");
-        fs.WriteLine("TrialType: {0}", session.level);
-        fs.WriteLine("SpecifiedRewardNo: {0}", session.numTrial);
+    private void WriteHeader(StreamWriter fs, Session session, ExperimentSettings settings, RewardArea[] rewards) {
+        SessionContext context = new SessionContext(session, settings, rewards);
+        fs.WriteLine(context.ToJsonString());
+        
+        //fs.WriteLine("Version: {0}", GameController.versionInfo);
+        //fs.WriteLine("Trigger: {0}", GameController.pportInfo);
+        //fs.WriteLine("TaskType: Continuous");
+        //LogRewardPositions(fs, rewards);
+        //fs.WriteLine("TrialType: {0}", session.level);
+        //fs.WriteLine("SpecifiedRewardNo: {0}", session.numTrial);
 
-        LogExperimentSettings(fs, settings);
-        LogRewardSettings(fs, settings);
-        LogRobotMovementSettings(fs, settings);
-        LogJoystickSettings(fs, settings);
+        //LogExperimentSettings(fs, settings);
+        //LogRewardSettings(fs, settings);
+        //LogRobotMovementSettings(fs, settings);
+        //LogJoystickSettings(fs, settings);
 
         fs.Flush();//call flush to write to file
     }
@@ -206,5 +211,16 @@ public class ExperimentLogger {
             //this values are a must to have. Therefore an exception is thrown
             throw new SaveLoad.SettingNotFoundException("ExperimentController.Settings not found");
         }
+    }
+
+    private void LogRewardPositions(StreamWriter writer, RewardArea[] rewards) {
+        fs.Write("PosterLocations:");
+        Vector3 posterPosition;
+        foreach(RewardArea reward in rewards) {
+            posterPosition = reward.target.transform.position;
+            //format: 'name(x,y,z) '. Maximum 2 decimal places for float positions
+            fs.Write("{0}({1:0.##},{2:0.##},{3:0.##}) ", reward.target.name, posterPosition.x, posterPosition.y, posterPosition.z);
+        }
+        fs.WriteLine();
     }
 }
