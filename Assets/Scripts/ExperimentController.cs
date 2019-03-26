@@ -53,7 +53,7 @@ public class ExperimentController : ConfigurableComponent {
     public int SessionIntermissionDuration { get; set; }
 
     public bool started { get; private set; } = false;
-    private ExperimentLogger logger = null;
+    private ExperimentLogger logger = new ExperimentLogger();
     private RobotMovement robot;
     //coroutine reference for properly stopping coroutine
     private Coroutine goNextLevelCoroutine;
@@ -103,15 +103,15 @@ public class ExperimentController : ConfigurableComponent {
 
             //validate logger
             int sessionIndex = sessionController.index - 1;
-            if (!logger.OpenSessionLog(
-                    sessionIndex,
-                    sessionController.Sessions[sessionIndex],
-                    SaveLoad.getCurrentSettings(),
-                    FindObjectsOfType<RewardArea>()
-                )) {
+            Session session = sessionController.Sessions[sessionIndex];
+            SessionContext context = new SessionContext(session, SaveLoad.getCurrentSettings(),
+                    FindObjectsOfType<RewardArea>());
+            if (!logger.OpenSessionLog(sessionIndex, context)) {
                 Console.WriteError("failed to create save files");
                 StopExperiment();
             }
+
+            levelController.StartSession();
         }
 
         //start logging robotmovement
@@ -150,7 +150,8 @@ public class ExperimentController : ConfigurableComponent {
         }
 
         //initilize ExperimentLogger
-        logger = new ExperimentLogger(SaveLocation, ExperimentLogger.GenerateDefaultExperimentID());
+        logger.SetExperimentIdDefault();
+        logger.SetSaveLocation(SaveLocation);
 
         goNextLevelCoroutine = StartCoroutine(GoToNextSession());
     }

@@ -42,7 +42,7 @@ public class BasicLevelController : MonoBehaviour {
     protected Session session { get; private set; }
     protected RobotMovement robotMovement { get; private set; }
     protected CueController cueController { get; private set; }
-    protected Fading fade { get; private set; }
+    protected FadeCanvas fade { get; private set; }
     protected WaitForSecondsRealtime cueDisplayDuration { get; private set; } = new WaitForSecondsRealtime(1f);
 
     //reference to coroutine to properly stop it.
@@ -58,7 +58,7 @@ public class BasicLevelController : MonoBehaviour {
     private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent";
 
     private void Awake() {
-        fade = FindObjectOfType<Fading>();
+        fade = FindObjectOfType<FadeCanvas>();
 
         waitIfPaused = new WaitUntil(() => !isPaused);
 
@@ -180,7 +180,7 @@ public class BasicLevelController : MonoBehaviour {
         }
 
         //check if all trials completed
-        if (trialCounter >= session.numTrial) {
+        if (trialCounter >= session.numTrials) {
             onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
             StartCoroutine(FadeOutBeforeLevelEnd());
             yield break;
@@ -211,7 +211,7 @@ public class BasicLevelController : MonoBehaviour {
         // prepare next 
         targetIndex = GetNextTarget(targetIndex, rewards);
 
-        cueController.SetHint(rewards[targetIndex].cueImage);
+        cueController.SetTargetImage(rewards[targetIndex].cueImage);
         StartCoroutine(StartTask());
     }
 

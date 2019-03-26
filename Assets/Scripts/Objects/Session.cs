@@ -100,7 +100,7 @@ public class Session {
     /// <summary>
     /// number of trails to run in this session
     /// </summary>
-    public int numTrial;
+    public int numTrials;
 
     
     private string _level;
@@ -132,7 +132,7 @@ public class Session {
     public Session(string level) : this(1, level) { }
 
     public Session(int numTrial, string level) {
-        this.numTrial = numTrial;
+        this.numTrials = numTrial;
         this.level = level;
     }
 
@@ -162,6 +162,6 @@ public class Session {
     }
 
     public override string ToString() {
-        return "numtrials: " + numTrial + "\nlevel: " + level;
+        return "numtrials: " + numTrials + "\nlevel: " + level;
     }
 }

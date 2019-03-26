@@ -19,7 +19,7 @@ public class CueController : MonoBehaviour {
         return hint;
     }
 
-    public void SetHint(Sprite value) {
+    public void SetTargetImage(Sprite value) {
         hint = value;
         cueImage.sprite = value;
         hintImage.sprite = value;

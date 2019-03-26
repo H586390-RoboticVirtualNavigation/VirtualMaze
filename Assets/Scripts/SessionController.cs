@@ -32,10 +32,10 @@ public class SessionController : ConfigurableComponent {
 
         switch (session.level) {
             case Session.RandLRFLevel:
-                session = new Session(session.numTrial, Session.GetRandomLRFLevel());
+                session = new Session(session.numTrials, Session.GetRandomLRFLevel());
                 break;
             case Session.RandomLevel:
-                session = new Session(session.numTrial, Session.GetRandomLevel());
+                session = new Session(session.numTrials, Session.GetRandomLevel());
                 break;
             default:
                 break;
@@ -53,7 +53,7 @@ public class SessionController : ConfigurableComponent {
 
     //updates the session Name at the given position
     public void UpdateSessionNumTrialAt(int pos, int numTrial) {
-        Sessions[pos].numTrial = numTrial;
+        Sessions[pos].numTrials = numTrial;
     }
 
     public void RemoveSessionAt(int pos) {

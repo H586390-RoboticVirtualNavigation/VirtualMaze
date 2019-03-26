@@ -20,7 +20,7 @@ public class Console : MonoBehaviour {
         }
         else {
             Instance = this;
-            versionText.text = VersionInfo.Version;
+            versionText.text = VersionInfo.VersionString;
         }
     }
 
@@ -32,5 +32,6 @@ public class Console : MonoBehaviour {
     public static void Write(string text) {
         Instance.console.color = Color.black;
         Instance.console.text = text;
+        Debug.Log(text);
     }
 }

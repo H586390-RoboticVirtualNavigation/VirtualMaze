@@ -47,6 +47,8 @@ public class RewardArea : MonoBehaviour {
     private Coroutine blinkCoroutine; // reference to properly stop the coroutine
     private WaitForSecondsRealtime blinkHalfPeriod = new WaitForSecondsRealtime(1f);
 
+    private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent but is tagged as a reward";
+
     private void Start() {
         if (blinkLight != null) {
             blinkLight.intensity = 0;// off at the start
@@ -68,22 +70,26 @@ public class RewardArea : MonoBehaviour {
 
         float angle = Vector3.Angle(direction, robot.forward);
 
+        //1.588 is estimated by logging the distance of the target and robot 
+        //position when the robot is pressing itself against the target
+        float distanceWithOffset = requiredDistance + 1.588f; 
+
         //uncomment to see the required view in the scene tab
-        Vector3 left = Quaternion.AngleAxis(-requiredViewAngle / 2f, Vector3.up) * robot.forward * requiredDistance;
-        Vector3 right = Quaternion.AngleAxis(requiredViewAngle / 2f, Vector3.up) * robot.forward * requiredDistance;
+        Vector3 left = Quaternion.AngleAxis(-requiredViewAngle / 2f, Vector3.up) * robot.forward * distanceWithOffset;
+        Vector3 right = Quaternion.AngleAxis(requiredViewAngle / 2f, Vector3.up) * robot.forward * distanceWithOffset;
         Debug.DrawRay(robot.position, left, Color.black);
         Debug.DrawRay(robot.position, right, Color.black);
-        Debug.DrawRay(robot.position, direction.normalized * requiredDistance, Color.cyan);
+        Debug.DrawRay(robot.position, direction.normalized * distanceWithOffset, Color.cyan);
 
         //check if in view angle
         if (angle < requiredViewAngle * 0.5f) {
             //checks if close enough
-            if (Vector3.Distance(target.position, robot.position) <= requiredDistance) {
+            if (Vector3.Distance(target.position, robot.position) <= distanceWithOffset) {
                 Debug.Log("Reward!!!");
                 OnRewardTriggered?.Invoke(this);
             }
             else {
-                Debug.Log("inView!!!" + Vector3.Distance(target.position, robot.position) + " " + requiredDistance);
+                Debug.Log("inView!!!" + Vector3.Distance(target.position, robot.position) + " " + distanceWithOffset);
             }
         }
     }
@@ -125,5 +131,24 @@ public class RewardArea : MonoBehaviour {
                 blinkLight.intensity = lightIntensity;
             }
         }
+    }
+
+    public static RewardArea[] GetAllRewardsFromScene() {
+        //Find all rewardAreas in scene and populate rewards[].
+        GameObject[] objs = GameObject.FindGameObjectsWithTag(Tags.RewardArea);
+        RewardArea[] tempArr = new RewardArea[objs.Length];
+        for (int i = 0; i < objs.Length; i++) {
+            RewardArea area = objs[i].GetComponent<RewardArea>();
+            if (area != null) {
+                tempArr[i] = area;
+
+                // Deactivate all rewards at the start.
+                area.SetActive(false);
+            }
+            else {
+                Debug.LogWarning(string.Format(Format_NoRewardAreaComponentFound, objs[0].name));
+            }
+        }
+        return tempArr;
     }
 }

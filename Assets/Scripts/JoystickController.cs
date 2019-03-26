@@ -10,13 +10,9 @@ using UnityEngine.UI;
 public class JoystickController : ConfigurableComponent {
     [Serializable]
     public class Settings : ComponentSettings {
-        public float deadzoneAmount;
-        public string portNum;
-
-        public Settings(string portNum, float deadzoneAmount) {
-            this.portNum = portNum;
-            this.deadzoneAmount = deadzoneAmount;
-        }
+        [Range(0, 1)]
+        public float deadzoneAmount = 0;
+        public string portNum = "";
     }
 
     public int baudRate = 115200;
@@ -28,10 +24,12 @@ public class JoystickController : ConfigurableComponent {
 	public static float horizontal { get; private set; }
     public static float vertical { get; private set; }
 
-    [Range(0, 1)]
-    public float deadzoneAmount = 0;
+    [SerializeField]
+    private Settings settings;
 
-    public string portNum;
+    public float DeadzoneAmount { get => settings.deadzoneAmount; set => settings.deadzoneAmount = value; }
+    public string PortNum { get => settings.portNum; set => settings.portNum = value; }
+
     public bool isOpen { get; private set; }
 
     private static byte[] buffer = new byte[2]; //serial must read byte (uint8), however must convert to sbyte (int8) later
@@ -69,10 +67,10 @@ public class JoystickController : ConfigurableComponent {
 
     public bool JoystickOpen() {
         if (serial == null) {
-            Debug.Log("Opening serial on " + portNum + " at " + baudRate);
+            Debug.Log($"Opening serial on {settings.portNum} at {baudRate}");
 
             try {
-                serial = new SerialPort(portNum, baudRate);
+                serial = new SerialPort(settings.portNum, baudRate);
                 serial.ReadTimeout = 16;
                 serial.Open();
             }
@@ -134,18 +132,18 @@ public class JoystickController : ConfigurableComponent {
     }
 
     private float ApplyDeadzone(float value) {
-        if(Math.Abs(value) > deadzoneAmount) {
+        if (Math.Abs(value) > settings.deadzoneAmount) {
             return value;
         }
         return 0;
     }
 
     public override ComponentSettings GetCurrentSettings() {
-        return new Settings(portNum, deadzoneAmount);
+        return settings;
     }
 
     public override ComponentSettings GetDefaultSettings() {
-        return new Settings("", 1);
+        return new Settings();
     }
 
     public override Type GetSettingsType() {
@@ -153,9 +151,6 @@ public class JoystickController : ConfigurableComponent {
     }
 
     protected override void ApplySettings(ComponentSettings loadedSettings) {
-        Settings s = (Settings)loadedSettings;
-
-        portNum = s.portNum;
-        deadzoneAmount = s.deadzoneAmount;
+        settings = (Settings)loadedSettings;
     }
 }

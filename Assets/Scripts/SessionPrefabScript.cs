@@ -112,7 +112,7 @@ public class SessionPrefabScript : MonoBehaviour {
 
     public void SetSession(Session s) {
         buttonLabel.text = s.level;
-        numTrialsField.text = s.numTrial.ToString();
+        numTrialsField.text = s.numTrials.ToString();
     }
 
     // Use this for initialization

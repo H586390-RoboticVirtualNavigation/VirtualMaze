@@ -2,11 +2,13 @@
 using System.Collections;
 using System.IO;
 using UnityEngine.UI;
+using EDFUtil;
+using EdfAccess;
+using System;
 using UnityEngine.SceneManagement;
 
 public class ScreenSaver : BasicGUIController {
     private int framePerBatch = 5;
-    private bool levelLoaded;
 
     public InputField eyeLinkFileInput;
     public InputField sessionInput;
@@ -24,7 +26,13 @@ public class ScreenSaver : BasicGUIController {
 
     public LineRenderer lineRenderer;
     public CueController cueController;
-    public Fading fadeController;
+    public FadeCanvas fadeController;
+
+    private void Awake() {
+        eyeLinkFileInput.onEndEdit.AddListener(ChooseEyelinkFile);
+        sessionInput.onEndEdit.AddListener(ChooseSession);
+        folderInput.onEndEdit.AddListener(ChooseFolder);
+    }
 
     private void OnsceneLoaded(Scene s, LoadSceneMode mode) {
         BasicLevelController levelcontroller = FindObjectOfType<BasicLevelController>();
@@ -34,7 +42,7 @@ public class ScreenSaver : BasicGUIController {
         print(levelcontroller.name);
         SceneManager.sceneLoaded -= OnsceneLoaded;
 
-        StartCoroutine(ProcessSessionData(sessionInput.text, folderInput.text));
+        StartCoroutine(ProcessSessionData(sessionInput.text, eyeLinkFileInput.text, folderInput.text));
         print("Started");
     }
 
@@ -94,10 +102,24 @@ public class ScreenSaver : BasicGUIController {
         eyeLinkFileInput.text = file;
 
         if (File.Exists(file)) {
+            EdfFilePointer filePointer = EdfAccessWrapper.EdfOpenFile(eyeLinkFileInput.text, 0, 1, 1, out int errVal);
+            if (errVal == 0) {
+                print($"success {errVal}");
+                uint test = EdfAccessWrapper.EdfGetElementCount(filePointer);
+                print($"element count:{test}");
+                int dataType = EdfAccessWrapper.EdfGetNextData(filePointer);
+                ALLF_DATA data = EdfAccessWrapper.EdfGetFloatData(filePointer);
+                print($"success data :\n{data}");
+                EdfAccessWrapper.EdfCloseFile(filePointer);
+            }
+            else {
+                print("fail");
+            }
+
             SetInputFieldValid(eyeLinkFileInput);
         }
         else {
-            SetInputFieldInvalid(sessionInput);
+            SetInputFieldInvalid(eyeLinkFileInput);
         }
     }
 
@@ -123,56 +145,63 @@ public class ScreenSaver : BasicGUIController {
         fb.OnFileBrowserExit += BrowserCancel;
 
         gazeIndicator = GameObject.Find("gazeIndicator");
-
-        SceneManager.sceneLoaded += OnSceneLoadCallback;
     }
 
-    private void OnApplicationQuit() {
-        levelLoaded = false;
-        SceneManager.sceneLoaded -= this.OnSceneLoadCallback;
-    }
-
-    void OnSceneLoadCallback(Scene scene, LoadSceneMode sceneMode) {
-        levelLoaded = true;
-    }
-
-    private IEnumerator ProcessSessionData(string sessionPath, string toFolderPath) {
+    private IEnumerator ProcessSessionData(string sessionPath, string edfPath, string toFolderPath) {
         // check if file exists
         if (!File.Exists(sessionPath)) {
-            Debug.LogError(sessionPath + " does not exist");
+            Debug.LogError($"{sessionPath} does not exist");
             yield break;
         }
+
+        if (!File.Exists(edfPath)) {
+            Debug.LogError($"{edfPath} does not exist");
+            yield break;
+        }
+
         //check if directory exists
         if (!Directory.Exists(toFolderPath)) {
-            Debug.LogError(toFolderPath + " does not exist");
+            Debug.LogError($"{toFolderPath} does not exist");
             yield break;
         }
 
         SessionReader sessionReader = new SessionReader(sessionPath);
+        EDFReader edfReader = new EDFReader(edfPath);
+
         int counter = 0;
 
+        Vector3 screenPos = Vector3.zero;
+        EdfData data;
         do {
             Ray r;
 
+            data = edfReader.getNextData();
+
+            switch (data) {
+                case EdfSampleData sample:
+
+                    screenPos.Set(sample.gazeX, sample.gazeY, 0);
+
+                    r = c.ScreenPointToRay(screenPos);
+                    //r = new Ray(robot.position, robot.forward);
+                    if (Physics.Raycast(r, out RaycastHit hit)) {
+                        lineRenderer?.SetPositions(new Vector3[] { c.transform.position, hit.point });
+                        yield return null;//for debug
+                    }
+                    else {
+                        print("nothing");
+                    }
+
+                    break;
+                case EdfMessage message:
+                    break;
+                default:
+                    break;
+            }
+
+            data = edfReader.getNextData();
+
             MoveRobotTo(robot, sessionReader);
-
-            for (int i = 0; i < 1; i++) {
-                r = c.ScreenPointToRay(new Vector3(540, 960)); //960
-                //r = new Ray(robot.position, robot.forward);
-                if (Physics.Raycast(r, out RaycastHit hit)) {
-                    lineRenderer?.SetPositions(new Vector3[] { c.transform.position, hit.point });
-                }
-                else {
-                    print("nothing");
-                }
-            }
-
-            //process more frames before returning control to main game logic.
-            counter++;
-            counter %= framePerBatch;
-            if (counter == framePerBatch - 1) {
-                yield return null;
-            }
 
             //process the triggers
             switch (sessionReader.flag / 10) {
@@ -199,6 +228,14 @@ public class ScreenSaver : BasicGUIController {
                     break;
             }
 
+
+
+            //process more frames before returning control to main game logic.
+            counter++;
+            counter %= framePerBatch;
+            if (counter == framePerBatch - 1) {
+                yield return null;
+            }
         } while (sessionReader.NextData());
 
         sessionReader.Close();

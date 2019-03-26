@@ -30,7 +30,7 @@ public class SessionContext {
         triggerVersion = GameController.pportInfo;
         taskType = "Continuous";
         trialName = session.level;
-        rewardsNumber = session.numTrial;
+        rewardsNumber = session.numTrials;
 
         foreach (RewardArea reward in rewards) {
             posterLocations.Add(new PosterLocation(reward.target.position, reward.target.name));

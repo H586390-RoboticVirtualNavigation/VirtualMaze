@@ -13,16 +13,17 @@ using System.Threading.Tasks;
 /// <example>
 /// <code>
 ///     //cache the reference
-///     private ExperimentLogger logger;
+///     private ExperimentLogger logger = new ExperimentLogger;
 ///
 ///     private void OnExperimentStart() {
 ///         //creates a new ExperimentLogger
-///         logger = new ExperimentLogger(SaveLocation, ExperimentLogger.GenerateDefaultExperimentID());
+///         logger.SetSaveLocation("SaveLocation");
+///         logger.SetExperimentId(ExperimentLogger.GenerateDefaultExperimentID());
 ///     }
 ///
 ///     private void BeforeSessionStart() {
 ///         //creates and opens the log file for the current session
-///         logger.OpenSessionLog(sessionNum, session, currentSettings);
+///         logger.OpenSessionLog(sessionNum, context);
 ///     }
 ///
 ///     private void WithinSession() {
@@ -65,13 +66,12 @@ public class ExperimentLogger {
 
     private StreamWriter fs;
 
-    public ExperimentLogger(string saveLocation, string experimentID) {
-        SetSaveLocation(saveLocation);
-        SetExperimentId(experimentID);
-    }
-
     public void SetSaveLocation(string saveLocation) {
         this.saveLocation = saveLocation;
+    }
+
+    public void SetExperimentIdDefault() {
+        SetExperimentId(GenerateDefaultExperimentID());
     }
 
     public void SetExperimentId(string experimentID) {
@@ -82,11 +82,9 @@ public class ExperimentLogger {
     /// Opens a file to store the logs of the current session
     /// </summary>
     /// <param name="sessionNum">Index of the current session that is currently being logged</param>
-    /// <param name="session">Session object describing the current Session</param>
-    /// <param name="currentSettings">Current Settings of the Experiment</param>
-    /// <param name="rewards">Array of rewards in the level</param>
+    /// <param name="context">Configuration of the current session</param>
     /// <returns>True if log is opened successfully</returns>
-    public bool OpenSessionLog(int sessionNum, Session session, ExperimentSettings currentSettings, RewardArea[] rewards) {
+    public bool OpenSessionLog(int sessionNum, SessionContext context) {
         //check if properly instantiated
         if (string.IsNullOrEmpty(saveLocation) || string.IsNullOrEmpty(experimentID)) {
             Debug.LogWarning(Msg_NotInitialized);
@@ -106,7 +104,7 @@ public class ExperimentLogger {
             return false;
         }
 
-        WriteHeader(fs, session, currentSettings, rewards);
+        WriteHeader(fs, context);
 
         return true;
     }
@@ -143,84 +141,15 @@ public class ExperimentLogger {
                 robot.rotation.eulerAngles.y
             )
         );
+        fs.Flush();
     }
 
-    private void WriteHeader(StreamWriter fs, Session session, ExperimentSettings settings, RewardArea[] rewards) {
-        SessionContext context = new SessionContext(session, settings, rewards);
+    private void WriteHeader(StreamWriter fs, SessionContext context) {
         fs.WriteLine(context.ToJsonString());
-        
-        //fs.WriteLine("Version: {0}", GameController.versionInfo);
-        //fs.WriteLine("Trigger: {0}", GameController.pportInfo);
-        //fs.WriteLine("TaskType: Continuous");
-        //LogRewardPositions(fs, rewards);
-        //fs.WriteLine("TrialType: {0}", session.level);
-        //fs.WriteLine("SpecifiedRewardNo: {0}", session.numTrial);
-
-        //LogExperimentSettings(fs, settings);
-        //LogRewardSettings(fs, settings);
-        //LogRobotMovementSettings(fs, settings);
-        //LogJoystickSettings(fs, settings);
-
         fs.Flush();//call flush to write to file
     }
 
     private string FileName(int sessionNum) {
         return string.Format(Format_Filename, sessionNum, experimentID);
-    }
-
-    //helper methods to log required settings
-    private void LogJoystickSettings(StreamWriter fs, ExperimentSettings settings) {
-        if (settings.TryGetComponentSetting(out JoystickController.Settings joystickSettings)) {
-            fs.WriteLine("JoystickDeadzone: {0}", joystickSettings.deadzoneAmount);
-        }
-        else {
-            //this values are a must to be logged. Therefore an exception is thrown.
-            throw new SaveLoad.SettingNotFoundException("JoystickController.Settings not found");
-        }
-    }
-
-    private void LogRobotMovementSettings(StreamWriter fs, ExperimentSettings settings) {
-        if (settings.TryGetComponentSetting(out RobotMovement.Settings movementSettings)) {
-            fs.WriteLine("RotationSpeed: {0}", movementSettings.rotationSpeed); // robotMovement
-            fs.WriteLine("TranslationSpeed: {0}", movementSettings.movementSpeed); // robotMovement
-        }
-        else {
-            //this values are a must to be logged. Therefore an exception is thrown.
-            throw new SaveLoad.SettingNotFoundException("RobotMovement.Settings not found");
-        }
-    }
-
-    private void LogRewardSettings(StreamWriter writer, ExperimentSettings settings) {
-        if (settings.TryGetComponentSetting(out RewardsController.Settings rewardSettings)) {
-            fs.WriteLine("RewardTime: {0}", rewardSettings.rewardDurationMilliSecs);
-            fs.WriteLine("RewardViewCriteria: {0}", rewardSettings.requiredViewAngle);
-        }
-        else {
-            //this values are a must to be logged. Therefore an exception is thrown.
-            throw new SaveLoad.SettingNotFoundException("RewardsController.Settings not found");
-        }
-    }
-
-    private void LogExperimentSettings(StreamWriter writer, ExperimentSettings settings) {
-        if (settings.TryGetComponentSetting(out ExperimentController.Settings experimentSettings)) {
-            fs.WriteLine("CompletionWindow: {0}", experimentSettings.timeLimitDuration);
-            fs.WriteLine("TimeoutDuration: {0}", experimentSettings.timeoutDuration);
-            fs.WriteLine("IntersessionInterval: {0}", experimentSettings.sessionIntermissionDuration);
-        }
-        else {
-            //this values are a must to have. Therefore an exception is thrown
-            throw new SaveLoad.SettingNotFoundException("ExperimentController.Settings not found");
-        }
-    }
-
-    private void LogRewardPositions(StreamWriter writer, RewardArea[] rewards) {
-        fs.Write("PosterLocations:");
-        Vector3 posterPosition;
-        foreach(RewardArea reward in rewards) {
-            posterPosition = reward.target.transform.position;
-            //format: 'name(x,y,z) '. Maximum 2 decimal places for float positions
-            fs.Write("{0}({1:0.##},{2:0.##},{3:0.##}) ", reward.target.name, posterPosition.x, posterPosition.y, posterPosition.z);
-        }
-        fs.WriteLine();
     }
 }

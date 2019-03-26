@@ -6,7 +6,7 @@ public class ParallelPort : ConfigurableComponent {
     private bool parallelflip = false;
     public int portHexAddress;
 
-    [DllImport("InpOutx64.dll", EntryPoint = "Out32")]
+    [DllImport("inpoutx64.dll", EntryPoint = "Out32")]
     private static extern void Out32(int address, int value);
 
     [Serializable]

@@ -2,7 +2,7 @@
 * [Setting Up](#setting-up)
 * [Gitflow Workflow](#gitflow-workflow)
 * [Gitflow with Sourcetree](#gitflow-with-sourcetree)
-* [SR Research SDK](SR Research Eyelink SDK)
+* [SR Research SDK](#SR-Research-Eyelink-SDK)
 * [Building VirtualMaze](#Building-VirtualMaze)
 * [Documentation](#Documentation)
 

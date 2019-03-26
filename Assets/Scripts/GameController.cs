@@ -30,7 +30,7 @@ public class GameController : MonoBehaviour {
     public GameObject sessions;
     public GuiController guiController;
     public RewardsController rewardsController;
-    public Fading fade;
+    public FadeCanvas fade;
 
     public string dataDirectory;
     //private DirectoryInfo dataDirectoryIO;

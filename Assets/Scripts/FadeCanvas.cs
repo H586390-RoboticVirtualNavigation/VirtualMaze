@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public class Fading : MonoBehaviour {
+public class FadeCanvas : MonoBehaviour {
 
 	private CanvasGroup fade;
     private WaitForSecondsRealtime timeIncrements = new WaitForSecondsRealtime(0.01f);

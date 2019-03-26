@@ -18,8 +18,8 @@ public class JoystickGUIController : DataGUIController {
     }
 
     public override void UpdateSettingsGUI() {
-        deadzoneSlider.value = joystickController.deadzoneAmount;
-        joystickPortField.text = joystickController.portNum;
+        deadzoneSlider.value = joystickController.DeadzoneAmount;
+        joystickPortField.text = joystickController.PortNum;
 
         joystickPortField.image.color = Color.white;
         joystickController.JoystickClose();
@@ -27,10 +27,10 @@ public class JoystickGUIController : DataGUIController {
     }
 
     private void onSliderValueChanged(float value) {
-        joystickController.deadzoneAmount = value;
+        joystickController.DeadzoneAmount = value;
     }
     private void onPortFieldEditEnd(string port) {
-        joystickController.portNum = port;
+        joystickController.PortNum = port;
     }
 
     public void onSerialStateButtonClicked() {

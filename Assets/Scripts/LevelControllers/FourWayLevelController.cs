@@ -6,7 +6,7 @@ public class FourWayLevelController : MonoBehaviour {
 	private GameController gameController;
 	private GameObject robot;
 	private RobotMovement robotMovement;
-	private Fading fade;
+	private FadeCanvas fade;
 	private bool gotReward001;
 	private int numTrials;
 	private int trialCounter;
@@ -25,7 +25,7 @@ public class FourWayLevelController : MonoBehaviour {
 	
 	void Awake(){
 		gameController = GameObject.Find ("GameController").GetComponent<GameController>();
-		fade = GameObject.Find ("FadeCanvas").GetComponent<Fading>();
+		fade = GameObject.Find ("FadeCanvas").GetComponent<FadeCanvas>();
 		robot = GameObject.Find ("Robot");
 		robotMovement = robot.GetComponent<RobotMovement> ();
 	}
