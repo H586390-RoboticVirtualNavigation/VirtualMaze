@@ -19,5 +19,6 @@ More details regarding the Gitflow can be found in the Developer guide.
 # More Information
 
 - [Developer Guide](./docs/DeveloperGuide.md)
+- [Raycasting Guide](./docs/RaycastingGuide.md)
 - [User Guide](./docs/UserGuide.md)
 - [Code Documentation](./docs/CodeDocumentation.md)

@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using Eyelink.Structs;
 using System.Runtime.InteropServices;
 
-//Note to self(syy): may need this [DllImport(dll, CallingConvention = CallingConvention.Cdecl)]
-namespace EdfAccess {
+namespace Eyelink.EdfAccess {
     public class EdfAccessWrapper {
         //see https://docs.unity3d.com/Manual/PlatformDependentCompilation.html 
 #if (UNITY_STANDALONE_WIN)
         const string dll = "edfapi"; //name of dll file. not including extension
+#elif (UNITY_STANDALONE_OSX)
+        const string dll = "edf2asc"; //name of dll file. not including extension
 #else
         const string dll = ""; //nothing such that it will "safely fail"
 #endif
@@ -35,24 +34,24 @@ namespace EdfAccess {
 
         [DllImport(dll)]
         private static extern unsafe int edf_close_file(EDFFILE* ef);
-        
-        public static unsafe  int EdfCloseFile(EdfFilePointer pointer) {
+
+        public static unsafe int EdfCloseFile(EdfFilePointer pointer) {
             return edf_close_file(pointer.value);
         }
 
         [DllImport(dll)]
-        private static extern unsafe int edf_get_next_data(EDFFILE * ef);
+        private static extern unsafe int edf_get_next_data(EDFFILE* ef);
 
-        public static unsafe int EdfGetNextData(EdfFilePointer pointer) {
-            return edf_get_next_data(pointer.value);
+        public static unsafe DataTypes EdfGetNextData(EdfFilePointer pointer) {
+            return (DataTypes) edf_get_next_data(pointer.value);
         }
 
         [DllImport(dll)]
-        private static extern unsafe ALLF_DATA* edf_get_float_data(EDFFILE * ef);
+        private static extern unsafe ALLF_DATA* edf_get_float_data(EDFFILE* ef);
 
         public static unsafe ALLF_DATA EdfGetFloatData(EdfFilePointer ef) {
             ALLF_DATA* data = edf_get_float_data(ef.value);
-            
+
             return *data;
         }
 
@@ -68,5 +67,14 @@ namespace EdfAccess {
 
         [DllImport(dll)]
         public static extern int edf_get_preamble_text_length(EDFFILE edf);
+    }
+
+    //wrapper to make the pointer easily used in safe code.
+    public unsafe class EdfFilePointer {
+        public readonly EDFFILE* value;
+
+        public EdfFilePointer(EDFFILE* pointer) {
+            value = pointer;
+        }
     }
 }

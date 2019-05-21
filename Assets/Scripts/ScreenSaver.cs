@@ -1,11 +1,13 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.IO;
-using UnityEngine.UI;
-using EDFUtil;
-using EdfAccess;
+﻿using Eyelink.EdfAccess;
+using Eyelink.Structs;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class ScreenSaver : BasicGUIController {
     private int framePerBatch = 5;
@@ -20,7 +22,7 @@ public class ScreenSaver : BasicGUIController {
 
     private GameObject gazeIndicator;
 
-    public Camera c;
+    public Camera viewport;
 
     public Transform robot;
 
@@ -28,10 +30,18 @@ public class ScreenSaver : BasicGUIController {
     public CueController cueController;
     public FadeCanvas fadeController;
 
+    public GraphicRaycaster cueCaster;
+
     private void Awake() {
         eyeLinkFileInput.onEndEdit.AddListener(ChooseEyelinkFile);
         sessionInput.onEndEdit.AddListener(ChooseSession);
         folderInput.onEndEdit.AddListener(ChooseFolder);
+
+        if (true) { //for testing purposes.
+            ChooseEyelinkFile("D:\\Program Files (D)\\SR Research\\EyeLink\\EDF_Access_API\\Example\\181026.edf");
+            ChooseSession("D:\\Desktop\\FYP Init\\session01\\RawData_T1-400\\ShortVer.txt");
+            ChooseFolder("D:\\Documents\\GitHub\\VirtualMaze\\Assets");
+        }
     }
 
     private void OnsceneLoaded(Scene s, LoadSceneMode mode) {
@@ -47,33 +57,68 @@ public class ScreenSaver : BasicGUIController {
     }
 
     public void OnRender() {
-        if (sessionInput.GetComponent<Image>().color == Color.green) {
-            if (folderInput.GetComponent<Image>().color == Color.green) {
-                //long st = long.Parse(from.text);
-                //long end = long.Parse(to.text);
-                //if((end >= st) && (end <= (allLines.Length-1))){
-                //everything okay to render
-                //StartCoroutine(ProcessSessionData(sessionInput.text, folderInput.text));
-                //}
-                SceneManager.sceneLoaded += OnsceneLoaded;
-                SceneManager.LoadScene("Double Tee");
-            }
+        // check if file exists
+        string sessionPath = sessionInput.text;
+
+        if (!File.Exists(sessionPath)) {
+            Debug.LogError($"{sessionPath} does not exist");
+            return;
         }
+
+        //check if directory exists
+        string toFolderPath = folderInput.text;
+        if (!Directory.Exists(toFolderPath)) {
+            Debug.LogError($"{toFolderPath} does not exist");
+            return;
+        }
+
+        string edfPath = eyeLinkFileInput.text;
+        if (!File.Exists(edfPath)) { //check if file exist
+            Debug.LogError($"{edfPath} does not exist");
+            return;
+        }
+
+
+        //long st = long.Parse(from.text);
+        //long end = long.Parse(to.text);
+        //if((end >= st) && (end <= (allLines.Length-1))){
+        //everything okay to render
+        //StartCoroutine(ProcessSessionData(sessionInput.text, folderInput.text));
+        //}
+        SessionReader.ExtractInfo(sessionPath, out SessionContext context, out int numframes);
+
+        SceneManager.sceneLoaded += OnsceneLoaded;
+        SceneManager.LoadScene(context.trialName);
     }
 
     public void onBrowseSession() {
         fb.OnFileBrowserExit += ChooseSession;
-        fb.Show(Application.dataPath);
+        if (File.Exists(sessionInput.text)) {
+            fb.Show(Path.GetDirectoryName(sessionInput.text));
+        }
+        else {
+            fb.Show(Application.dataPath);
+        }
     }
 
     public void onBrowseEyelink() {
         fb.OnFileBrowserExit += ChooseEyelinkFile;
-        fb.Show(Application.dataPath);
+        if (File.Exists(eyeLinkFileInput.text)) {
+            fb.Show(Path.GetDirectoryName(eyeLinkFileInput.text));
+        }
+        else {
+            fb.Show(Application.dataPath);
+        }
     }
 
     public void onBrowseFolder() {
         fb.OnFileBrowserExit += ChooseFolder;
-        fb.Show(Application.dataPath);
+        if (File.Exists(folderInput.text)) {
+            fb.Show(folderInput.text);
+        }
+        else {
+            fb.Show(Application.dataPath);
+        }
     }
 
     void ChooseSession(string file) {
@@ -102,20 +147,6 @@ public class ScreenSaver : BasicGUIController {
         eyeLinkFileInput.text = file;
 
         if (File.Exists(file)) {
-            EdfFilePointer filePointer = EdfAccessWrapper.EdfOpenFile(eyeLinkFileInput.text, 0, 1, 1, out int errVal);
-            if (errVal == 0) {
-                print($"success {errVal}");
-                uint test = EdfAccessWrapper.EdfGetElementCount(filePointer);
-                print($"element count:{test}");
-                int dataType = EdfAccessWrapper.EdfGetNextData(filePointer);
-                ALLF_DATA data = EdfAccessWrapper.EdfGetFloatData(filePointer);
-                print($"success data :\n{data}");
-                EdfAccessWrapper.EdfCloseFile(filePointer);
-            }
-            else {
-                print("fail");
-            }
-
             SetInputFieldValid(eyeLinkFileInput);
         }
         else {
@@ -145,101 +176,185 @@ public class ScreenSaver : BasicGUIController {
         fb.OnFileBrowserExit += BrowserCancel;
 
         gazeIndicator = GameObject.Find("gazeIndicator");
+
     }
 
     private IEnumerator ProcessSessionData(string sessionPath, string edfPath, string toFolderPath) {
-        // check if file exists
-        if (!File.Exists(sessionPath)) {
-            Debug.LogError($"{sessionPath} does not exist");
-            yield break;
-        }
+        fadeController.gameObject.SetActive(false);
+        int frameCounter = 0;
+        EdfFilePointer pointer = EdfAccessWrapper.EdfOpenFile(edfPath, 0, 1, 1, out int errVal);
 
-        if (!File.Exists(edfPath)) {
-            Debug.LogError($"{edfPath} does not exist");
-            yield break;
-        }
+        cueController.ShowCue();
 
-        //check if directory exists
-        if (!Directory.Exists(toFolderPath)) {
-            Debug.LogError($"{toFolderPath} does not exist");
+        if (errVal != 0) { //check if file can be parsed by library
+            Debug.LogError($"Unable to open .edf file");
             yield break;
         }
 
         SessionReader sessionReader = new SessionReader(sessionPath);
-        EDFReader edfReader = new EDFReader(edfPath);
 
-        int counter = 0;
+        //assume all files the first msg is 84
+        uint timeToNextFrame;
+        uint time = 0;
 
-        Vector3 screenPos = Vector3.zero;
-        EdfData data;
-        do {
-            Ray r;
-
-            data = edfReader.getNextData();
-
-            switch (data) {
-                case EdfSampleData sample:
-
-                    screenPos.Set(sample.gazeX, sample.gazeY, 0);
-
-                    r = c.ScreenPointToRay(screenPos);
-                    //r = new Ray(robot.position, robot.forward);
-                    if (Physics.Raycast(r, out RaycastHit hit)) {
-                        lineRenderer?.SetPositions(new Vector3[] { c.transform.position, hit.point });
-                        yield return null;//for debug
-                    }
-                    else {
-                        print("nothing");
-                    }
-
-                    break;
-                case EdfMessage message:
-                    break;
-                default:
-                    break;
+        //move sessionReader to point to first trial
+        while (sessionReader.NextData()) {
+            if (sessionReader.trigger == SessionTrigger.TrialStartedTrigger) {
+                MoveRobotTo(robot, sessionReader);
+                break;
             }
+        }
 
-            data = edfReader.getNextData();
-
-            MoveRobotTo(robot, sessionReader);
-
-            //process the triggers
-            switch (sessionReader.flag / 10) {
-                case 0: //no trigger
-                    break; //do nothing
-                case 1: //cue shown
+        //move edfFile to point to first trial
+        bool foundFirstTrial = false;
+        while (!foundFirstTrial) {
+            if (EdfAccessWrapper.EdfGetNextData(pointer) == DataTypes.MESSAGEEVENT) {
+                ALLF_DATA data = EdfAccessWrapper.EdfGetFloatData(pointer);
+                FEVENT ev = data.fe;
+                if (ev.GetSessionTrigger() == SessionTrigger.TrialStartedTrigger) {
+                    time = ev.sttime;
+                    Debug.LogError($"LOOK AT ME TOO {ev.sttime}");
+                    foundFirstTrial = true;
                     cueController.ShowCue();
                     break;
-                case 2: //cue hidden, hint shown, trial start
-                    cueController.HideCue();
-                    cueController.ShowHint();
-                    break;
-                case 3: //Trial Ended (Trial Success)
-                    cueController.HideAll();
-                    break;
-                case 4: //Timeout Trigger (TrialFailed)
-                    cueController.HideAll();
-                    break;
-                case 8: //Experiment Version
-                    fadeController.FadeIn();
-                    break;
-                default:
-                    Console.WriteError($"Unkown Flag {sessionReader.flag}");
-                    break;
+                }
+            }
+        }
+
+        print("ended");
+        bool synced = true;
+        uint desyncTime = 0;
+        while (sessionReader.NextData()) {
+            timeToNextFrame = time + (uint)(sessionReader.timeDelta * 1000);
+            print($"timetoNext:{timeToNextFrame}");
+            MoveRobotTo(robot, sessionReader);
+
+            if (sessionReader.trigger != SessionTrigger.NoTrigger) {
+                synced = false;
             }
 
+            while (time < timeToNextFrame || !synced) {
+                print($"{time} | {timeToNextFrame}");
 
+                DataTypes type = EdfAccessWrapper.EdfGetNextData(pointer);
+                ALLF_DATA data = EdfAccessWrapper.EdfGetFloatData(pointer);
 
-            //process more frames before returning control to main game logic.
-            counter++;
-            counter %= framePerBatch;
-            if (counter == framePerBatch - 1) {
+                switch (type) {
+                    case DataTypes.SAMPLE_TYPE:
+                        print($"type:{type}, flags:{Convert.ToString(data.fs.flags, 16)}, time:{data.fs.time}, {synced}");
+                        LogGazeObjectInScene(data.fs);
+                        time = data.fs.time;
+                        break;
+                    case DataTypes.MESSAGEEVENT:
+                        SessionTrigger trigger = ProcessMessageEvent(data.fe);
+                        time = data.fe.sttime;
+
+                        print($"type:{type}, flags:{Convert.ToString(data.fs.flags, 16)}, time:{time}, {synced}");
+
+                        if (!synced) {
+                            synced = sessionReader.trigger == trigger;
+                            Debug.LogError($"error of {time - desyncTime}ms, {synced}, sessionT: {data.fe.GetMessage()}|{sessionReader.flag}, @desynced at{desyncTime}");
+                            desyncTime = 0;
+                        }
+                        else {
+                            synced = false;
+                            float frameError = sessionReader.timeDelta;//1 for this current frame
+                            uint timestart = data.fe.sttime;
+                            while (sessionReader.NextData() && !synced) {
+                                if (sessionReader.trigger == trigger) {
+                                    synced = true;
+                                    Debug.LogError($"{frameError}|{sessionReader.flag}|at:{timestart}|{data.fe.GetMessage()},{sessionReader.flag}");
+                                }
+                                else {
+                                    frameError += sessionReader.timeDelta;
+                                    //Debug.Break();
+                                }
+                            }
+                        }
+                        break;
+                    default:
+                        //ignore others for now
+                        Debug.LogWarning($"Unsupported EDF DataType Found! ({type})");
+                        break;
+                }
+
+                if (time > timeToNextFrame && !synced && desyncTime == 0) {
+                    desyncTime = time;
+                }
+            }
+            frameCounter++;
+            frameCounter %= framePerBatch;
+            if (frameCounter == 0) {
                 yield return null;
             }
-        } while (sessionReader.NextData());
+        }
 
-        sessionReader.Close();
-        SceneManager.UnloadSceneAsync("Double Tee");
+        //sessionReader.Close();
+        //SceneManager.UnloadSceneAsync("Double Tee");
+    }
+
+    private SessionTrigger ProcessMessageEvent(FEVENT ev) {
+        //print($", @time:{ev.sttime}");
+
+        SessionTrigger trigger = ev.GetSessionTrigger();
+
+        switch (trigger) {
+            case SessionTrigger.CueShownTrigger:
+                cueController.HideCue();
+                cueController.ShowHint();
+                break;
+
+            case SessionTrigger.TrialStartedTrigger:
+                cueController.ShowCue();
+                break;
+
+            case SessionTrigger.TimeoutTrigger:
+            case SessionTrigger.TrialEndedTrigger:
+                cueController.HideAll();
+                break;
+
+            case SessionTrigger.NoTrigger:
+            default:
+                Debug.LogError($"Unidentified Session Trigger: {trigger}");
+                break;
+        }
+        return trigger;
+    }
+
+    private void LogGazeObjectInScene(FSAMPLE sample) {
+        //check for UI raycasts first
+        List<RaycastResult> results = new List<RaycastResult>();
+
+        PointerEventData data = new PointerEventData(EventSystem.current);
+        data.position = sample.RightGaze;
+        cueCaster.Raycast(data, results);
+
+        if (results.Count > 0) {
+            print($"results count: {results.Count}, gaze:{data.position}");
+
+            if (results.Count > 1) {
+                Debug.LogWarning($"There are overlapping graphics when graphics at time = {sample.time}");
+            }
+
+            Vector2 objPosition = RectTransformUtility.WorldToScreenPoint(viewport, results[0].gameObject.transform.position);
+            print($"t:{sample.time}, name:{results[0].gameObject.name}, 2d:{objPosition - results[0].screenPosition}, objhit:{results[0].gameObject.transform.position}, pointHit: pls go calculate");
+            print(results[0].screenPosition);
+
+            return;
+        }
+
+        //check for scene raycast
+        Ray r = viewport.ScreenPointToRay(sample.RightGaze);
+
+        if (Physics.Raycast(r, out RaycastHit hit)) {
+            lineRenderer?.SetPositions(new Vector3[] { viewport.transform.position, hit.point });
+            //, point of ray hit poster (2d, surface of collided), position of object hit, world coordinates of position 
+            Transform objhit = hit.transform;
+            print($"t:{sample.time}, name:{hit.transform.name}, 2d:{hit.point - objhit.position}, objhit:{objhit.position}, pointHit:{hit.point}");
+        }
+        else {
+            lineRenderer?.SetPositions(new Vector3[0]);
+        }
     }
 
     void MoveRobotTo(Transform robot, SessionReader reader) {

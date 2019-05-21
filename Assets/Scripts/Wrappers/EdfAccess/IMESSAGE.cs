@@ -1,4 +1,4 @@
-﻿namespace EdfAccess {
+﻿namespace Eyelink.Structs {
     public unsafe struct IMESSAGE {
         public uint time;
         public short type;

@@ -1,4 +1,4 @@
-﻿namespace EdfAccess {
+﻿namespace Eyelink.Structs {
     public struct RECORDINGS {
         public uint time;
         public float sample_rate;

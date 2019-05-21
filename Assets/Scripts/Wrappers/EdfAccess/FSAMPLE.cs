@@ -1,7 +1,12 @@
-﻿//the arrays may need to be set as unsafe | fixed float gxvel[3];
-namespace EdfAccess {
+﻿using System.Text;
+using System.Runtime.InteropServices;
+using UnityEngine;
+using SREYELINKLib;
+
+//the arrays may need to be set as unsafe | fixed float gxvel[3];
+namespace Eyelink.Structs {
     public unsafe struct FSAMPLE {
-        public short time;
+        public uint time;
         public fixed float px[2];
         public fixed float py[2];
         public fixed float hx[2];
@@ -24,10 +29,41 @@ namespace EdfAccess {
         public fixed float frxvel[2];
         public fixed float fryvel[2];
         public fixed short hdata[8];
+
+        //flags to indicate contents
         public ushort flags;
+
         public ushort input;
         public ushort buttons;
         public short htype;
         public ushort errors;
+
+        public unsafe Vector2 RightGaze {
+            get {
+                fixed (float* ptr = gx, ptr2 = gy) {
+                    return new Vector2(*ptr, *ptr2);
+                }
+            }
+        }
+
+        public override string ToString() {
+            StringBuilder builder = new StringBuilder(base.ToString());
+
+            fixed (float* x = hx) {
+                float[] arr = ToArray(fixedArr: x, len: 2);
+            }
+
+            return builder.ToString();
+        }
+
+        private static float[] ToArray(float* fixedArr, int len) {
+            float[] arr = new float[len];
+
+            for (int i = 0; i < len; i++) {
+                arr[i] = *(fixedArr + i);
+            }
+
+            return arr;
+        }
     }
 }

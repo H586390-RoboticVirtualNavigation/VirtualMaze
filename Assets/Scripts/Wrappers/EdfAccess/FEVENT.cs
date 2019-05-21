@@ -1,11 +1,18 @@
-﻿namespace EdfAccess {
-    //types differ from Eyelink documentation.
-    //See https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/built-in-types-table
-    
+﻿using System;
+using System.Text;
+using System.Text.RegularExpressions;
+using UnityEngine;
+
+namespace Eyelink.Structs {
     public struct FEVENT {
         public uint time;
         public short type;
+
+        /// <summary>
+        /// flags of which items are included
+        /// </summary>
         public ushort read;
+
         public uint sttime;
         public uint entime;
         public float hstx;
@@ -33,11 +40,88 @@
         public float eupd_y;
         public short eye;
         public ushort status;
+
+        /// <summary>
+        /// contains error or warning flags
+        /// </summary>
         public ushort flags;
+
         public ushort input;
         public ushort buttons;
         public ushort parsedby;
-        //from documentation it is LSTRING * message but it has no equivalent in C#, trying to use char*
-        public unsafe char* message;// LSTRING * message; 
+
+        public unsafe LSTRING* message;
+
+        /// <summary>
+        /// Converts LSTRING to a proper string message.
+        /// </summary>
+        /// <returns></returns>
+        public unsafe string GetMessage() {
+            int len = message->len;
+            byte* charPtr = &(message->c);
+
+            StringBuilder builder = new StringBuilder(len);
+
+            for (int i = 0; i < len-1; i++) {
+                //byte converted to char, charPtr increments to point to next char
+                builder.Append((char)*(charPtr + i));
+            }
+
+            return builder.ToString();
+
+        }
+
+        /// <summary>
+        /// Since all messages sent to Eyelink is appended by the SessionTrigger, 
+        /// it is safe to get the second last char and convert it into a SessionTrigger.
+        /// 
+        /// eg.
+        /// MSG	1686949 Trigger Version 84\0
+        /// MSG	1689040	Start Trial 14\0
+        /// 
+        /// where '\0' is a null character
+        /// </summary>
+        /// <returns></returns>
+        public unsafe SessionTrigger GetSessionTrigger() {
+            //check that the message is a valid SessionTrigger.
+            if (!isSessionTrigger(GetMessage())) {
+                return SessionTrigger.NoTrigger;
+            }
+
+            //get index of trigger
+            int index = (message->len) - 3;
+
+            //derive pointer of trigger
+            byte* triggerPtr = (&(message->c)) + index;
+
+            //convert byte to char and subtract with the char '0' to get actual number.
+            int trigger = ((char)(*triggerPtr)) - '0';
+
+            // multipled by 10 due to the trigger being in the tens place
+            return (SessionTrigger)(trigger * 10);
+        }
+
+        
+        private bool isSessionTrigger(string message) {
+            //pattern describes only 2 words and a 2 digit number
+            const string pattern = @"^(\w+\s){2}\d{2}$";
+           
+            return Regex.IsMatch(message.Trim(), pattern);
+        }
+    }
+
+    public struct LSTRING {
+        /// <summary>
+        /// length of message
+        /// </summary>
+        public Int16 len;
+
+        /// <summary>
+        /// First character of the message,
+        /// 
+        /// In EDF file, char is stored as 8 bits ascii characters and in C#, 
+        /// char is 16 bits so byte is used.
+        /// </summary>
+        public byte c;
     }
 }

@@ -17,6 +17,8 @@ public class SessionReader {
     public float posZ { get; private set; } = -1;
     public float rotY { get; private set; } = -1;
 
+    public SessionTrigger trigger { get { return (SessionTrigger)((flag / 10) * 10); } }
+
     public SessionContext context;
 
     public SessionReader(string filePath) {
@@ -29,7 +31,7 @@ public class SessionReader {
 
     public bool NextData() {
         currentData = reader.ReadLine();
-        if (currentData != null) {
+        if (!string.IsNullOrEmpty(currentData)) {
             ParseData(currentData);
             return true;
         }

@@ -4174,7 +4174,7 @@ RectTransform:
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -5164,7 +5164,7 @@ RectTransform:
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -6224,7 +6224,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &6223434938693101384
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7361,7 +7361,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2430676302139559799
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9217,8 +9217,9 @@ MonoBehaviour:
     m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
   baudRate: 115200
-  deadzoneAmount: 0
-  portNum: 
+  settings:
+    deadzoneAmount: 0
+    portNum: 
 --- !u!222 &2772038610712446021
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -12372,11 +12373,12 @@ MonoBehaviour:
   from: {fileID: 0}
   to: {fileID: 0}
   sessionInfo: {fileID: 4075818648752084303}
-  c: {fileID: 2084128}
+  viewport: {fileID: 2084128}
   robot: {fileID: 416224}
   lineRenderer: {fileID: 0}
-  cueController: {fileID: 0}
-  fadeController: {fileID: 0}
+  cueController: {fileID: 7489421944467076256}
+  fadeController: {fileID: 11434004}
+  cueCaster: {fileID: 5281864669549934393}
 --- !u!1 &6474123425981459034
 GameObject:
   m_ObjectHideFlags: 0
@@ -19074,7 +19076,7 @@ PrefabInstance:
     - target: {fileID: 7380630212920141058, guid: 3ee4b64493e2e40c0b1b852904531a46,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 6363748.5
+      value: 7584704
       objectReference: {fileID: 0}
     - target: {fileID: 7380630212920139510, guid: 3ee4b64493e2e40c0b1b852904531a46,
         type: 3}
