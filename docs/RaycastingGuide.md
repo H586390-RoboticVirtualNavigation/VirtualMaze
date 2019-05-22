@@ -4,7 +4,14 @@ This guide assumes that the developer is already able to acquire and set the vir
 ## VirtualMaze Setup
 The current setup of the cue and subject is as follows.
 
-The cue exists as image components residing in a Canvas in World Space and this canvas is set as a child of the gameobject representing the subject. This setup allows the cues to follow the subject easily.
+The image cues exists as image components residing in a Canvas in World Space and this canvas is set as a child of the gameobject representing the subject. This setup allows the cues to follow the subject easily.
+
+## Full Code
+Full code can be found at ScreenSaver.cs.
+
+Functions of interest are:
+  - ProcessSessionData()
+  - LogGazeObjectInScene()
 
 ## Overview of Method (Pseudocode)
 ```
@@ -76,6 +83,10 @@ Since the cues are at the front of everything, it is recommended to do a Graphic
 
 
 ### Physics Raycast
+
+Uses:
+- [Physics.Raycast](https://docs.unity3d.com/ScriptReference/Physics.Raycast.html)
+
 ```Csharp
 //create a ray from the camera
 //RightGaze is a 2D Vector containing the x and y position of the gaze data
@@ -91,5 +102,6 @@ if (Physics.Raycast(r, out RaycastHit hit)) {
   //process and record the hit
   print($"t:{sample.time}, name:{hit.transform.name}, 2d:{hit.point - objhit.position}, objhit:{objhit.position}, pointHit:{hit.point}");
 }
+//continues to the next gaze data point
 
 ```
