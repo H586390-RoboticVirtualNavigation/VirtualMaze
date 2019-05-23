@@ -90,12 +90,12 @@ public class RobotMovement : ConfigurableComponent {
 
         if (ShouldRotate(horizontal)) {
             Quaternion rotateBy = Quaternion.Euler(0, horizontal * rotationSpeed * Time.deltaTime, 0);
-            rigidBody.MoveRotation(transform.rotation * rotateBy);
+            rigidBody.rotation = (transform.rotation * rotateBy);
         }
 
         if (ShouldMove(vertical)) {
             Vector3 moveBy = transform.forward * vertical * movementSpeed * Time.deltaTime;
-            rigidBody.MovePosition(transform.position + moveBy);
+            rigidBody.position = transform.position + moveBy;
         }
     }
 

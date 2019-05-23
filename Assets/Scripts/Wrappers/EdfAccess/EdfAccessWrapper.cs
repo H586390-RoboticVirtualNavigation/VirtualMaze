@@ -4,10 +4,10 @@ using System.Runtime.InteropServices;
 namespace Eyelink.EdfAccess {
     public class EdfAccessWrapper {
         //see https://docs.unity3d.com/Manual/PlatformDependentCompilation.html 
-#if (UNITY_STANDALONE_WIN)
+#if (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN)
         const string dll = "edfapi"; //name of dll file. not including extension
-#elif (UNITY_STANDALONE_OSX)
-        const string dll = "edf2asc"; //name of dll file. not including extension
+#elif (UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX)
+        const string dll = "edfapiMac"; //name of bundle file. not including extension
 #else
         const string dll = ""; //nothing such that it will "safely fail"
 #endif
@@ -43,7 +43,7 @@ namespace Eyelink.EdfAccess {
         private static extern unsafe int edf_get_next_data(EDFFILE* ef);
 
         public static unsafe DataTypes EdfGetNextData(EdfFilePointer pointer) {
-            return (DataTypes) edf_get_next_data(pointer.value);
+            return (DataTypes)edf_get_next_data(pointer.value);
         }
 
         [DllImport(dll)]

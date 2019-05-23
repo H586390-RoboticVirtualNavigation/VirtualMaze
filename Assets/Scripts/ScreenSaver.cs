@@ -40,7 +40,7 @@ public class ScreenSaver : BasicGUIController {
         if (true) { //for testing purposes.
             ChooseEyelinkFile("D:\\Program Files (D)\\SR Research\\EyeLink\\EDF_Access_API\\Example\\181026.edf");
             ChooseSession("D:\\Desktop\\FYP Init\\session01\\RawData_T1-400\\ShortVer.txt");
-            ChooseFolder("D:\\Documents\\GitHub\\VirtualMaze\\Assets");
+            ChooseFolder(@"D:\Documents\GitHub\VirtualMaze\out");
         }
     }
 
@@ -224,6 +224,11 @@ public class ScreenSaver : BasicGUIController {
         print("ended");
         bool synced = true;
         uint desyncTime = 0;
+
+        string filename = $"{Path.GetFileNameWithoutExtension(sessionPath)}{Path.GetFileNameWithoutExtension(edfPath)}.csv";
+
+        RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename);
+
         while (sessionReader.NextData()) {
             timeToNextFrame = time + (uint)(sessionReader.timeDelta * 1000);
             print($"timetoNext:{timeToNextFrame}");
@@ -242,7 +247,10 @@ public class ScreenSaver : BasicGUIController {
                 switch (type) {
                     case DataTypes.SAMPLE_TYPE:
                         print($"type:{type}, flags:{Convert.ToString(data.fs.flags, 16)}, time:{data.fs.time}, {synced}");
-                        LogGazeObjectInScene(data.fs);
+                        RaycastGazeData(data.fs, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
+
+                        recorder.WriteSample(type, data.fs.time, objName, relativePos, objHitPos, gazePoint, data.fs.RightGaze);
+
                         time = data.fs.time;
                         break;
                     case DataTypes.MESSAGEEVENT:
@@ -250,6 +258,8 @@ public class ScreenSaver : BasicGUIController {
                         time = data.fe.sttime;
 
                         print($"type:{type}, flags:{Convert.ToString(data.fs.flags, 16)}, time:{time}, {synced}");
+
+                        recorder.WriteEvent(type, data.fe.sttime, data.fe.GetMessage());
 
                         if (!synced) {
                             synced = sessionReader.trigger == trigger;
@@ -289,8 +299,9 @@ public class ScreenSaver : BasicGUIController {
             }
         }
 
-        //sessionReader.Close();
-        //SceneManager.UnloadSceneAsync("Double Tee");
+        recorder.Close();
+        sessionReader.Close();
+        SceneManager.UnloadSceneAsync("Double Tee");
     }
 
     private SessionTrigger ProcessMessageEvent(FEVENT ev) {
@@ -321,7 +332,16 @@ public class ScreenSaver : BasicGUIController {
         return trigger;
     }
 
-    private void LogGazeObjectInScene(FSAMPLE sample) {
+    /// <summary>
+    /// Fires a raycast into the scene bases on the sample data.
+    /// </summary>
+    /// <param name="sample">Data sameple from edf file</param>
+    /// <param name="objName">Name of object the gazed object</param>
+    /// <param name="relativePos">Local 2D offset of from the center of the object gazed</param>
+    /// <param name="objHitPos">World position of the object in the scene</param>
+    /// <param name="gazePoint">World position of the point where the gaze fixates the object</param>
+    /// <returns>True if an object was in the path of the gaze</returns>
+    private bool RaycastGazeData(FSAMPLE sample, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint) {
         //check for UI raycasts first
         List<RaycastResult> results = new List<RaycastResult>();
 
@@ -337,10 +357,23 @@ public class ScreenSaver : BasicGUIController {
             }
 
             Vector2 objPosition = RectTransformUtility.WorldToScreenPoint(viewport, results[0].gameObject.transform.position);
-            print($"t:{sample.time}, name:{results[0].gameObject.name}, 2d:{objPosition - results[0].screenPosition}, objhit:{results[0].gameObject.transform.position}, pointHit: pls go calculate");
-            print(results[0].screenPosition);
 
-            return;
+
+            objName = results[0].gameObject.name;
+
+            RectTransform t = results[0].gameObject.GetComponent<RectTransform>();
+
+
+            //check this
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(t, sample.RightGaze, viewport, out gazePoint);
+
+            Vector3 imgWorldPos = t.TransformPoint(t.rect.center);
+
+            relativePos = gazePoint - imgWorldPos;
+
+            objHitPos = results[0].gameObject.transform.position;
+
+            return true;
         }
 
         //check for scene raycast
@@ -348,13 +381,55 @@ public class ScreenSaver : BasicGUIController {
 
         if (Physics.Raycast(r, out RaycastHit hit)) {
             lineRenderer?.SetPositions(new Vector3[] { viewport.transform.position, hit.point });
-            //, point of ray hit poster (2d, surface of collided), position of object hit, world coordinates of position 
             Transform objhit = hit.transform;
-            print($"t:{sample.time}, name:{hit.transform.name}, 2d:{hit.point - objhit.position}, objhit:{objhit.position}, pointHit:{hit.point}");
+
+            objName = hit.transform.name;
+            //not accurate did not consider the direction the object is facing
+            relativePos = computeLocalPostion(objhit, hit); ;
+            objHitPos = objhit.position;
+            //check this
+            gazePoint = hit.point;
+
+            return false;
+
         }
         else {
+            objName = null;
+            //not accurate did not consider the direction the object is facing
+            relativePos = Vector2.zero;
+            //check this
+            gazePoint = Vector3.zero;
+            objHitPos = Vector3.zero;
+
             lineRenderer?.SetPositions(new Vector3[0]);
+
+            return false;
         }
+    }
+
+
+    private Vector2 computeLocalPostion(Transform objHit, RaycastHit hit) {
+        Debug.LogWarning($"{hit.normal}, {objHit.name}");
+
+        Vector3 normal = hit.normal;
+        Vector3 dist = hit.point - objHit.position;
+
+        Vector2 result = Vector2.zero;
+
+        if (normal.x != 0) {
+            result.y = dist.y;
+            result.x = dist.z * normal.x;
+        }
+        else if (normal.y != 0) {
+            result.y = dist.z;
+            result.x = dist.x * normal.y;
+        }
+        else if (normal.z != 0) {
+            result.y = dist.z;
+            result.x = dist.x * normal.z;
+        }
+
+        return result;
     }
 
     void MoveRobotTo(Transform robot, SessionReader reader) {

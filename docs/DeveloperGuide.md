@@ -4,6 +4,7 @@
 * [Gitflow with Sourcetree](#gitflow-with-sourcetree)
 * [SR Research SDK](#SR-Research-Eyelink-SDK)
 * [Building VirtualMaze](#Building-VirtualMaze)
+* [Creating edfapi.bundle for MacOS](#Creating-edfapi.bundle-for-MacOS)
 * [Documentation](#Documentation)
 
 # Setting Up
@@ -76,6 +77,19 @@ This project makes use of the Eyelink SDK. Information and the SDK can be found 
 A folder named `out` in the root of the project folder is created for developers to build VirtualMaze into.
 
 Developers can also build their games here for convenience as then contents of the folder is ignored by Git and will not be uploaded to the remote repository.
+
+# Creating edfapi.bundle for MacOS
+The MAC developer kit provided does not have an out of the box .bundle file to be used as a plugin Unity. This section serves to provide steps to create the .bundle file if the library needs to be updated.
+
+Prerequisites:
+- Eyelink SDK for MacOS is already installed.
+
+To create a plugin, use XCode create a new .bundle project.
+In the project settings at the *General > Linked Frameworks and Libraries*, Select *Add Other...* and add the *edfapi.framework* from the MacOS *Library > Frameworks* folder.
+
+Copy all of the .c and .h files from *Application > Eyelink > EDF_ACCESS_API > Example* into the project.
+
+Run and build. An error encountered is the missing *edf_data.h* file. A way to solve this is to copy the *edf_data.h* into the project.
 
 # Documentation
 To write this documentation, the text editor [Atom](https://atom.io/) was used as it supports syntax highlighting and preview of Markdown files(.md).

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices; //important for DLLs
 using UnityEngine;
+using SREYELINKLib;
 
 /// <summary>
 /// temporary holding area for eyelink commands
@@ -44,6 +45,10 @@ public class EyeLink {
     }
 
     public int TryGetEyelinkConnectedStatus() {
+        //if(eyelink!= null) {
+        //    return eyelink.isConnected();
+        //}
+        //return false;
         int result = 0;
         try {
             result = eyelink_is_connected();
@@ -55,17 +60,21 @@ public class EyeLink {
         return result;
     }
 
+    public static SREYELINKLib.EyeLink eyelink;
+
     public static void Initialize() {
-        try {
-            //initilise the dll
-            EyeLink.OpenEyelinkConnection(-1);
-            //listen in eyelink connection. See eyelink documentation.
-            EyeLink.EyelinkBroadcastOpen();
-        }
-        catch (DllNotFoundException e) {
-            GuiController.experimentStatus = e.ToString();
-            Debug.Log(e.ToString());
-        }
+        eyelink = new SREYELINKLib.EyeLink();
+
+        //try {
+        //    //initilise the dll
+        //    EyeLink.OpenEyelinkConnection(-1);
+        //    //listen in eyelink connection. See eyelink documentation.
+        //    EyeLink.EyelinkBroadcastOpen();
+        //}
+        //catch (DllNotFoundException e) {
+        //    GuiController.experimentStatus = e.ToString();
+        //    Debug.Log(e.ToString());
+        //}
     }
 
     public void OnSessionTrigger(SessionTrigger trigger, int triggerValue) {
