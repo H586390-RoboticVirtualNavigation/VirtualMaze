@@ -6,7 +6,7 @@ using UnityEngine;
 using SREYELINKLib;
 
 public class EyeLink {
-    private static bool openDummy = false;
+    private static bool openDummy = true;
 
     public static void TryEyemsg_Printf(String msg) {
             eyelink.sendMessage(msg);

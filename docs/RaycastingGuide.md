@@ -19,7 +19,7 @@ A CSV (Comma Seperated Value) file will be generated in the desired destination.
 #### Columns Reference
 1. Type of the data in the row (string/text).
 2. Timestamp of the gaze data used to generate the object fixated (unsigned int)
-3. Name of the Object fixated by the gaze or Message (string).
+3. Name of the Object fixated by the gaze or Message (string/text).
 
 *Relative Position ([Unity Units](#unity-units))*
 
@@ -52,15 +52,15 @@ See [Relative Position](#relative-position) for more details.
 16. Z Worldspace Co-ordinate of the subject's location in the Worldspace.
 
 #### Unity Units
-Numbers represented by Unity Units are values unity uses to position the various gameobjects in the Worldspace where the center of the Worldspace and the maze is located at (x: 0, y: 0, z: 0). For reference and scaling, the "rooms" used in VirtualMaze is 25 by 25 Unity Units and the ceiling is 4.93 Unity Units high.
+Numbers represented by Unity Units are values unity uses to position the various gameobjects in the Worldspace where the center of the floor of the maze is located at (x: 0, y: 0, z: 0). For reference and scaling, the "rooms" used in VirtualMaze is 25 by 25 Unity Units and the ceiling is 4.93 Unity Units high.
 
 The default settings for units in Unity is 1 Unity Unit = 1 meter however, because the scaling is mutable, feel free to scale these values as required.
 
 #### Object Size Reference
 
-- **Posters:** (width: 2.24, length: 1.4, thickness: 0) Unity Unit
-- **Outer Walls:** (width: 5, length: 5, thickness: 0.1) Unity Unit
-- **Inner/Colored Walls:** (width: 5, length: 3.11, thickness: 0.1) Unity Unit
+- **Posters:** (width: 2.24, height: 1.4, thickness: 0) Unity Unit
+- **Outer Walls:** (width: 5, height: 5, thickness: 0.1) Unity Unit
+- **Inner Walls/Barriers:** (width: 5, height: 3.11, thickness: 0.1) Unity Unit
 - **Ground and Ceiling:** (width: 25, length: 25, thickness: 0) Unity Unit
  - Ceiling Height: 4.93 Unity Unit
 - **CueImage:** (width: 0.4, length: 0.2, thickness: 0) Unity Unit
