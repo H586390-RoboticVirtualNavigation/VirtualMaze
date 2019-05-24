@@ -48,7 +48,7 @@ See [Relative Position](#relative-position) for more details.
 ## Relative Position
 Relative position represents the coordinates of the gaze hit position from the center of the poster.
 
-![cat-poster](/docs/images/relativepos-explaination.png)
+![relative position explaination](/docs/images/relativePos-explaination.png)
 
 The center of object (represented by the circle) is the 3D coordinates of its position in the virtual space.
 
