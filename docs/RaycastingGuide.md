@@ -12,7 +12,7 @@
 + Click ***Generate*** to start processing the files.
 
 ## Output
-A csv (Comma Seperated Value) file will be generated in the desired destination.
+A CSV (Comma Seperated Value) file will be generated in the desired destination.
 
 ![data-generation-outputScreenshot](/docs/images/data-generation-output.PNG)
 
@@ -45,12 +45,42 @@ See [Relative Position](#relative-position) for more details.
 12. gx data copied from the .edf file used to raycast.
 13. gy data copied from the .edf file used to raycast.
 
+*Subject location in Worldspace ([Unity Units](#unity-units))*
+
+14. X Worldspace Co-ordinate of the subject's location in the Worldspace.
+15. Y Worldspace Co-ordinate of the subject's location in the Worldspace.
+16. Z Worldspace Co-ordinate of the subject's location in the Worldspace.
+
 #### Unity Units
-Numbers represented by Unity Units are values unity uses to position the various gameobjects. For reference and scaling, the rooms used in VirtualMaze is 25 by 25 Unity Units and the ceiling is 4.93 Unity Units high.
+Numbers represented by Unity Units are values unity uses to position the various gameobjects in the Worldspace where the center of the Worldspace and the maze is located at (x: 0, y: 0, z: 0). For reference and scaling, the "rooms" used in VirtualMaze is 25 by 25 Unity Units and the ceiling is 4.93 Unity Units high.
+
+The default settings for units in Unity is 1 Unity Unit = 1 meter however, because the scaling is mutable, feel free to scale these values as required.
+
+#### Object Size Reference
+
+- **Posters:** (width: 2.24, length: 1.4, thickness: 0) Unity Unit
+- **Outer Walls:** (width: 5, length: 5, thickness: 0.1) Unity Unit
+- **Inner/Colored Walls:** (width: 5, length: 3.11, thickness: 0.1) Unity Unit
+- **Ground and Ceiling:** (width: 25, length: 25, thickness: 0) Unity Unit
+ - Ceiling Height: 4.93 Unity Unit
+- **CueImage:** (width: 0.4, length: 0.2, thickness: 0) Unity Unit
+- **HintImage** (width: 0.2, length: 0.1, thickness: 0) Unity Unit
+- **Height of Viewport:** 1.85 Unity Units from the floor
+
+See [CueImage and HintImage ](#cueImage-and-hintImage) for definition of CueImage and HintImage.
+
+#### Object Name References
+
+##### CueImage and HintImage
+![cue-hint-image](/docs/images/cue-hint-image.png)
+
+There are 2 kinds of cues presented to the subject and for convenience, the larger cue is referred as the CueImage while the smaller image at the top is referred as the HintImage.
+
 
 ## Relative Position
 Relative position represents the coordinates of the gaze hit position from the center of the poster.
 
+###### Image cue in 3D space
 ![relative position explanation](/docs/images/relativePos-explaination.png)
 
 The center of object (represented by the circle) is the 3D coordinates of its position in the virtual space.
@@ -59,4 +89,5 @@ The point where the gaze hits the object (represented by the triangle) is also r
 
 From the image example, the resultant 2D relative position is **(x: 1, y: 1)** because the center of the 2D image is taken to be the origin of the 2D co-ordinate system.
 
+###### Gaze point with reference to the center of the image on the cue
 ![reading-relative-position](/docs/images/reading-relative-position.png)
