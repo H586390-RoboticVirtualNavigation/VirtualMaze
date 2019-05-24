@@ -82,6 +82,7 @@ public class SaveLoad : MonoBehaviour {
             s.Add(c.GetSettingsType().FullName, c.GetCurrentSettings());
         }
 
+
         return s;
     }
 
