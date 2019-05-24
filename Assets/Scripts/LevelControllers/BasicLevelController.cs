@@ -117,8 +117,9 @@ public class BasicLevelController : MonoBehaviour {
         //disable robot movement
         robotMovement.SetMovementActive(false);
 
-        //Prepare BasicLevelController
+        //Prepare Eyelink
         EyeLink.Initialize();
+        onSessionTrigger.AddListener(EyeLink.OnSessionTrigger);
 
         // +1 since trailCounter is starts from 0
         SessionStatusDisplay.DisplayTrialNumber(trialCounter + 1);

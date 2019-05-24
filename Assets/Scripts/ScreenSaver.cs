@@ -249,7 +249,7 @@ public class ScreenSaver : BasicGUIController {
                         print($"type:{type}, flags:{Convert.ToString(data.fs.flags, 16)}, time:{data.fs.time}, {synced}");
                         RaycastGazeData(data.fs, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
 
-                        recorder.WriteSample(type, data.fs.time, objName, relativePos, objHitPos, gazePoint, data.fs.RightGaze);
+                        recorder.WriteSample(type, data.fs.time, objName, relativePos, objHitPos, gazePoint, data.fs.RightGaze, robot.position);
 
                         time = data.fs.time;
                         break;

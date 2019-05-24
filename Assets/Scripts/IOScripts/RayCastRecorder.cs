@@ -16,7 +16,7 @@ public class RayCastRecorder
         s = new StreamWriter(Path.Combine(saveLocation, fileName));
     }
 
-    public void WriteSample(DataTypes type, uint time, string objName, Vector2 centerOffset, Vector3 hitObjLocation, Vector3 pointHitLocation, Vector2 gaze) {
+    public void WriteSample(DataTypes type, uint time, string objName, Vector2 centerOffset, Vector3 hitObjLocation, Vector3 pointHitLocation, Vector2 gaze, Vector3 subjectLoc) {
         s.Write($"{type}{delimiter}");
         s.Write($"{time}{delimiter}");
         s.Write($"{objName}{delimiter}");
@@ -27,6 +27,8 @@ public class RayCastRecorder
         s.Write(VectorToString(pointHitLocation)); //2 delimiter
         s.Write(delimiter);
         s.Write(VectorToString(gaze)); //1 delimiter
+        s.Write(delimiter);
+        s.Write(VectorToString(subjectLoc)); //2 delimiter
         s.WriteLine(); //total 12 delimiter
         s.Flush();
     }
@@ -35,7 +37,7 @@ public class RayCastRecorder
         s.Write($"{type}{delimiter}");
         s.Write($"{time}{delimiter}");
         s.Write($"{message}{delimiter}");
-        for(int i = 0; i < 12-3; i++) {
+        for(int i = 0; i < 15-3; i++) {
             s.Write($"{delimiter}");
         }
         s.WriteLine();

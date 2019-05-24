@@ -13,6 +13,16 @@ public class CueController : MonoBehaviour {
     private void Awake() {
         ShowImage(cueImage, false);
         ShowImage(hintImage, false);
+
+        Vector3[] corners = new Vector3[4];
+
+        cueImage.rectTransform.GetWorldCorners(corners);
+
+        print($"{cueImage.name}|{corners[0]}{corners[1]}{corners[2]}{corners[3]}");
+
+        hintImage.rectTransform.GetWorldCorners(corners);
+
+        print($"{hintImage.name}|{corners[0]}{corners[1]}{corners[2]}{corners[3]}");
     }
 
     public Sprite GetHint() {
