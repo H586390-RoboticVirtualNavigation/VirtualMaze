@@ -1,5 +1,5 @@
 # Raycasting guide
-This utility takes eye-tracking data and generates information about the surfaces on which the eye positions land.
+This utility takes eye-tracking data and generates information about the fixated surfaces or objects.
 ![data-generationScreenshot](/docs/images/data-generation.PNG)
 
 ## Prerequisites
@@ -19,8 +19,8 @@ A CSV (Comma Seperated Value) file will be generated in the destination folder.
 
 #### Description of Columns
 1. Type of data in the row (string/text).
-2. Timestamp of the gaze data used to identify the object fixated (unsigned int)
-3. Name of the object fixated by the gaze, or Message (string/text).
+2. Timestamp of the gaze data used to identify the fixated object (unsigned int)
+3. Name of the object fixated by the gaze, or Message received by EyeLink (string/text).
 
 [Can we re-arrange the columns to the following order:]
 
@@ -57,7 +57,7 @@ See [Gaze Position in Object](#relative-position) for more details.
 #### Unity Units
 Unity Units are values Unity uses to position the various game objects in Worldspace, where the center of the floor of the maze is located at (x: 0, y: 0, z: 0). For reference and scaling, the "rooms" used in VirtualMaze are 25 by 25 Unity Units and the ceiling is 4.93 Unity Units high.
 
-The default settings for units in Unity is 1 Unity Unit = 1 meter however, because the scaling is mutable, feel free to scale these values as required.
+The default settings for units in Unity is 1 Unity Unit = 1 meter. However, because the scaling is mutable, feel free to scale these values as required.
 
 #### Object Size Reference
 
@@ -86,7 +86,7 @@ Gaze Position in Object represents the coordinates of the gaze position from the
 ###### Image Cue in 3D Space
 ![relative position explanation](/docs/images/relativePos-explaination.png)
 
-The center of the object (represented by the circle) are the 3D coordinates of its position in virtual space.
+The center of the object (represented by the circle) is the 3D coordinates of its position in virtual space.
 
 The point where the gaze hits the object (represented by the triangle) is also represented by its position in virtual space.
 
