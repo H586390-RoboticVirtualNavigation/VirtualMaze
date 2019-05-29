@@ -19,40 +19,37 @@ A CSV (Comma Seperated Value) file will be generated in the destination folder.
 
 #### Description of Columns
 1. Type of data in the row (string/text).
-2. Timestamp of the gaze data used to identify the fixated object (unsigned int)
-3. Name of the object fixated by the gaze, or Message received by EyeLink (string/text).
-
-[Can we re-arrange the columns to the following order:]
+- Timestamp of the gaze data used to identify the fixated object (unsigned int)
+- Name of the object fixated by the gaze, or Message received by EyeLink (string/text).
 
 *Raw Gaze Data (Pixels)*
-
-12. gx data from the .edf file used to raycast.
-13. gy data from the .edf file used to raycast.
+4. gx data from the .edf file used to raycast.
+- gy data from the .edf file used to raycast.
 
 *Subject Location in Worldspace ([Unity Units](#unity-units))*
 
-14. X Worldspace coordinate of the subject's location in Worldspace.
-15. Y Worldspace coordinate of the subject's location in Worldspace.
-16. Z Worldspace coordinate of the subject's location in Worldspace.
+6. X Worldspace coordinate of the subject's location in Worldspace.
+- Y Worldspace coordinate of the subject's location in Worldspace.
+- Z Worldspace coordinate of the subject's location in Worldspace.
 
 *Gaze Location ([Unity Units](#unity-units))*
 
 9. X Worldspace coordinate where the gaze lands.
-10. Y Worldspace coordinate where the gaze lands.
-11. Z Worldspace coordinate where the gaze lands.
+- Y Worldspace coordinate where the gaze lands.
+- Z Worldspace coordinate where the gaze lands.
 
 *Gazed Object Location ([Unity Units](#unity-units))*
 
-6. X Worldspace coordinate of the fixated object.
-7. Y Worldspace coordinate of the fixated object.
-8. Z Worldspace coordinate of the fixated object.
+12. X Worldspace coordinate of the fixated object.
+- Y Worldspace coordinate of the fixated object.
+- Z Worldspace coordinate of the fixated object.
 
 *Gaze Position in Object ([Unity Units](#unity-units))*
 
-4. 2D X location of gaze with reference to the center of the fixated object.
-5. 2D Y location of gaze with reference to the center of the fixated object.
+15. 2D X location of gaze with reference to the center of the fixated object.
+- 2D Y location of gaze with reference to the center of the fixated object.
 
-See [Gaze Position in Object](#relative-position) for more details.
+See [Gaze Position in Object](#gaze-position-in-object) for more details.
 
 #### Unity Units
 Unity Units are values Unity uses to position the various game objects in Worldspace, where the center of the floor of the maze is located at (x: 0, y: 0, z: 0). For reference and scaling, the "rooms" used in VirtualMaze are 25 by 25 Unity Units and the ceiling is 4.93 Unity Units high.

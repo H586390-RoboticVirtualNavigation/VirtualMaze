@@ -18,5 +18,18 @@ namespace Eyelink.Structs {
 
         [FieldOffset(0)]
         public RECORDINGS rec;
+
+        public uint getTime(DataTypes type) {
+            switch (type) {
+                case DataTypes.SAMPLE_TYPE:
+                    return fs.time;
+
+                case DataTypes.MESSAGEEVENT:
+                    return fe.sttime;
+
+                default:
+                    return fe.sttime;
+            }
+        }
     }
 }

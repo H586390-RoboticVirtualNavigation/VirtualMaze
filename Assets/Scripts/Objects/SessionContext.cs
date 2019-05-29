@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.IO;
 
 /// <summary>
 /// Class for encapsulation the data required to parse and unparse settings to be logged into
@@ -42,8 +43,54 @@ public class SessionContext {
         GetExperimentSettings(settings);
     }
 
-    //allow creation of empty object
-    public SessionContext() {}
+    /// <summary>
+    /// Creates a SessionContext with the old header where data is stored line by line
+    /// </summary>
+    /// <param name="currentline"></param>
+    /// <param name="reader"></param>
+    public SessionContext(string currentLine, StreamReader reader) {
+        string line = currentLine;
+        version = GetValue(line);
+
+        line = reader.ReadLine();
+        triggerVersion = GetValue(line);
+
+        line = reader.ReadLine();
+        taskType = GetValue(line);
+
+        line = reader.ReadLine();//ignore parsing of poster location for now
+        //context.posterLocations = GetValue(lin;
+
+        line = reader.ReadLine();
+        trialName = GetValue(line);
+
+        line = reader.ReadLine();
+        int.TryParse(GetValue(line), out rewardsNumber);
+
+        line = reader.ReadLine();
+        int.TryParse(GetValue(line), out completionWindow);
+
+        line = reader.ReadLine();
+        int.TryParse(GetValue(line), out timeoutDuration);
+
+        line = reader.ReadLine();
+        int.TryParse(GetValue(line), out intersessionInterval);
+
+        line = reader.ReadLine();
+        int.TryParse(GetValue(line), out rewardTime);
+
+        line = reader.ReadLine();
+        float.TryParse(GetValue(line), out rotationSpeed);
+
+        line = reader.ReadLine();
+        float.TryParse(GetValue(line), out movementSpeed);
+
+        line = reader.ReadLine();
+        float.TryParse(GetValue(line), out joystickDeadzone);
+
+        line = reader.ReadLine();
+        float.TryParse(GetValue(line), out rewardViewCriteria);
+    }
 
     public string ToJsonString() {
         return JsonUtility.ToJson(this, false);
@@ -96,6 +143,11 @@ public class SessionContext {
             //this values are a must to have. Therefore an exception is thrown
             throw new SaveLoad.SettingNotFoundException("ExperimentController.Settings not found");
         }
+    }
+
+    private string GetValue(string line) {
+        //get second index where the value resides
+        return line.Split(':')[1].Trim();
     }
 
     [Serializable]

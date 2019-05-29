@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ScreenSaver : BasicGUIController {
-    private int framePerBatch = 5;
+    private int framePerBatch = 2;
 
     public InputField eyeLinkFileInput;
     public InputField sessionInput;
@@ -38,8 +38,8 @@ public class ScreenSaver : BasicGUIController {
         folderInput.onEndEdit.AddListener(ChooseFolder);
 
         if (true) { //for testing purposes.
-            ChooseEyelinkFile("D:\\Program Files (D)\\SR Research\\EyeLink\\EDF_Access_API\\Example\\181026.edf");
-            ChooseSession("D:\\Desktop\\FYP Init\\session01\\RawData_T1-400\\ShortVer.txt");
+            ChooseEyelinkFile(@"D:\Desktop\NUS\FYP\181105.edf");
+            ChooseSession(@"D:\Desktop\NUS\FYP\session_1_5112018105323.txt");
             ChooseFolder(@"D:\Documents\GitHub\VirtualMaze\out");
         }
     }
@@ -48,12 +48,9 @@ public class ScreenSaver : BasicGUIController {
         BasicLevelController levelcontroller = FindObjectOfType<BasicLevelController>();
         levelcontroller.gameObject.SetActive(false);
 
-
-        print(levelcontroller.name);
         SceneManager.sceneLoaded -= OnsceneLoaded;
 
-        StartCoroutine(ProcessSessionData(sessionInput.text, eyeLinkFileInput.text, folderInput.text));
-        print("Started");
+        StartCoroutine(ProcessSessionDataTask(sessionInput.text, eyeLinkFileInput.text, folderInput.text));
     }
 
     public void OnRender() {
@@ -179,157 +176,252 @@ public class ScreenSaver : BasicGUIController {
 
     }
 
-    private IEnumerator ProcessSessionData(string sessionPath, string edfPath, string toFolderPath) {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sTrigger">Current trigger of the Session Logs</param>
+    /// <param name="edfTrigger">Current Trigger of the EDF file</param>
+    /// <returns>True if session file should be processed again to the next trigger</returns>
+    private bool ShouldSessionFileCatchUp(SessionTrigger sTrigger, SessionTrigger edfTrigger) {
+        //if one trigger is either trial ended or trial timeout and the other is Trial started
+        bool premise3 = sTrigger >= SessionTrigger.TrialEndedTrigger && edfTrigger == SessionTrigger.TrialStartedTrigger;
+        bool premise4 = edfTrigger >= SessionTrigger.TrialEndedTrigger && sTrigger == SessionTrigger.TrialStartedTrigger;
+
+        if (premise3 || premise4) {
+            return sTrigger > edfTrigger;
+        }
+        else {
+            return sTrigger < edfTrigger;
+        }
+    }
+
+    //private float GetWeightedOffset(float timeToNextTrigger, float currentPeriod, float excessTime) {
+    //    return (currentPeriod / (timeToNextTrigger * 1000)) * excessTime;
+    //}
+
+    private IEnumerator ProcessSessionDataTask(string sessionPath, string edfPath, string toFolderPath) {
+        //Setup
         fadeController.gameObject.SetActive(false);
         int frameCounter = 0;
         EdfFilePointer pointer = EdfAccessWrapper.EdfOpenFile(edfPath, 0, 1, 1, out int errVal);
 
-        cueController.ShowCue();
-
         if (errVal != 0) { //check if file can be parsed by library
-            Debug.LogError($"Unable to open .edf file");
+            String error = $"Unable to open .edf file";
+            Debug.LogError(error);
+            Console.WriteError(error);
             yield break;
         }
+        string filename = $"{Path.GetFileNameWithoutExtension(sessionPath)}_{Path.GetFileNameWithoutExtension(edfPath)}.csv";
+        RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename);
 
         SessionReader sessionReader = new SessionReader(sessionPath);
 
-        //assume all files the first msg is 84
-        uint timeToNextFrame;
-        uint time = 0;
+        //Move to first Trial Trigger
+        DataTypes currType = PrepareFiles(sessionReader, pointer, SessionTrigger.TrialStartedTrigger);
 
-        //move sessionReader to point to first trial
-        while (sessionReader.NextData()) {
-            if (sessionReader.trigger == SessionTrigger.TrialStartedTrigger) {
-                MoveRobotTo(robot, sessionReader);
-                break;
-            }
-        }
+        print($"prepared {EdfAccessWrapper.EdfGetFloatData(pointer).fe.GetSessionTrigger()}");
 
-        //move edfFile to point to first trial
-        bool foundFirstTrial = false;
-        while (!foundFirstTrial) {
-            if (EdfAccessWrapper.EdfGetNextData(pointer) == DataTypes.MESSAGEEVENT) {
-                ALLF_DATA data = EdfAccessWrapper.EdfGetFloatData(pointer);
-                FEVENT ev = data.fe;
-                if (ev.GetSessionTrigger() == SessionTrigger.TrialStartedTrigger) {
-                    time = ev.sttime;
-                    Debug.LogError($"LOOK AT ME TOO {ev.sttime}");
-                    foundFirstTrial = true;
-                    cueController.ShowCue();
-                    break;
+        Queue<SessionData> sessionFrames = new Queue<SessionData>();
+        Queue<Tuple<DataTypes, ALLF_DATA>> fixations = new Queue<Tuple<DataTypes, ALLF_DATA>>();
+
+        DataTypes latestType = DataTypes.NULL;
+        //int useSessionEvents = 0;
+
+        //feed in current Data
+        fixations.Enqueue(new Tuple<DataTypes, ALLF_DATA>(currType, EdfAccessWrapper.EdfGetFloatData(pointer)));
+        print($"peek|{fixations.Peek().Item2.fe.GetSessionTrigger()}");
+
+        while (sessionReader.HasNext() && latestType != DataTypes.NO_PENDING_ITEMS) {
+            //buffer since sessionData.timeDelta is the time difference from the previous frame.
+            sessionFrames.Enqueue(sessionReader.currData);
+
+            float sessionEventPeriod = LoadToNextTriggerSession(sessionReader, sessionFrames, out SessionTrigger sessionTrigger);
+            uint edfEventPeriod = LoadToNextTriggerEdf(pointer, fixations, out SessionTrigger edfTrigger, out uint timestamp, out latestType);
+
+            print($"peek - a|{fixations.Peek().Item2.fe.GetSessionTrigger()}");
+
+            while (sessionTrigger != edfTrigger && sessionReader.HasNext() && latestType != DataTypes.NO_PENDING_ITEMS) {
+                Debug.LogError($"initial : {sessionTrigger}|{edfTrigger}|{timestamp}");
+
+                //Assuming that the previous iteration is synchronized
+                if (ShouldSessionFileCatchUp(sessionTrigger, edfTrigger)) {
+                    //session file should catch up
+                    sessionEventPeriod += LoadToNextTriggerSession(sessionReader, sessionFrames, out sessionTrigger);
                 }
-            }
-        }
-
-        print("ended");
-        bool synced = true;
-        uint desyncTime = 0;
-
-        string filename = $"{Path.GetFileNameWithoutExtension(sessionPath)}{Path.GetFileNameWithoutExtension(edfPath)}.csv";
-
-        RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename);
-
-        while (sessionReader.NextData()) {
-            timeToNextFrame = time + (uint)(sessionReader.timeDelta * 1000);
-            print($"timetoNext:{timeToNextFrame}");
-            MoveRobotTo(robot, sessionReader);
-
-            if (sessionReader.trigger != SessionTrigger.NoTrigger) {
-                synced = false;
-            }
-
-            while (time < timeToNextFrame || !synced) {
-                print($"{time} | {timeToNextFrame}");
-
-                DataTypes type = EdfAccessWrapper.EdfGetNextData(pointer);
-                ALLF_DATA data = EdfAccessWrapper.EdfGetFloatData(pointer);
-
-                switch (type) {
-                    case DataTypes.SAMPLE_TYPE:
-                        print($"type:{type}, flags:{Convert.ToString(data.fs.flags, 16)}, time:{data.fs.time}, {synced}");
-                        RaycastGazeData(data.fs, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
-
-                        recorder.WriteSample(type, data.fs.time, objName, relativePos, objHitPos, gazePoint, data.fs.RightGaze, robot.position);
-
-                        time = data.fs.time;
-                        break;
-                    case DataTypes.MESSAGEEVENT:
-                        SessionTrigger trigger = ProcessMessageEvent(data.fe);
-                        time = data.fe.sttime;
-
-                        print($"type:{type}, flags:{Convert.ToString(data.fs.flags, 16)}, time:{time}, {synced}");
-
-                        recorder.WriteEvent(type, data.fe.sttime, data.fe.GetMessage());
-
-                        if (!synced) {
-                            synced = sessionReader.trigger == trigger;
-                            Debug.LogError($"error of {time - desyncTime}ms, {synced}, sessionT: {data.fe.GetMessage()}|{sessionReader.flag}, @desynced at{desyncTime}");
-                            desyncTime = 0;
-                        }
-                        else {
-                            synced = false;
-                            float frameError = sessionReader.timeDelta;//1 for this current frame
-                            uint timestart = data.fe.sttime;
-                            while (sessionReader.NextData() && !synced) {
-                                if (sessionReader.trigger == trigger) {
-                                    synced = true;
-                                    Debug.LogError($"{frameError}|{sessionReader.flag}|at:{timestart}|{data.fe.GetMessage()},{sessionReader.flag}");
-                                }
-                                else {
-                                    frameError += sessionReader.timeDelta;
-                                    //Debug.Break();
-                                }
-                            }
-                        }
-                        break;
-                    default:
-                        //ignore others for now
-                        Debug.LogWarning($"Unsupported EDF DataType Found! ({type})");
-                        break;
+                else {
+                    //edfFile should catch up
+                    edfEventPeriod += LoadToNextTriggerEdf(pointer, fixations, out edfTrigger, out timestamp, out latestType);
                 }
 
-                if (time > timeToNextFrame && !synced && desyncTime == 0) {
-                    desyncTime = time;
+                Debug.LogError($"{sessionTrigger}|{edfTrigger}|{sessionEventPeriod}|{edfEventPeriod}|{timestamp}");
+            }
+
+            float excessTime = (sessionEventPeriod * 1000 - edfEventPeriod);
+            float timeOffset = excessTime / (sessionFrames.Count);
+
+            print($"timeError: {excessTime} for {sessionFrames.Count} frames, ses: {sessionEventPeriod}, edf: {edfEventPeriod}");
+
+            uint gazeTime = 0;
+
+            float timepassed = -1;
+
+            while (sessionFrames.Count > 0 && fixations.Count > 0) {
+                SessionData sessionData = sessionFrames.Dequeue();
+                Tuple<DataTypes, ALLF_DATA> tuple = fixations.Dequeue();
+
+                print($"first dequeue|{tuple.Item2.fe.GetSessionTrigger()}");
+
+                //initialise timepassed
+                if (timepassed == -1) {
+                    timepassed = tuple.Item2.getTime(tuple.Item1);
+
+                }
+
+                float period;
+                if (sessionFrames.Count > 0) {
+                    //peek since next sessionData holds the time it takes from this data to the next
+                    period = (sessionFrames.Peek().timeDeltaMs) - timeOffset;
+                }
+                else {
+                    //use current data's timedelta to approximate
+                    period = (sessionData.timeDeltaMs); //- timeOffset;
+                }
+
+                timepassed += period;
+
+                MoveRobotTo(robot, sessionData);
+
+                while (gazeTime <= timepassed) {
+
+                    DataTypes type = tuple.Item1;
+                    ALLF_DATA data = tuple.Item2;
+
+                    gazeTime = data.getTime(type);
+
+                    switch (type) {
+                        case DataTypes.SAMPLE_TYPE:
+                            //print($"type:{type}, flags:{Convert.ToString(data.fs.flags, 16)}, time:{data.fs.time}");
+                            RaycastGazeData(data.fs, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
+
+                            recorder.WriteSample(type, data.fs.time, objName, relativePos, objHitPos, gazePoint, data.fs.RightGaze, robot.position);
+                            break;
+                        case DataTypes.MESSAGEEVENT:
+                            FEVENT fe = data.fe;
+
+                            ProcessTrigger(fe.GetSessionTrigger());
+
+                            //print($"type:{type}, flags:{Convert.ToString(data.fs.flags, 16)}, time:{gazeTime}");
+                            recorder.WriteEvent(type, fe.sttime, fe.GetMessage());
+                            break;
+                        default:
+                            //ignore others for now
+                            //Debug.LogWarning($"Unsupported EDF DataType Found! ({type})");
+                            break;
+                    }
+
+                    //process next fixation
+                    tuple = fixations.Dequeue();
+                }
+
+                frameCounter++;
+                frameCounter %= framePerBatch;
+                if (frameCounter == 0) {
+                    yield return null;
                 }
             }
-            frameCounter++;
-            frameCounter %= framePerBatch;
-            if (frameCounter == 0) {
-                yield return null;
+
+            //Debug.LogWarning($"ses: {sessionFrames.Count}| fix: {fixations.Count}, timestamp {gazeTime}, timepassed{timepassed}");
+
+            sessionFrames.Clear();
+
+            while (fixations.Count > 0) {
+                ProcessTrigger(fixations.Dequeue());
             }
         }
-
         recorder.Close();
         sessionReader.Close();
-        SceneManager.UnloadSceneAsync("Double Tee");
+        SceneManager.LoadScene("Start");
+        fadeController.gameObject.SetActive(true);
     }
 
-    private SessionTrigger ProcessMessageEvent(FEVENT ev) {
-        //print($", @time:{ev.sttime}");
+    private void ProcessTrigger(Tuple<DataTypes, ALLF_DATA> tuple) {
+        if (tuple.Item1 == DataTypes.MESSAGEEVENT) {
+            ProcessTrigger(tuple.Item2.fe.GetSessionTrigger());
+        }
+    }
 
-        SessionTrigger trigger = ev.GetSessionTrigger();
+    TestTrigger expected = TestTrigger.CueShownTrigger;
+
+    [Flags]
+    enum TestTrigger {
+        NoTrigger = 0x0,
+        TrialStartedTrigger = 0x1,
+        CueShownTrigger = 0x2,
+        TrialEndedTrigger = 0x4,
+        TimeoutTrigger = 0x8,
+        ExperimentVersionTrigger = 0xF
+    }
+
+    private TestTrigger ConvertToTestTrigger(SessionTrigger trigger) {
+        switch (trigger) {
+            case SessionTrigger.CueShownTrigger:
+                return TestTrigger.CueShownTrigger;
+            case SessionTrigger.ExperimentVersionTrigger:
+                return TestTrigger.ExperimentVersionTrigger;
+            case SessionTrigger.NoTrigger:
+                return TestTrigger.NoTrigger;
+            case SessionTrigger.TimeoutTrigger:
+                return TestTrigger.TimeoutTrigger;
+            case SessionTrigger.TrialEndedTrigger:
+                return TestTrigger.TrialEndedTrigger;
+            case SessionTrigger.TrialStartedTrigger:
+                return TestTrigger.TrialStartedTrigger;
+        }
+        return TestTrigger.NoTrigger;
+    }
+
+    private void ProcessTrigger(SessionTrigger trigger) {
+        TestTrigger test = ConvertToTestTrigger(trigger);
+
+        if ((test | expected) != expected) {
+            Debug.LogError($"Expected:{expected}, Received: {trigger}");
+        }
+        else {
+            Debug.LogWarning($"Expected:{expected}, Received: {trigger}");
+        }
 
         switch (trigger) {
             case SessionTrigger.CueShownTrigger:
                 cueController.HideCue();
                 cueController.ShowHint();
+
+                expected = TestTrigger.TimeoutTrigger | TestTrigger.TrialEndedTrigger;
                 break;
 
             case SessionTrigger.TrialStartedTrigger:
+                cueController.HideHint();
                 cueController.ShowCue();
+
+                expected = TestTrigger.CueShownTrigger;
                 break;
 
             case SessionTrigger.TimeoutTrigger:
             case SessionTrigger.TrialEndedTrigger:
                 cueController.HideAll();
+                expected = TestTrigger.TrialStartedTrigger;
                 break;
 
             case SessionTrigger.NoTrigger:
+                //do nothing
+                break;
+
+            case SessionTrigger.ExperimentVersionTrigger:
+                expected = TestTrigger.TrialStartedTrigger;
+                break;
             default:
                 Debug.LogError($"Unidentified Session Trigger: {trigger}");
                 break;
         }
-        return trigger;
     }
 
     /// <summary>
@@ -350,10 +442,8 @@ public class ScreenSaver : BasicGUIController {
         cueCaster.Raycast(data, results);
 
         if (results.Count > 0) {
-            print($"results count: {results.Count}, gaze:{data.position}");
-
             if (results.Count > 1) {
-                Debug.LogWarning($"There are overlapping graphics when graphics at time = {sample.time}");
+                Debug.LogWarning($"There are overlapping graphics at time = {sample.time}");
             }
 
             Vector2 objPosition = RectTransformUtility.WorldToScreenPoint(viewport, results[0].gameObject.transform.position);
@@ -363,8 +453,6 @@ public class ScreenSaver : BasicGUIController {
 
             RectTransform t = results[0].gameObject.GetComponent<RectTransform>();
 
-
-            //check this
             RectTransformUtility.ScreenPointToWorldPointInRectangle(t, sample.RightGaze, viewport, out gazePoint);
 
             Vector3 imgWorldPos = t.TransformPoint(t.rect.center);
@@ -407,10 +495,16 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-
+    /// <summary>
+    /// Gets the local position with reference to the center of the object
+    /// 
+    /// Note: Naive implementation of computation becasue this code only considers the case that the
+    /// normal is pointing in solely one of the x, y or z axes.
+    /// </summary>
+    /// <param name="objHit">Transsform of the object hit by the raycast</param>
+    /// <param name="hit"></param>
+    /// <returns>2D location of the point fixated by that gaze relative to the center of the image</returns>
     private Vector2 computeLocalPostion(Transform objHit, RaycastHit hit) {
-        Debug.LogWarning($"{hit.normal}, {objHit.name}");
-
         Vector3 normal = hit.normal;
         Vector3 dist = hit.point - objHit.position;
 
@@ -432,7 +526,102 @@ public class ScreenSaver : BasicGUIController {
         return result;
     }
 
-    void MoveRobotTo(Transform robot, SessionReader reader) {
+    private DataTypes PrepareFiles(SessionReader sessionReader, EdfFilePointer pointer, SessionTrigger firstOccurance) {
+        //move sessionReader to point to first trial
+        while (sessionReader.NextData()) {
+            if (sessionReader.currData.trigger == firstOccurance) {
+                MoveRobotTo(robot, sessionReader.currData);
+                break;
+            }
+        }
+
+        DataTypes currType = DataTypes.NULL;
+
+        //move edfFile to point to first trial
+        bool foundFirstTrial = false;
+        while (!foundFirstTrial) {
+            currType = EdfAccessWrapper.EdfGetNextData(pointer);
+            if (currType == DataTypes.MESSAGEEVENT) {
+                ALLF_DATA data = EdfAccessWrapper.EdfGetFloatData(pointer);
+                FEVENT ev = data.fe;
+                if (ev.GetSessionTrigger() == firstOccurance) {
+                    Debug.Log($"LOOK AT ME TOO {ev.sttime} {currType}");
+                    foundFirstTrial = true;
+                }
+            }
+        }
+
+        return currType;
+    }
+
+    //returns total time to 
+    private float LoadToNextTriggerSession(SessionReader reader, Queue<SessionData> frames, out SessionTrigger trigger) {
+        float totalTime = 0;// reader.currData.timeDelta;
+
+        trigger = SessionTrigger.NoTrigger;
+        bool isNextEventFound = false;
+
+        while (reader.NextData() && !isNextEventFound) {
+            SessionData data = reader.currData;
+            frames.Enqueue(data);
+            totalTime += data.timeDelta;
+            trigger = data.trigger;
+
+            isNextEventFound = trigger != SessionTrigger.NoTrigger;
+        }
+
+        return totalTime;
+    }
+
+    private uint LoadToNextTriggerEdf(EdfFilePointer file,
+                                      Queue<Tuple<DataTypes, ALLF_DATA>> fixations,
+                                      out SessionTrigger trigger,
+                                      out uint timestamp,
+                                      out DataTypes latestType) {
+
+        print($"peek a boo|{fixations.Peek().Item2.fe.GetSessionTrigger()}");
+        uint startTime = 0;
+
+        bool isNextEventFound = false;
+
+        string prev = "";
+
+        while (/*!isNextEventFound*/ fixations.Count <= 900 + 8000 * 2) {
+            DataTypes type = EdfAccessWrapper.EdfGetNextData(file);
+            ALLF_DATA data = EdfAccessWrapper.EdfGetFloatData(file);
+
+            if (startTime == 0) {
+                startTime = data.getTime(type);
+            }
+
+            fixations.Enqueue(new Tuple<DataTypes, ALLF_DATA>(type, data));
+            string msg = fixations.Peek().Item2.fe.GetMessage();
+
+            if (!prev.Equals(msg)) {
+                print($"peek a b boo|{fixations.Peek().Item2.fe.GetSessionTrigger()}| {fixations.Count} | | {msg}");
+                prev = msg;
+            }
+
+            if (type == DataTypes.MESSAGEEVENT) {
+                FEVENT ev = data.fe;
+                trigger = ev.GetSessionTrigger();
+                timestamp = ev.sttime;
+                isNextEventFound = trigger != SessionTrigger.NoTrigger;
+                latestType = type;
+                //return ev.sttime - startTime;
+            }
+            else if (type == DataTypes.NO_PENDING_ITEMS) {
+                break;
+            }
+        }
+
+        trigger = SessionTrigger.NoTrigger;
+        timestamp = 0;
+        latestType = DataTypes.NO_PENDING_ITEMS;
+        return 0;
+    }
+
+    void MoveRobotTo(Transform robot, SessionData reader) {
         Vector3 pos = robot.position;
         pos.x = reader.posX;
         pos.z = reader.posZ;

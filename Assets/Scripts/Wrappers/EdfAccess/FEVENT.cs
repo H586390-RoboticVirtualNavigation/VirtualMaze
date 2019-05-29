@@ -62,7 +62,7 @@ namespace Eyelink.Structs {
 
             StringBuilder builder = new StringBuilder(len);
 
-            for (int i = 0; i < len-1; i++) {
+            for (int i = 0; i < len - 1; i++) {
                 //byte converted to char, charPtr increments to point to next char
                 builder.Append((char)*(charPtr + i));
             }
@@ -101,12 +101,12 @@ namespace Eyelink.Structs {
             return (SessionTrigger)(trigger * 10);
         }
 
-        
+
         private bool isSessionTrigger(string message) {
             //pattern describes only 2 words and a 2 digit number
             const string pattern = @"^(\w+\s){2}\d{2}$";
-           
-            return Regex.IsMatch(message.Trim(), pattern);
+
+            return Regex.IsMatch(message.Trim(), pattern) || message.Contains("Timeout");
         }
     }
 

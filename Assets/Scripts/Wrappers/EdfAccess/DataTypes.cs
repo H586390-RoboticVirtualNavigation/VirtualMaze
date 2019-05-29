@@ -22,7 +22,9 @@
     ENDEVENTS = 18,     /* end of events in block */
 
     RECORDING_INFO = 30,  /* recording struct is returned */
-    NO_PENDING_ITEMS = 0  /*no more data left.*/
+    NO_PENDING_ITEMS = 0,  /*no more data left.*/
+
+    NULL = -1 //not part of API
 }
 
 

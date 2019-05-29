@@ -16,19 +16,19 @@ public class RayCastRecorder
         s = new StreamWriter(Path.Combine(saveLocation, fileName));
     }
 
-    public void WriteSample(DataTypes type, uint time, string objName, Vector2 centerOffset, Vector3 hitObjLocation, Vector3 pointHitLocation, Vector2 gaze, Vector3 subjectLoc) {
+    public void WriteSample(DataTypes type, uint time, string objName, Vector2 centerOffset, Vector3 hitObjLocation, Vector3 pointHitLocation, Vector2 rawGaze, Vector3 subjectLoc) {
         s.Write($"{type}{delimiter}");
         s.Write($"{time}{delimiter}");
         s.Write($"{objName}{delimiter}");
-        s.Write(VectorToString(centerOffset));//1 delimiter
+        s.Write(VectorToString(rawGaze)); //1 delimiter
         s.Write(delimiter);
-        s.Write(VectorToString(hitObjLocation));//2 delimiter
+        s.Write(VectorToString(subjectLoc)); //2 delimiter
         s.Write(delimiter);
         s.Write(VectorToString(pointHitLocation)); //2 delimiter
         s.Write(delimiter);
-        s.Write(VectorToString(gaze)); //1 delimiter
+        s.Write(VectorToString(hitObjLocation));//2 delimiter
         s.Write(delimiter);
-        s.Write(VectorToString(subjectLoc)); //2 delimiter
+        s.Write(VectorToString(centerOffset));//1 delimiter
         s.WriteLine(); //total 12 delimiter
         s.Flush();
     }
@@ -37,6 +37,7 @@ public class RayCastRecorder
         s.Write($"{type}{delimiter}");
         s.Write($"{time}{delimiter}");
         s.Write($"{message}{delimiter}");
+        //for CSV to be parsed properly, empty columns are needed.
         for(int i = 0; i < 15-3; i++) {
             s.Write($"{delimiter}");
         }
