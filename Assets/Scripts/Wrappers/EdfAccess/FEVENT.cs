@@ -124,4 +124,22 @@ namespace Eyelink.Structs {
         /// </summary>
         public byte c;
     }
+
+    public class FEvent : AllFloatData {
+        private uint time;
+        public readonly string message;
+        public readonly SessionTrigger trigger;
+
+        public FEvent(FEVENT ev, DataTypes dataType) : base(dataType) {
+            time = ev.sttime;
+            message = ev.GetMessage();
+            trigger = ev.GetSessionTrigger();
+        }
+
+        public override uint Time => time;
+
+        public override string ToString() {
+            return $"{dataType} @ {time} | {trigger} | {message}";
+        }
+    }
 }

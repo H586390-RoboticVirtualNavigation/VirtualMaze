@@ -66,4 +66,21 @@ namespace Eyelink.Structs {
             return arr;
         }
     }
+
+    public class Fsample : AllFloatData {
+        private uint time;
+
+        public readonly Vector2 rightGaze;
+
+        public Fsample(FSAMPLE sample, DataTypes datatype) : base(datatype) {
+            time = sample.time;
+            rightGaze = sample.RightGaze;
+        }
+
+        public override uint Time => time;
+
+        public override string ToString() {
+            return $"{dataType} @ {time} | {rightGaze}";
+        }
+    }
 }
