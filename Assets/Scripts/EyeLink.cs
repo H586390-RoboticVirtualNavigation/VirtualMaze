@@ -6,13 +6,27 @@ using UnityEngine;
 using SREYELINKLib;
 
 public class EyeLink {
+#if (UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX)
+    private static bool useLibrary = false;
+#else
+    private static bool useLibrary = true;
+#endif
+
     private static bool openDummy = true;
 
     public static void TryEyemsg_Printf(String msg) {
-            eyelink.sendMessage(msg);
+        if (!useLibrary) {
+            return;
+        }
+
+        eyelink.sendMessage(msg);
     }
 
     public static bool TryGetEyelinkConnectedStatus() {
+        if (!useLibrary) {
+            return false;
+        }
+
         if (eyelink != null) {
             return eyelink.isConnected();
         }
@@ -22,6 +36,10 @@ public class EyeLink {
     public static SREYELINKLib.EyeLink eyelink;
 
     public static void Initialize() {
+        if (!useLibrary) {
+            return;
+        }
+
         eyelink = new SREYELINKLib.EyeLink();
         if (!openDummy) {
             eyelink.open();
@@ -32,6 +50,10 @@ public class EyeLink {
     }
 
     public static void OnSessionTrigger(SessionTrigger trigger, int triggerValue) {
+        if (!useLibrary) {
+            return;
+        }
+
         bool isconnected = TryGetEyelinkConnectedStatus();
         Debug.Log("EL connected?:" + isconnected);
         if (isconnected) {
