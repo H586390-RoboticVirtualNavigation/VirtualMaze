@@ -23,7 +23,7 @@ public class RewardArea : MonoBehaviour {
     /// <summary>
     /// optional blinkLight
     /// </summary>
-    public Light blinkLight;
+    public Renderer blinkLight;
 
     /// <summary>
     /// viewing angle required to register if the target is in sight
@@ -44,16 +44,19 @@ public class RewardArea : MonoBehaviour {
 
     private float lightIntensity = 1;
     private bool blinkState;
+    private readonly WaitForSeconds half_period = new WaitForSeconds(0.5f);
+
     private Coroutine blinkCoroutine; // reference to properly stop the coroutine
     private WaitForSecondsRealtime blinkHalfPeriod = new WaitForSecondsRealtime(1f);
 
     private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent but is tagged as a reward";
-
+    private const string emissionKeyword = "_EMISSION";
     private void Start() {
         if (blinkLight != null) {
-            blinkLight.intensity = 0;// off at the start
+            blinkLight.material.DisableKeyword(emissionKeyword);
             blinkState = false;
         }
+        StartBlinking();
     }
 
     private void OnTriggerStay(Collider other) {
@@ -72,7 +75,7 @@ public class RewardArea : MonoBehaviour {
 
         //1.588 is estimated by logging the distance of the target and robot 
         //position when the robot is pressing itself against the target
-        float distanceWithOffset = requiredDistance + 1.588f; 
+        float distanceWithOffset = requiredDistance + 1.588f;
 
         //uncomment to see the required view in the scene tab
         Vector3 left = Quaternion.AngleAxis(-requiredViewAngle / 2f, Vector3.up) * robot.forward * distanceWithOffset;
@@ -118,18 +121,20 @@ public class RewardArea : MonoBehaviour {
         }
 
         if (blinkLight != null) {
-            blinkLight.intensity = 0;
+            blinkLight.material.DisableKeyword(emissionKeyword);
         }
     }
 
     private IEnumerator Blink() {
         while (true) {
             if (blinkState) {
-                blinkLight.intensity = 0;
+                blinkLight.material.DisableKeyword(emissionKeyword);
             }
             else {
-                blinkLight.intensity = lightIntensity;
+                blinkLight.material.EnableKeyword(emissionKeyword);
             }
+            blinkState = !blinkState;
+            yield return half_period;
         }
     }
 
