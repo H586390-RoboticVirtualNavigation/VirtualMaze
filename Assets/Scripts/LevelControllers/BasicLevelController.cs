@@ -233,6 +233,7 @@ public class BasicLevelController : MonoBehaviour {
         cueController.ShowHint();
 
         rewards[targetIndex].SetActive(true); // enable reward
+        rewards[targetIndex].StartBlinking(); // start blinking if target has light
         robotMovement.SetMovementActive(true); // enable robot
 
         onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
@@ -254,6 +255,8 @@ public class BasicLevelController : MonoBehaviour {
         ProcessReward(rewardArea);
         cueController.HideHint(); // remove hint
         robotMovement.SetMovementActive(false); // disable robot movement
+
+        rewardArea.StopBlinking(); // stop blinking if there is light
         rewardArea.SetActive(false); // disable reward
 
         StartCoroutine(GoNextTask(true));
@@ -298,6 +301,7 @@ public class BasicLevelController : MonoBehaviour {
         //disable robot movement
         robotMovement.SetMovementActive(false);
         cueController.HideHint();
+        rewards[targetIndex].StopBlinking(); // disable reward
         rewards[targetIndex].SetActive(false); // disable reward
 
         //play audio
