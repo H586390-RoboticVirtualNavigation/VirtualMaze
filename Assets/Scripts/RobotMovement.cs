@@ -68,6 +68,7 @@ public class RobotMovement : ConfigurableComponent {
     protected override void Awake() {
         base.Awake();
         rigidBody = GetComponent<Rigidbody>();
+        rigidBody.constraints = RigidbodyConstraints.FreezePositionY;
     }
 
     // Update is called once per frame
@@ -84,8 +85,9 @@ public class RobotMovement : ConfigurableComponent {
             horizontal = JoystickController.horizontal;
         }
         else {
-            vertical = Input.GetAxis("Vertical");
-            horizontal = Input.GetAxis("Horizontal");
+            ///Input.GetAxis has smoothing of input values which is unwanted
+            vertical = Input.GetAxisRaw("Vertical");
+            horizontal = Input.GetAxisRaw("Horizontal");
         }
 
         if (ShouldRotate(horizontal)) {
