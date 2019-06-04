@@ -332,7 +332,7 @@ public class ScreenSaver : BasicGUIController {
 
             Debug.LogWarning($"final excess: {finalExcess} | {finalExcess + sessionReader.currData.timeDeltaMs} || {sessionReader.currData.timeDeltaMs}");
             Debug.LogWarning($"whats this?: {debugtimeOffset} | {timepassed} vs {sessionEventPeriod} vs {edfEventPeriod}");
-            if (finalExcess > sessionReader.currData.timeDeltaMs) {
+            if (Math.Abs(finalExcess) > 3) {
                 Debug.LogError("SEE ABOVE");
             }
 
@@ -618,7 +618,8 @@ public class ScreenSaver : BasicGUIController {
         trigger = SessionTrigger.NoTrigger;
         bool isNextEventFound = false;
 
-        while (reader.NextData() && !isNextEventFound) {
+        //bool checks is left to right do not rearrange this while condition
+        while (!isNextEventFound && reader.NextData()) {
             SessionData data = reader.currData;
             frames.Enqueue(data);
             totalTime += data.timeDelta;

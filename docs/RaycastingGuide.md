@@ -102,6 +102,24 @@ In an event of missing triggers either in the session files or the .edf file, de
 
 The missing trigger is approximated if the period difference is within **20ms** or else the data between the previous and next trigger is ignored.
 
+If data is ignored, the gaze data for that point is ignored and the following line is recorded in the output CSV
+
+```CSV
+SAMPLE_TYPE,4558794,Data ignored (x:1267.1 y:219.4),,,,,,,,,,,,,,
+```
+
+If the Trigger is approximated, the following line is added at the approximated time.
+
+```CSV
+EVENTMESSAGE,4558794,Approximated Trigger 13,,,,,,,,,,,,,,
+```
+
+###### Column Reference
+1. Data type of this row
+2. Timestamp of this Data
+3. Message describing the data loss
+ - Data ignored message also gives the gaze x and y position from the edf file
+ - Approximated trigger message also gives the trigger it approximates
 
 ## Gaze Position in Object
 Gaze Position in Object represents the coordinates of the gaze position from the center of the object.
