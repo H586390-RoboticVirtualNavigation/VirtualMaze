@@ -199,6 +199,12 @@ public class ScreenSaver : BasicGUIController {
         return (currentPeriod / (timeToNextTrigger * 1000)) * excessTime;
     }
 
+
+    private uint Round(float value) {
+        //default Math.Round uses ToEven
+        return (uint)Math.Round(value, MidpointRounding.AwayFromZero);
+    }
+
     private IEnumerator ProcessSessionDataTask(string sessionPath, string edfPath, string toFolderPath) {
         //Setup
         fadeController.gameObject.SetActive(false);
@@ -239,30 +245,44 @@ public class ScreenSaver : BasicGUIController {
             float sessionEventPeriod = LoadToNextTriggerSession(sessionReader, sessionFrames, out SessionTrigger sessionTrigger);
             uint edfEventPeriod = LoadToNextTriggerEdf(pointer, fixations, out SessionTrigger edfTrigger, out uint timestamp, out latestType);
 
+            bool missingTriggerDetected = false;
+            bool isMissingEdfTrigger = false;
+            SessionTrigger missingTrigger;
+
             while (sessionTrigger != edfTrigger && sessionReader.HasNext() && latestType != DataTypes.NO_PENDING_ITEMS) {
-                Debug.LogError($"initial : {sessionTrigger}|{edfTrigger}|{timestamp}");
+                missingTriggerDetected = true;
+                string errorMessage = $"Missing trigger found at approx {timestamp}. session: {sessionTrigger}| edf: {edfTrigger}";
+                Console.WriteError(errorMessage);
+                Debug.LogWarning(errorMessage);
 
                 //Assuming that the previous iteration is synchronized
                 if (ShouldSessionFileCatchUp(sessionTrigger, edfTrigger)) {
                     //session file should catch up
                     sessionEventPeriod += LoadToNextTriggerSession(sessionReader, sessionFrames, out sessionTrigger);
+                    isMissingEdfTrigger = true;
+                    missingTrigger = edfTrigger;
                 }
                 else {
                     //edfFile should catch up
                     edfEventPeriod += LoadToNextTriggerEdf(pointer, fixations, out edfTrigger, out timestamp, out latestType);
+                    isMissingEdfTrigger = false;
+                    missingTrigger = sessionTrigger;
                 }
-
-                Debug.LogError($"{sessionTrigger}|{edfTrigger}|{sessionEventPeriod}|{edfEventPeriod}|{timestamp}");
             }
 
             float excessTime = (sessionEventPeriod * 1000 - edfEventPeriod);
+            float timepassed = fixations.Peek().Time;
+            // if missing trigger detected and the time difference between the 2 files is less than 20ms
+            if (missingTriggerDetected && Math.Abs(excessTime) > 20) {
+                IgnoreData(fixations, recorder);
+            }
+
             float timeOffset = excessTime / (sessionFrames.Count - 1);
 
             print($"timeError: {excessTime}|{timeOffset} for {sessionFrames.Count} frames, ses: {sessionEventPeriod: 0.00}, edf: {edfEventPeriod}");
 
             uint gazeTime = 0;
 
-            float timepassed = fixations.Peek().Time;
             float debugtimeOffset = 0;
 
             while (sessionFrames.Count > 0 && fixations.Count > 0) {
@@ -273,16 +293,19 @@ public class ScreenSaver : BasicGUIController {
                 if (sessionFrames.Count > 0) {
                     //peek since next sessionData holds the time it takes from this data to the next
                     period = (sessionFrames.Peek().timeDeltaMs) - timeOffset;
-                    //period = (sessionFrames.Peek().timeDeltaMs) - GetWeightedOffset(sessionEventPeriod, sessionFrames.Peek().timeDeltaMs, excessTime);
                 }
                 else {
                     //use current data's timedelta to approximate
                     period = (sessionData.timeDeltaMs) - timeOffset;
-                    //period = (sessionData.timeDeltaMs) - GetWeightedOffset(sessionEventPeriod, sessionData.timeDeltaMs, excessTime);
                 }
 
-                if (period < 0) {
-                    Debug.LogWarning("NEG Period");
+                // does not matter if trigger in session file is missing since "true" timing is based on edf file
+                if (missingTriggerDetected && isMissingEdfTrigger) {
+                    SessionTrigger approxTrigger = sessionData.trigger;
+                    if (approxTrigger != SessionTrigger.NoTrigger) {
+                        ProcessTrigger(sessionData.trigger);
+                        recorder.WriteEvent(DataTypes.MESSAGEEVENT, currData.Time, $"Approximated Trigger {sessionData.flag}");
+                    }
                 }
 
                 debugtimeOffset += timeOffset;
@@ -291,7 +314,7 @@ public class ScreenSaver : BasicGUIController {
 
                 MoveRobotTo(robot, sessionData);
 
-                while (gazeTime <= timepassed && fixations.Count > 0) {
+                while (gazeTime <= Round(timepassed) && fixations.Count > 0) {
                     currData = fixations.Dequeue();
                     gazeTime = currData.Time;
                     ProcessData(currData, recorder);
@@ -338,7 +361,7 @@ public class ScreenSaver : BasicGUIController {
                 Fsample fs = (Fsample)data;
 
                 RaycastGazeData(fs, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
-                recorder.WriteSample(data.dataType, data.Time, objName, relativePos, objHitPos, gazePoint, fs.rightGaze, robot.position);
+                recorder.WriteSample(data.dataType, data.Time, objName, relativePos, objHitPos, gazePoint, fs.rightGaze, robot.position, robot.rotation.eulerAngles.y);
 
                 break;
             case DataTypes.MESSAGEEVENT:
@@ -353,6 +376,30 @@ public class ScreenSaver : BasicGUIController {
                 //ignore others for now
                 //Debug.LogWarning($"Unsupported EDF DataType Found! ({type})");
                 break;
+        }
+    }
+
+    private void IgnoreData(Queue<AllFloatData> fixations, RayCastRecorder recorder) {
+        while (fixations.Count > 0) {
+            AllFloatData data = fixations.Dequeue();
+
+            switch (data.dataType) {
+                case DataTypes.SAMPLE_TYPE:
+                    Fsample fs = (Fsample)data;
+                    recorder.IgnoreEvent(fs.dataType, fs.Time, fs.rightGaze);
+
+                    break;
+                case DataTypes.MESSAGEEVENT:
+                    FEvent fe = (FEvent)data;
+                    ProcessTrigger(fe.trigger);
+                    recorder.WriteEvent(fe.dataType, fe.Time, $"Data ignored {fe.message}");
+
+                    break;
+                default:
+                    //ignore others for now
+                    //Debug.LogWarning($"Unsupported EDF DataType Found! ({type})");
+                    break;
+            }
         }
     }
 
