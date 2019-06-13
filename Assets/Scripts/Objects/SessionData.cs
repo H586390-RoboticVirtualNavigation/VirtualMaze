@@ -8,7 +8,7 @@ using System.Collections.Generic;
 /// </summary>
 public class SessionData {
     public int flag { get; private set; } = -1;
-    public float timeDelta { get; private set; } = -1;
+    public double timeDelta { get; private set; } = -1;
     public float posX { get; private set; } = -1;
     public float posZ { get; private set; } = -1;
     public float rotY { get; private set; } = -1;
@@ -16,7 +16,7 @@ public class SessionData {
 
     public string rawData { get; private set; }
 
-    public float timeDeltaMs { get { return timeDelta * 1000; } }
+    public double timeDeltaMs { get { return timeDelta * 1000; } }
 
     public SessionData(string data) {
         rawData = data;
@@ -25,7 +25,7 @@ public class SessionData {
             string[] dataArr = data.Trim().Split(' ');
 
             flag = int.Parse(dataArr[0]);
-            timeDelta = float.Parse(dataArr[1]);
+            timeDelta = double.Parse(dataArr[1]);
             posX = float.Parse(dataArr[2]);
             posZ = float.Parse(dataArr[3]);
             rotY = float.Parse(dataArr[4]);

@@ -42,7 +42,6 @@ public class RewardArea : MonoBehaviour {
     public delegate void OnRewardTriggeredEvent(RewardArea rewardArea);
     public static event OnRewardTriggeredEvent OnRewardTriggered;
 
-    private float lightIntensity = 1;
     private bool blinkState;
     private readonly WaitForSeconds half_period = new WaitForSeconds(0.5f);
 
@@ -56,7 +55,6 @@ public class RewardArea : MonoBehaviour {
             blinkLight.material.DisableKeyword(emissionKeyword);
             blinkState = false;
         }
-        StartBlinking();
     }
 
     private void OnTriggerStay(Collider other) {

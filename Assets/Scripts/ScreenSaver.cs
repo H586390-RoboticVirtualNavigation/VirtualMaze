@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ScreenSaver : BasicGUIController {
-    private int framePerBatch = 100;
+    private int framePerBatch = 1;
 
     public InputField eyeLinkFileInput;
     public InputField sessionInput;
@@ -31,6 +31,16 @@ public class ScreenSaver : BasicGUIController {
     public FadeCanvas fadeController;
 
     public GraphicRaycaster cueCaster;
+
+    public RectTransform GazeCanvas;
+    public RectTransform gazePtImage;
+
+    private void setGazePoint(Vector2 gazePt) {
+
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(GazeCanvas, gazePt, viewport, out Vector2 localpoint)) {
+            gazePtImage.localPosition = localpoint;
+        }
+    }
 
     private void Awake() {
         eyeLinkFileInput.onEndEdit.AddListener(ChooseEyelinkFile);
@@ -200,7 +210,7 @@ public class ScreenSaver : BasicGUIController {
     }
 
 
-    private uint Round(float value) {
+    private uint Round(double value) {
         //default Math.Round uses ToEven
         return (uint)Math.Round(value, MidpointRounding.AwayFromZero);
     }
@@ -210,6 +220,7 @@ public class ScreenSaver : BasicGUIController {
         fadeController.gameObject.SetActive(false);
         int frameCounter = 0;
         EdfFilePointer pointer = EdfAccessWrapper.EdfOpenFile(edfPath, 0, 1, 1, out int errVal);
+        GazePointPool.gazePointPooler.preparePool();
 
         if (errVal != 0) { //check if file can be parsed by library
             String error = $"Unable to open .edf file";
@@ -242,7 +253,7 @@ public class ScreenSaver : BasicGUIController {
             //buffer since sessionData.timeDelta is the time difference from the previous frame.
             sessionFrames.Enqueue(sessionReader.currData);
 
-            float sessionEventPeriod = LoadToNextTriggerSession(sessionReader, sessionFrames, out SessionTrigger sessionTrigger);
+            double sessionEventPeriod = LoadToNextTriggerSession(sessionReader, sessionFrames, out SessionTrigger sessionTrigger);
             uint edfEventPeriod = LoadToNextTriggerEdf(pointer, fixations, out SessionTrigger edfTrigger, out uint timestamp, out latestType);
 
             bool missingTriggerDetected = false;
@@ -270,26 +281,26 @@ public class ScreenSaver : BasicGUIController {
                 }
             }
 
-            float excessTime = (sessionEventPeriod * 1000 - edfEventPeriod);
-            float timepassed = fixations.Peek().Time;
+            double excessTime = (sessionEventPeriod * 1000 - edfEventPeriod);
+            double timepassed = fixations.Peek().Time;
             // if missing trigger detected and the time difference between the 2 files is less than 20ms
             if (missingTriggerDetected && Math.Abs(excessTime) > 20) {
                 IgnoreData(fixations, recorder);
             }
 
-            float timeOffset = excessTime / (sessionFrames.Count - 1);
+            double timeOffset = excessTime / (sessionFrames.Count - 1);
 
             print($"timeError: {excessTime}|{timeOffset} for {sessionFrames.Count} frames, ses: {sessionEventPeriod: 0.00}, edf: {edfEventPeriod}");
 
             uint gazeTime = 0;
 
-            float debugtimeOffset = 0;
+            double debugtimeOffset = 0;
 
             while (sessionFrames.Count > 0 && fixations.Count > 0) {
                 SessionData sessionData = sessionFrames.Dequeue();
                 AllFloatData currData = fixations.Peek();
 
-                float period;
+                double period;
                 if (sessionFrames.Count > 0) {
                     //peek since next sessionData holds the time it takes from this data to the next
                     period = (sessionFrames.Peek().timeDeltaMs) - timeOffset;
@@ -325,10 +336,11 @@ public class ScreenSaver : BasicGUIController {
                 if (frameCounter == 0) {
                     yield return null;
                 }
+                GazePointPool.gazePointPooler.ClearScreen();
             }
 
             Debug.LogWarning($"ses: {sessionFrames.Count}| fix: {fixations.Count}, timestamp {gazeTime}, timepassed{timepassed: 0.00}");
-            float finalExcess = gazeTime - timepassed;
+            double finalExcess = gazeTime - timepassed;
 
             Debug.LogWarning($"final excess: {finalExcess} | {finalExcess + sessionReader.currData.timeDeltaMs} || {sessionReader.currData.timeDeltaMs}");
             Debug.LogWarning($"whats this?: {debugtimeOffset} | {timepassed} vs {sessionEventPeriod} vs {edfEventPeriod}");
@@ -362,6 +374,9 @@ public class ScreenSaver : BasicGUIController {
 
                 RaycastGazeData(fs, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
                 recorder.WriteSample(data.dataType, data.Time, objName, relativePos, objHitPos, gazePoint, fs.rightGaze, robot.position, robot.rotation.eulerAngles.y);
+
+                //setGazePoint(fs.rightGaze);
+                GazePointPool.gazePointPooler.addGazePoint(GazeCanvas, viewport, fs.rightGaze);
 
                 break;
             case DataTypes.MESSAGEEVENT:
@@ -612,8 +627,8 @@ public class ScreenSaver : BasicGUIController {
     }
 
     //returns total time to 
-    private float LoadToNextTriggerSession(SessionReader reader, Queue<SessionData> frames, out SessionTrigger trigger) {
-        float totalTime = 0;// reader.currData.timeDelta;
+    private double LoadToNextTriggerSession(SessionReader reader, Queue<SessionData> frames, out SessionTrigger trigger) {
+        double totalTime = 0;// reader.currData.timeDelta;
 
         trigger = SessionTrigger.NoTrigger;
         bool isNextEventFound = false;
