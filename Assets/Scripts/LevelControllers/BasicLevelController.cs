@@ -42,7 +42,6 @@ public class BasicLevelController : MonoBehaviour {
     protected Session session { get; private set; }
     protected RobotMovement robotMovement { get; private set; }
     protected CueController cueController { get; private set; }
-    protected FadeCanvas fade { get; private set; }
     protected WaitForSecondsRealtime cueDisplayDuration { get; private set; } = new WaitForSecondsRealtime(1f);
 
     //reference to coroutine to properly stop it.
@@ -58,8 +57,6 @@ public class BasicLevelController : MonoBehaviour {
     private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent";
 
     private void Awake() {
-        fade = FindObjectOfType<FadeCanvas>();
-
         waitIfPaused = new WaitUntil(() => !isPaused);
 
         GameObject robot = GameObject.FindGameObjectWithTag(Tags.Player);
@@ -85,7 +82,7 @@ public class BasicLevelController : MonoBehaviour {
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
         StopTrialTimer();
         StopAllCoroutines();
-        fade.FadeOut();
+        FadeCanvas.fadeCanvas.FadeOut();
     }
 
     public RewardArea[] GetAllRewardsFromScene() {
@@ -137,7 +134,7 @@ public class BasicLevelController : MonoBehaviour {
         robotMovement.MoveToWaypoint(startWaypoint);
 
         //fade in and wait for fadein to complete
-        yield return fade.FadeIn();
+        yield return FadeCanvas.fadeCanvas.FadeIn();
 
         // start the first trial.
         StartCoroutine(GoNextTask(true)); // first task is always true.
@@ -264,14 +261,14 @@ public class BasicLevelController : MonoBehaviour {
 
     private IEnumerator FadeOutBeforeLevelEnd() {
         //fade out when end
-        yield return fade.FadeOut();
+        yield return FadeCanvas.fadeCanvas.FadeOut();
         onSessionFinishEvent.Invoke();
     }
 
     protected virtual IEnumerator InterTrial() {
         if (resetRobotPositionDuringInterTrial) {
             //fadeout and wait for fade out to finish.
-            yield return fade.FadeOut();
+            yield return FadeCanvas.fadeCanvas.FadeOut();
             robotMovement.MoveToWaypoint(startWaypoint);
         }
 
@@ -282,7 +279,7 @@ public class BasicLevelController : MonoBehaviour {
 
         if (resetRobotPositionDuringInterTrial) {
             //fade in and wait for fade in to finish
-            yield return fade.FadeIn();
+            yield return FadeCanvas.fadeCanvas.FadeIn();
         }
     }
 
@@ -310,14 +307,14 @@ public class BasicLevelController : MonoBehaviour {
         float timeoutDuration = Session.timeoutDuration / 1000f;
 
         if (resetRobotPositionDuringInterTrial && restartOnTaskFail) {
-            yield return fade.FadeOut();
+            yield return FadeCanvas.fadeCanvas.FadeOut();
             robotMovement.MoveToWaypoint(startWaypoint);
         }
 
         yield return SessionStatusDisplay.Countdown("Timeout", timeoutDuration);
 
         if (resetRobotPositionDuringInterTrial && restartOnTaskFail) {
-            yield return fade.FadeIn();
+            yield return FadeCanvas.fadeCanvas.FadeIn();
         }
 
         StartCoroutine(GoNextTask(false));

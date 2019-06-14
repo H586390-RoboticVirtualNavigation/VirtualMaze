@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ScreenSaver : BasicGUIController {
-    private int framePerBatch = 1;
+    private int framePerBatch = 100;
 
     public InputField eyeLinkFileInput;
     public InputField sessionInput;

@@ -4,6 +4,9 @@ using UnityEngine.UI;
 
 public class FadeCanvas : MonoBehaviour {
 
+    public static FadeCanvas fadeCanvas;
+    
+
 	private CanvasGroup fade;
     private WaitForSecondsRealtime timeIncrements = new WaitForSecondsRealtime(0.01f);
 	public bool fadeOutDone { get; private set; }
@@ -11,6 +14,7 @@ public class FadeCanvas : MonoBehaviour {
     public bool isFadedOut { get; private set; }
 
     void Awake() {
+        fadeCanvas = this;
 		fade = GetComponent<CanvasGroup> ();
 		fadeInDone = true;
 		fadeOutDone = true;
