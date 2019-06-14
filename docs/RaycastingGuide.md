@@ -32,7 +32,7 @@ A CSV (Comma Separated Value) file will be generated in the destination folder.
 #### Description of Columns
 1. Type of data in the row (string/text).
 2. Timestamp of the gaze data used to identify the fixated object (unsigned int)
-3. Name of the object fixated by the gaze, or Message received by EyeLink (string/text).
+3. Name of the object fixated by the gaze, or message received by EyeLink (string/text).
 
 *Raw Gaze Data (Pixels)*
 
@@ -41,10 +41,10 @@ A CSV (Comma Separated Value) file will be generated in the destination folder.
 
 *Subject Location in Worldspace ([Unity Units](#unity-units))*
 
-6. X Worldspace coordinate of the subject's location in Worldspace.
-7. Y Worldspace coordinate of the subject's location in Worldspace.
-8. Z Worldspace coordinate of the subject's location in Worldspace.
-9. Rotation of subject. (degrees)
+6. X coordinate of the subject's location in Worldspace.
+7. Y coordinate of the subject's location in Worldspace.
+8. Z coordinate of the subject's location in Worldspace.
+9. Orientation of the subject about Unity's Y axis (degrees).
 
 *Gaze Location ([Unity Units](#unity-units))*
 
@@ -54,9 +54,9 @@ A CSV (Comma Separated Value) file will be generated in the destination folder.
 
 *Gazed Object Location ([Unity Units](#unity-units))*
 
-13. X Worldspace coordinate of the fixated object.
-14. Y Worldspace coordinate of the fixated object.
-15. Z Worldspace coordinate of the fixated object.
+13. X Worldspace coordinate of the center of the fixated object.
+14. Y Worldspace coordinate of the center of the fixated object.
+15. Z Worldspace coordinate of the center of the fixated object.
 
 *Gaze Position in Object ([Unity Units](#unity-units))*
 
@@ -90,37 +90,6 @@ See [Cue Image and Hint Image ](#cueImage-and-hintImage) for definition of Cue I
 
 There are 2 kinds of cues presented to the subject, and for convenience, the larger cue is referred to as the Cue Image, while the smaller image at the top is referred to as the Hint Image.
 
-### Synchronization
-The timings between triggers are not the same between the session logs and .edf file because the sessions files are generated from Unity which runs on non real time operating system while the edf file is generated on a real time operating system.
-
-To synchronize the files, the time difference of 2 triggers between the session logs and .edf files are divided by the number of frames between the 2 triggers in the session logs.
-
-This value is then used to offset the timings recorded for each frame between the same triggers in the session logs which will result in both files having the same duration between the 2 files.
-
-#### Missing Triggers
-In an event of missing triggers either in the session files or the .edf file, depending on the difference of duration between the previous and next trigger (w.r.t. the missing trigger).
-
-The missing trigger is approximated if the period difference is within **20ms** or else the data between the previous and next trigger is ignored.
-
-If data is ignored, the gaze data for that point is ignored and the following line is recorded in the output CSV
-
-```CSV
-SAMPLE_TYPE,4558794,Data ignored (x:1267.1 y:219.4),,,,,,,,,,,,,,
-```
-
-If the Trigger is approximated, the following line is added at the approximated time.
-
-```CSV
-EVENTMESSAGE,4558794,Approximated Trigger 13,,,,,,,,,,,,,,
-```
-
-###### Column Reference
-1. Data type of this row
-2. Timestamp of this Data
-3. Message describing the data loss
- - Data ignored message also gives the gaze x and y position from the edf file
- - Approximated trigger message also gives the trigger it approximates
-
 ## Gaze Position in Object
 Gaze Position in Object represents the coordinates of the gaze position from the center of the object.
 
@@ -135,3 +104,26 @@ For the example shown in the image, the resultant Gaze Position in Object is **(
 
 ###### Gaze point with reference to the center of the Cue Image.
 ![reading-relative-position](/docs/images/reading-relative-position.png)
+
+### Synchronization
+The time between messages may not be the same in the session log and .edf file because the sessions files are generated from Unity, which runs on a non-real-time operating system, while the EyeLink uses something more like a real-time operating system.
+
+In order to synchronize the timelines in the 2 files, we correct the event times in Unity with those we find in EyeLink, and adjust all inter-event times in Unity by dividing the inter-event interval differences by the number of frames between the 2 triggers.
+
+#### Missing Triggers
+In the event of missing triggers either in the session files or the .edf file, the difference in the interval between the previous and the next trigger (w.r.t. the missing trigger) is first computed. The missing trigger is approximated if the difference in interval is within **20ms**. Otherwise, the data between the previous and the next trigger is ignored.
+
+If the data is ignored, the gaze data for that point is ignored, and the following line will be recorded in the output CSV:
+
+```CSV
+SAMPLE_TYPE,4558794,Data ignored (x:1267.1 y:219.4),,,,,,,,,,,,,,
+```
+
+The message will also include the gaze x and y position from the edf file.
+
+If the trigger is approximated, the following line will be added with the approximated time:
+
+```CSV
+EVENTMESSAGE,4558794,Approximated Trigger 13,,,,,,,,,,,,,,
+```
+The approximated trigger message will also include the trigger number it approximated.
