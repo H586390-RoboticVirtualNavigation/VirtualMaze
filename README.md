@@ -7,7 +7,7 @@ recorded when navigating through a real maze.
 
 # More Information
 
-- [Developer Guide](./docs/DeveloperGuide.md)
-- [Raycasting Guide](./docs/RaycastingGuide.md)
-- [User Guide](./docs/UserGuide.md)
-- [Code Documentation](./docs/CodeDocumentation.md)
+- [Developer Guide](/docs/DeveloperGuide.md)
+- [Raycasting Guide](/docs/RaycastingGuide.md)
+- [User Guide](/docs/UserGuide.md)
+- [Code Documentation](/docs/CodeDocumentation.md)
