@@ -21,9 +21,12 @@ Complete [Setting Up](/docs/DeveloperGuide.md#setting-up) in the Developer's Gui
 **.edf file:** .edf file from the EyeLink eye-tracker.
 
 ## Steps to Use
-1. Select the files in the respective text boxes
-2. Select the destination folder to save the output file
-3. Click ***Generate*** to start processing the files.
+1. Open VirtualMaze project in Unity
+2. Select File->Open Scene menu command
+3. Navigate to VirtualMaze->Assets->Scenes and select Start.unity
+4. Select the files in the respective text boxes
+5. Select the destination folder to save the output file
+6. Click ***Generate*** to start processing the files.
 
 ## Output
 A CSV (Comma Separated Value) file will be generated in the destination folder.
