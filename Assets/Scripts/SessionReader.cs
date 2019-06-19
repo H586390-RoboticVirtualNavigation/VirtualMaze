@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.IO;
 
@@ -39,7 +37,7 @@ public class SessionReader {
     private void parseHeader() {
         string currLine = reader.ReadLine();
         // check if first line is a JsonObject
-        if (currLine[0] == '{') {
+        if (currLine[0] == '{') { // newest version
             context = JsonUtility.FromJson<SessionContext>(currLine);
         }
         else {
@@ -64,7 +62,7 @@ public class SessionReader {
         r.Close();
     }
 
-    public bool HasNext() { 
+    public bool HasNext() {
         return reader.Peek() > 0;
     }
 }

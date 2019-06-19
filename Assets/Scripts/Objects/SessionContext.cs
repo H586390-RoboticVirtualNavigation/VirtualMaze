@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -25,6 +25,10 @@ public class SessionContext {
     public float rotationSpeed;
     public float movementSpeed;
     public float joystickDeadzone;
+
+    //regex to extract information from string
+    // any word ( float or int, float or int, float or int )
+    private const string posterRegex = @"(\w+)\(([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+),([-+]?[0-9]*\.?[0-9]+)\)";
 
     public SessionContext(Session session, ExperimentSettings settings, RewardArea[] rewards) {
         version = GameController.versionInfo;
@@ -58,38 +62,56 @@ public class SessionContext {
         line = reader.ReadLine();
         taskType = GetValue(line);
 
-        line = reader.ReadLine();//ignore parsing of poster location for now
-        //context.posterLocations = GetValue(lin;
+        line = reader.ReadLine();
+        ProcessPosterLocations(posterLocations, GetValue(line));
 
         line = reader.ReadLine();
         trialName = GetValue(line);
 
         line = reader.ReadLine();
-        int.TryParse(GetValue(line), out rewardsNumber);
+        rewardsNumber = int.Parse(GetValue(line));
 
         line = reader.ReadLine();
-        int.TryParse(GetValue(line), out completionWindow);
+        completionWindow = int.Parse(GetValue(line));
 
         line = reader.ReadLine();
-        int.TryParse(GetValue(line), out timeoutDuration);
+        timeoutDuration = int.Parse(GetValue(line));
 
         line = reader.ReadLine();
-        int.TryParse(GetValue(line), out intersessionInterval);
+        intersessionInterval = int.Parse(GetValue(line));
 
         line = reader.ReadLine();
-        int.TryParse(GetValue(line), out rewardTime);
+        rewardTime = int.Parse(GetValue(line));
 
         line = reader.ReadLine();
-        float.TryParse(GetValue(line), out rotationSpeed);
+        rotationSpeed = float.Parse(GetValue(line));
 
         line = reader.ReadLine();
-        float.TryParse(GetValue(line), out movementSpeed);
+        movementSpeed = float.Parse(GetValue(line));
 
         line = reader.ReadLine();
-        float.TryParse(GetValue(line), out joystickDeadzone);
+        movementSpeed = float.Parse(GetValue(line));
 
         line = reader.ReadLine();
-        float.TryParse(GetValue(line), out rewardViewCriteria);
+        rewardViewCriteria = float.Parse(GetValue(line));
+    }
+
+    private void ProcessPosterLocations(List<PosterLocation> posterLocations, string line) {
+        posterLocations.Clear();
+        MatchCollection matches = Regex.Matches(line, posterRegex, RegexOptions.IgnoreCase);
+
+        foreach (Match match in matches) {
+            Vector3 location = Vector3.zero;
+
+            location.x = float.Parse(match.Groups[2].Value);
+            location.y = float.Parse(match.Groups[3].Value);
+            location.z = float.Parse(match.Groups[4].Value);
+
+            PosterLocation pLoc = new PosterLocation(location, match.Groups[1].Value);
+
+            posterLocations.Add(pLoc);
+
+        }
     }
 
     public string ToJsonString() {
@@ -147,7 +169,12 @@ public class SessionContext {
 
     private string GetValue(string line) {
         //get second index where the value resides
-        return line.Split(':')[1].Trim();
+        return GetValue(line, ':');
+    }
+
+    private string GetValue(string line, char delimiter) {
+        //get second index where the value resides
+        return line.Split(delimiter)[1].Trim();
     }
 
     [Serializable]
@@ -157,6 +184,10 @@ public class SessionContext {
         public PosterLocation(Vector3 position, string name) {
             this.name = name;
             this.position = position;
+        }
+
+        public override string ToString() {
+            return $"{name}, {position}";
         }
     }
 }

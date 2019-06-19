@@ -33,14 +33,8 @@ public class ScreenSaver : BasicGUIController {
     public GraphicRaycaster cueCaster;
 
     public RectTransform GazeCanvas;
-    public RectTransform gazePtImage;
 
-    private void setGazePoint(Vector2 gazePt) {
-
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(GazeCanvas, gazePt, viewport, out Vector2 localpoint)) {
-            gazePtImage.localPosition = localpoint;
-        }
-    }
+    public Slider progressBar;
 
     private void Awake() {
         eyeLinkFileInput.onEndEdit.AddListener(ChooseEyelinkFile);
@@ -93,7 +87,7 @@ public class ScreenSaver : BasicGUIController {
         //StartCoroutine(ProcessSessionData(sessionInput.text, folderInput.text));
         //}
         SessionReader.ExtractInfo(sessionPath, out SessionContext context, out int numframes);
-
+        progressBar.maxValue = numframes;
         SceneManager.sceneLoaded += OnsceneLoaded;
         SceneManager.LoadScene(context.trialName);
     }
@@ -137,6 +131,7 @@ public class ScreenSaver : BasicGUIController {
             SetInputFieldValid(sessionInput);
 
             SessionReader.ExtractInfo(file, out SessionContext context, out int numFrames);
+
             //from.text = "1";
             //to.text = lineCount.ToString();
             sessionInfo.text = $"{numFrames} frames";
@@ -221,6 +216,9 @@ public class ScreenSaver : BasicGUIController {
         int frameCounter = 0;
         EdfFilePointer pointer = EdfAccessWrapper.EdfOpenFile(edfPath, 0, 1, 1, out int errVal);
         GazePointPool.gazePointPooler.preparePool();
+
+        progressBar.value = 0;
+        progressBar.gameObject.SetActive(true);
 
         if (errVal != 0) { //check if file can be parsed by library
             String error = $"Unable to open .edf file";
@@ -334,6 +332,7 @@ public class ScreenSaver : BasicGUIController {
                 frameCounter++;
                 frameCounter %= framePerBatch;
                 if (frameCounter == 0) {
+                    progressBar.value += framePerBatch;
                     yield return null;
                 }
                 GazePointPool.gazePointPooler.ClearScreen();
@@ -364,6 +363,7 @@ public class ScreenSaver : BasicGUIController {
         sessionReader.Close();
         SceneManager.LoadScene("Start");
         fadeController.gameObject.SetActive(true);
+        progressBar.gameObject.SetActive(false);
     }
 
     private void ProcessData(AllFloatData data, RayCastRecorder recorder) {
@@ -465,20 +465,27 @@ public class ScreenSaver : BasicGUIController {
             case SessionTrigger.CueShownTrigger:
                 cueController.HideCue();
                 cueController.ShowHint();
-
                 expected = TestTrigger.TimeoutTrigger | TestTrigger.TrialEndedTrigger;
+                SessionStatusDisplay.DisplaySessionStatus("Trial Running");
                 break;
 
             case SessionTrigger.TrialStartedTrigger:
                 cueController.HideHint();
                 cueController.ShowCue();
-
+                SessionStatusDisplay.DisplaySessionStatus("Showing Cue");
                 expected = TestTrigger.CueShownTrigger;
                 break;
 
             case SessionTrigger.TimeoutTrigger:
             case SessionTrigger.TrialEndedTrigger:
                 cueController.HideAll();
+                if (trigger == SessionTrigger.TimeoutTrigger) {
+                    SessionStatusDisplay.DisplaySessionStatus("Time out");
+                }
+                else {
+                    SessionStatusDisplay.DisplaySessionStatus("Trial Ended");
+                }
+
                 expected = TestTrigger.TrialStartedTrigger;
                 break;
 
@@ -487,6 +494,7 @@ public class ScreenSaver : BasicGUIController {
                 break;
 
             case SessionTrigger.ExperimentVersionTrigger:
+                SessionStatusDisplay.DisplaySessionStatus("Next Session");
                 expected = TestTrigger.TrialStartedTrigger;
                 break;
             default:
@@ -598,27 +606,39 @@ public class ScreenSaver : BasicGUIController {
     }
 
     private DataTypes PrepareFiles(SessionReader sessionReader, EdfFilePointer pointer, SessionTrigger firstOccurance) {
+        FindNextSessionTrigger(sessionReader, firstOccurance);
+        return FindNextEdfTrigger(pointer, firstOccurance);
+    }
+
+    private void FindNextSessionTrigger(SessionReader sessionReader, SessionTrigger trigger) {
         //move sessionReader to point to first trial
         while (sessionReader.NextData()) {
-            if (sessionReader.currData.trigger == firstOccurance) {
-                Debug.Log($"LOOK AT ME First {sessionReader.currData.rawData}");
+            if (sessionReader.currData.trigger == trigger) {
                 MoveRobotTo(robot, sessionReader.currData);
                 break;
             }
         }
+    }
 
+    /// <summary>
+    /// Moves the current pointer to point to the next trigger. Any data between the current point and the 
+    /// next trigger is ignored.
+    /// </summary>
+    /// <param name="pointer">Pointer of the EDF file</param>
+    /// <param name="trigger">The next trigger to find</param>
+    /// <returns>DataType of the object so the data can be processed</returns>
+    private DataTypes FindNextEdfTrigger(EdfFilePointer pointer, SessionTrigger trigger) {
         DataTypes currType = DataTypes.NULL;
 
         //move edfFile to point to first trial
-        bool foundFirstTrial = false;
-        while (!foundFirstTrial) {
+        bool foundNextTrigger = false;
+        while (!foundNextTrigger) {
             currType = EdfAccessWrapper.EdfGetNextData(pointer);
             if (currType == DataTypes.MESSAGEEVENT) {
                 ALLF_DATA data = EdfAccessWrapper.EdfGetFloatData(pointer);
                 FEVENT ev = data.fe;
-                if (ev.GetSessionTrigger() == firstOccurance) {
-                    Debug.Log($"LOOK AT ME TOO {ev.sttime} {currType}");
-                    foundFirstTrial = true;
+                if (ev.GetSessionTrigger() == trigger) {
+                    foundNextTrigger = true;
                 }
             }
         }
@@ -626,9 +646,19 @@ public class ScreenSaver : BasicGUIController {
         return currType;
     }
 
-    //returns total time to 
+    /// <summary>
+    /// Loads data from the next data point to the next trigger (inclusive) and returns the total taken from the current 
+    /// position top the next Trigger
+    /// 
+    /// TODO: since the time delta is time difference of the last frame, total time should include the time difference of the 
+    /// next frame after the trigger.
+    /// </summary>
+    /// <param name="reader">The SessionReader to be read</param>
+    /// <param name="frames">the Queue to store the data</param>
+    /// <param name="trigger">The trigger where the loading stops</param>
+    /// <returns>Total time from the </returns>
     private double LoadToNextTriggerSession(SessionReader reader, Queue<SessionData> frames, out SessionTrigger trigger) {
-        double totalTime = 0;// reader.currData.timeDelta;
+        double totalTime = 0;
 
         trigger = SessionTrigger.NoTrigger;
         bool isNextEventFound = false;
@@ -646,6 +676,18 @@ public class ScreenSaver : BasicGUIController {
         return totalTime;
     }
 
+
+    /// <summary>
+    /// Loads data from the next data point to the next trigger (inclusive) and returns the total taken from the current 
+    /// position top the next Trigger
+    /// 
+    /// </summary>
+    /// <param name="file">EdfFilePointer Object to process</param>
+    /// <param name="fixations">Queue to fill the data</param>
+    /// <param name="trigger">The trigger where the loading stops at</param>
+    /// <param name="timestamp">The timestamp of the trigger where the loading stops at</param>
+    /// <param name="latestType">The Datatype of the last data point</param>
+    /// <returns>Time taken from next data point to the last data point</returns>
     private uint LoadToNextTriggerEdf(EdfFilePointer file,
                                       Queue<AllFloatData> fixations,
                                       out SessionTrigger trigger,
