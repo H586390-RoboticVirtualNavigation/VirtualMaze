@@ -11,6 +11,7 @@ This utility takes eye-tracking data and generates information about the fixated
 - [Object Size Reference](#Object-Size-Reference)
 - [Object Name References](#Object-Name-References)
 - [Gaze Position in Object](#Gaze-Position-in-Object)
+- [Environment Reference](#Environment-Reference)
 - [Synchronization](#Synchronization)
 
 ## Prerequisites
@@ -109,6 +110,26 @@ For the example shown in the image, the resultant Gaze Position in Object is **(
 
 ###### Gaze point with reference to the center of the Cue Image.
 ![reading-relative-position](/docs/images/reading-relative-position.png)
+
+### Environment Reference
+
+#### Axes
+
+![Unity Axes](/docs/images/axes.PNG)
+
+This is the axes defined by Unity. The colored sides represents the positive direction of the axes and the Y axis represents the height of the axis.
+
+#### Rotation Around Y Axis
+
+![rotation-ref](/docs/images/rotation-ref.PNG)
+
+The direction of the black arrow represents the positive increase in rotational angle around Y axis starting from 0.
+
+
+#### Room
+The surrounding walls of the room are labeled as follows.
+
+![wall-label](/docs/images/wall-positions.PNG)
 
 ### Synchronization
 The time between messages may not be the same in the session log and .edf file because the sessions files are generated from Unity, which runs on a non-real-time operating system, while the EyeLink uses something more like a real-time operating system.
