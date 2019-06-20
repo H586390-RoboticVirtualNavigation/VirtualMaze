@@ -121,7 +121,7 @@ This is the axes defined by Unity. The colored sides represents the positive dir
 
 #### Rotation Around Y Axis
 
-![rotation-ref](/docs/images/rotation-ref.PNG)
+![rotation-ref](/docs/images/rotation-ref.png)
 
 The direction of the black arrow represents the positive increase in rotational angle around Y axis starting from 0.
 
@@ -129,7 +129,7 @@ The direction of the black arrow represents the positive increase in rotational 
 #### Room
 The surrounding walls of the room are labeled as follows.
 
-![wall-label](/docs/images/wall-positions.PNG)
+![wall-label](/docs/images/wall-positions.png)
 
 ### Synchronization
 The time between messages may not be the same in the session log and .edf file because the sessions files are generated from Unity, which runs on a non-real-time operating system, while the EyeLink uses something more like a real-time operating system.
