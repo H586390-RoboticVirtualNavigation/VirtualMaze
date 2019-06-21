@@ -29,6 +29,11 @@ Complete [Setting Up](/docs/DeveloperGuide.md#setting-up) in the Developer's Gui
 5. Select the destination folder to save the output file
 6. Click ***Generate*** to start processing the files.
 
+###### Note:
+Compiling the game will speed up the generation of ray cast data because the computer does not have to deal with the overhead of the Unity Editor.
+
+To compile the game, Click on *File > Build and Run*.
+
 ## Output
 A CSV (Comma Separated Value) file will be generated in the destination folder.
 

@@ -4,22 +4,20 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class GazePointPool : MonoBehaviour {
-    public static GazePointPool gazePointPooler;
-
     public Image gazePointImage;
     private List<Image> pool = new List<Image>(0);
     private readonly int initalPool = 25;
 
-    public void addGazePoint(RectTransform canvasRect, Camera camera, Vector2 gazePoint) {
-        Image i = getPooledGazePoint();
-        i.gameObject.SetActive(true);
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, gazePoint, camera, out Vector2 localpoint)) {
+    public void AddGazePoint(RectTransform canvasRect, Camera camera, Vector2 gazePoint) {
+        Image i = GetPooledGazePoint();
 
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, gazePoint, camera, out Vector2 localpoint)) {
+            i.gameObject.SetActive(true);
             i.rectTransform.localPosition = localpoint;
         }
     }
 
-    public void preparePool() {
+    public void PreparePool() {
         if (pool.Count < initalPool) {
             return;
         }
@@ -30,10 +28,10 @@ public class GazePointPool : MonoBehaviour {
     }
 
     private void Awake() {
-        gazePointPooler = this;
+        DontDestroyOnLoad(this);
     }
 
-    private Image getPooledGazePoint() {
+    private Image GetPooledGazePoint() {
         Image result = null;
         foreach (Image i in pool) {
             if (!i.gameObject.activeInHierarchy) {

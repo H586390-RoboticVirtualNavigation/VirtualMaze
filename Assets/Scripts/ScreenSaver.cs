@@ -9,6 +9,11 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+/// <summary>
+/// TODO cancel button
+/// trial number
+/// </summary>
+
 public class ScreenSaver : BasicGUIController {
     private int framePerBatch = 100;
 
@@ -20,7 +25,7 @@ public class ScreenSaver : BasicGUIController {
     public InputField to;
     public Text sessionInfo;
 
-    private GameObject gazeIndicator;
+    public GazePointPool gazePointPool;
 
     public Camera viewport;
 
@@ -42,8 +47,8 @@ public class ScreenSaver : BasicGUIController {
         folderInput.onEndEdit.AddListener(ChooseFolder);
 
         if (true) { //for testing purposes.
-            ChooseEyelinkFile(@"D:\Desktop\NUS\FYP\181105.edf");
-            ChooseSession(@"D:\Desktop\NUS\FYP\session_1_5112018105323.txt");
+            ChooseEyelinkFile(@"D:\Program Files (D)\SR Research\EyeLink\EDF_Access_API\Example\181026.edf");
+            ChooseSession(@"D:\Desktop\FYP Init\session01\RawData_T1-400\ShortVer.txt");
             ChooseFolder(@"D:\Documents\GitHub\VirtualMaze\out");
         }
     }
@@ -176,9 +181,6 @@ public class ScreenSaver : BasicGUIController {
 
     void Start() {
         fb.OnFileBrowserExit += BrowserCancel;
-
-        gazeIndicator = GameObject.Find("gazeIndicator");
-
     }
 
     /// <summary>
@@ -213,9 +215,8 @@ public class ScreenSaver : BasicGUIController {
     private IEnumerator ProcessSessionDataTask(string sessionPath, string edfPath, string toFolderPath) {
         //Setup
         fadeController.gameObject.SetActive(false);
-        int frameCounter = 0;
         EdfFilePointer pointer = EdfAccessWrapper.EdfOpenFile(edfPath, 0, 1, 1, out int errVal);
-        GazePointPool.gazePointPooler.preparePool();
+        gazePointPool.PreparePool();
 
         progressBar.value = 0;
         progressBar.gameObject.SetActive(true);
@@ -226,21 +227,31 @@ public class ScreenSaver : BasicGUIController {
             Console.WriteError(error);
             yield break;
         }
+
         string filename = $"{Path.GetFileNameWithoutExtension(sessionPath)}_{Path.GetFileNameWithoutExtension(edfPath)}.csv";
         RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename);
 
+        yield return ProcessSession(sessionPath, pointer, recorder);
+
+        recorder.Close();
+        SceneManager.LoadScene("Start");
+        fadeController.gameObject.SetActive(true);
+        progressBar.gameObject.SetActive(false);
+        expected = TestTrigger.TrialStartedTrigger;
+    }
+
+    private IEnumerator ProcessSession(string sessionPath, EdfFilePointer pointer, RayCastRecorder recorder) {
+
+        int frameCounter = 0;
         SessionReader sessionReader = new SessionReader(sessionPath);
 
         //Move to first Trial Trigger
         DataTypes currType = PrepareFiles(sessionReader, pointer, SessionTrigger.TrialStartedTrigger);
 
-        print($"prepared {EdfAccessWrapper.EdfGetFloatData(pointer).fe.GetSessionTrigger()}");
-
         Queue<SessionData> sessionFrames = new Queue<SessionData>();
         Queue<AllFloatData> fixations = new Queue<AllFloatData>();
 
         DataTypes latestType = DataTypes.NULL;
-        //int useSessionEvents = 0;
 
         //feed in current Data
         fixations.Enqueue(EdfAccessWrapper.EdfGetFloatData(pointer).ConvertToAllFloatData(currType));
@@ -335,7 +346,7 @@ public class ScreenSaver : BasicGUIController {
                     progressBar.value += framePerBatch;
                     yield return null;
                 }
-                GazePointPool.gazePointPooler.ClearScreen();
+                gazePointPool.ClearScreen();
             }
 
             Debug.LogWarning($"ses: {sessionFrames.Count}| fix: {fixations.Count}, timestamp {gazeTime}, timepassed{timepassed: 0.00}");
@@ -358,32 +369,24 @@ public class ScreenSaver : BasicGUIController {
         }
 
         Debug.LogError(debugMaxMissedOffset);
-
-        recorder.Close();
         sessionReader.Close();
-        SceneManager.LoadScene("Start");
-        fadeController.gameObject.SetActive(true);
-        progressBar.gameObject.SetActive(false);
     }
 
     private void ProcessData(AllFloatData data, RayCastRecorder recorder) {
         switch (data.dataType) {
             case DataTypes.SAMPLE_TYPE:
-                //print($"type:{type}, flags:{Convert.ToString(data.fs.flags, 16)}, time:{data.fs.time}");
                 Fsample fs = (Fsample)data;
 
                 RaycastGazeData(fs, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
                 recorder.WriteSample(data.dataType, data.Time, objName, relativePos, objHitPos, gazePoint, fs.rightGaze, robot.position, robot.rotation.eulerAngles.y);
 
-                //setGazePoint(fs.rightGaze);
-                GazePointPool.gazePointPooler.addGazePoint(GazeCanvas, viewport, fs.rightGaze);
+                gazePointPool.AddGazePoint(GazeCanvas, viewport, fs.rightGaze);
 
                 break;
             case DataTypes.MESSAGEEVENT:
                 FEvent fe = (FEvent)data;
                 ProcessTrigger(fe.trigger);
 
-                //print($"type:{type}, flags:{Convert.ToString(data.fs.flags, 16)}, time:{gazeTime}");
                 recorder.WriteEvent(fe.dataType, fe.Time, fe.message);
 
                 break;
