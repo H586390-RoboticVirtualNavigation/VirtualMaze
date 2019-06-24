@@ -17,6 +17,7 @@ using UnityEngine.UI;
 public class ScreenSaver : BasicGUIController {
     private int framePerBatch = 100;
 
+    //UI objects
     public InputField eyeLinkFileInput;
     public InputField sessionInput;
     public InputField folderInput;
@@ -27,19 +28,24 @@ public class ScreenSaver : BasicGUIController {
 
     public GazePointPool gazePointPool;
 
+    // Camera which renders the view of the subject
     public Camera viewport;
 
     public Transform robot;
-
-    public LineRenderer lineRenderer;
-    public CueController cueController;
     public FadeCanvas fadeController;
 
+    // Used to check if UI in the canvas is hit.
     public GraphicRaycaster cueCaster;
 
-    public RectTransform GazeCanvas;
+    public CueController cueController;
 
+    public RectTransform GazeCanvas;
     public Slider progressBar;
+
+    private TestTrigger expected = TestTrigger.TrialStartedTrigger;
+
+    // for debugging
+    public LineRenderer lineRenderer;
 
     private void Awake() {
         eyeLinkFileInput.onEndEdit.AddListener(ChooseEyelinkFile);
@@ -53,11 +59,11 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    private void OnsceneLoaded(Scene s, LoadSceneMode mode) {
+    private void OnSceneLoaded(Scene s, LoadSceneMode mode) {
         BasicLevelController levelcontroller = FindObjectOfType<BasicLevelController>();
         levelcontroller.gameObject.SetActive(false);
 
-        SceneManager.sceneLoaded -= OnsceneLoaded;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
 
         StartCoroutine(ProcessSessionDataTask(sessionInput.text, eyeLinkFileInput.text, folderInput.text));
     }
@@ -84,16 +90,9 @@ public class ScreenSaver : BasicGUIController {
             return;
         }
 
-
-        //long st = long.Parse(from.text);
-        //long end = long.Parse(to.text);
-        //if((end >= st) && (end <= (allLines.Length-1))){
-        //everything okay to render
-        //StartCoroutine(ProcessSessionData(sessionInput.text, folderInput.text));
-        //}
         SessionReader.ExtractInfo(sessionPath, out SessionContext context, out int numframes);
         progressBar.maxValue = numframes;
-        SceneManager.sceneLoaded += OnsceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
         SceneManager.LoadScene(context.trialName);
     }
 
@@ -184,7 +183,7 @@ public class ScreenSaver : BasicGUIController {
     }
 
     /// <summary>
-    /// 
+    /// Determines which session file or the other file needs to load more data into their queue due to missing triggers
     /// </summary>
     /// <param name="sTrigger">Current trigger of the Session Logs</param>
     /// <param name="edfTrigger">Current Trigger of the EDF file</param>
@@ -202,11 +201,6 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    private float GetWeightedOffset(float timeToNextTrigger, float currentPeriod, float excessTime) {
-        return (currentPeriod / (timeToNextTrigger * 1000)) * excessTime;
-    }
-
-
     private uint Round(double value) {
         //default Math.Round uses ToEven
         return (uint)Math.Round(value, MidpointRounding.AwayFromZero);
@@ -216,7 +210,7 @@ public class ScreenSaver : BasicGUIController {
         //Setup
         fadeController.gameObject.SetActive(false);
         EdfFilePointer pointer = EdfAccessWrapper.EdfOpenFile(edfPath, 0, 1, 1, out int errVal);
-        gazePointPool.PreparePool();
+        gazePointPool?.PreparePool();
 
         progressBar.value = 0;
         progressBar.gameObject.SetActive(true);
@@ -231,18 +225,23 @@ public class ScreenSaver : BasicGUIController {
         string filename = $"{Path.GetFileNameWithoutExtension(sessionPath)}_{Path.GetFileNameWithoutExtension(edfPath)}.csv";
         RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename);
 
+        //process data
         yield return ProcessSession(sessionPath, pointer, recorder);
 
+
+        //cleanup
         recorder.Close();
         SceneManager.LoadScene("Start");
         fadeController.gameObject.SetActive(true);
         progressBar.gameObject.SetActive(false);
         expected = TestTrigger.TrialStartedTrigger;
+        SessionStatusDisplay.ResetStatus();
     }
 
     private IEnumerator ProcessSession(string sessionPath, EdfFilePointer pointer, RayCastRecorder recorder) {
-
         int frameCounter = 0;
+        int trialCounter = 1;
+
         SessionReader sessionReader = new SessionReader(sessionPath);
 
         //Move to first Trial Trigger
@@ -269,7 +268,8 @@ public class ScreenSaver : BasicGUIController {
             bool isMissingEdfTrigger = false;
             SessionTrigger missingTrigger;
 
-            while (sessionTrigger != edfTrigger && sessionReader.HasNext() && latestType != DataTypes.NO_PENDING_ITEMS) {
+            //check and account for missing trigger
+            while (sessionTrigger != edfTrigger && latestType != DataTypes.NO_PENDING_ITEMS && sessionReader.HasNext()) {
                 missingTriggerDetected = true;
                 string errorMessage = $"Missing trigger found at approx {timestamp}. session: {sessionTrigger}| edf: {edfTrigger}";
                 Console.WriteError(errorMessage);
@@ -292,6 +292,7 @@ public class ScreenSaver : BasicGUIController {
 
             double excessTime = (sessionEventPeriod * 1000 - edfEventPeriod);
             double timepassed = fixations.Peek().Time;
+
             // if missing trigger detected and the time difference between the 2 files is less than 20ms
             if (missingTriggerDetected && Math.Abs(excessTime) > 20) {
                 IgnoreData(fixations, recorder);
@@ -334,10 +335,17 @@ public class ScreenSaver : BasicGUIController {
 
                 MoveRobotTo(robot, sessionData);
 
-                while (gazeTime <= Round(timepassed) && fixations.Count > 0) {
+                uint passes = Round(timepassed);
+
+                //due to the nature of floats, (1.0 == 10.0 / 10.0) might not return true every time
+                //therefore use Mathf.Approximately()
+                while ((gazeTime <  passes || Mathf.Approximately(passes, gazeTime))&& fixations.Count > 0) {
                     currData = fixations.Dequeue();
                     gazeTime = currData.Time;
-                    ProcessData(currData, recorder);
+                    if (ProcessData(currData, recorder) == SessionTrigger.TrialStartedTrigger) {
+                        trialCounter++;
+                        SessionStatusDisplay.DisplayTrialNumber(trialCounter);
+                    }
                 }
 
                 frameCounter++;
@@ -346,7 +354,7 @@ public class ScreenSaver : BasicGUIController {
                     progressBar.value += framePerBatch;
                     yield return null;
                 }
-                gazePointPool.ClearScreen();
+                gazePointPool?.ClearScreen();
             }
 
             Debug.LogWarning($"ses: {sessionFrames.Count}| fix: {fixations.Count}, timestamp {gazeTime}, timepassed{timepassed: 0.00}");
@@ -361,10 +369,12 @@ public class ScreenSaver : BasicGUIController {
             //clear queues to prepare for next trigger
             sessionFrames.Clear();
             while (fixations.Count > 0) {
-
                 debugMaxMissedOffset = Math.Max(fixations.Count, debugMaxMissedOffset);
 
-                ProcessData(fixations.Dequeue(), recorder);
+                if (ProcessData(fixations.Dequeue(), recorder) == SessionTrigger.TrialStartedTrigger) {
+                    trialCounter++;
+                    SessionStatusDisplay.DisplayTrialNumber(trialCounter);
+                }
             }
         }
 
@@ -372,28 +382,28 @@ public class ScreenSaver : BasicGUIController {
         sessionReader.Close();
     }
 
-    private void ProcessData(AllFloatData data, RayCastRecorder recorder) {
+    private SessionTrigger ProcessData(AllFloatData data, RayCastRecorder recorder) {
         switch (data.dataType) {
             case DataTypes.SAMPLE_TYPE:
                 Fsample fs = (Fsample)data;
 
-                RaycastGazeData(fs, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
+                RaycastGazeData(fs, cueCaster, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
                 recorder.WriteSample(data.dataType, data.Time, objName, relativePos, objHitPos, gazePoint, fs.rightGaze, robot.position, robot.rotation.eulerAngles.y);
 
-                gazePointPool.AddGazePoint(GazeCanvas, viewport, fs.rightGaze);
+                gazePointPool?.AddGazePoint(GazeCanvas, viewport, fs.rightGaze);
 
-                break;
+                return SessionTrigger.NoTrigger;
             case DataTypes.MESSAGEEVENT:
                 FEvent fe = (FEvent)data;
                 ProcessTrigger(fe.trigger);
 
                 recorder.WriteEvent(fe.dataType, fe.Time, fe.message);
 
-                break;
+                return fe.trigger;
             default:
                 //ignore others for now
                 //Debug.LogWarning($"Unsupported EDF DataType Found! ({type})");
-                break;
+                return SessionTrigger.NoTrigger;
         }
     }
 
@@ -421,14 +431,6 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    private void ProcessTrigger(AllFloatData data) {
-        if (data.dataType == DataTypes.MESSAGEEVENT) {
-            ProcessTrigger(((FEvent)data).trigger);
-        }
-    }
-
-    TestTrigger expected = TestTrigger.TrialStartedTrigger;
-
     [Flags]
     enum TestTrigger {
         NoTrigger = 0x0,
@@ -439,6 +441,11 @@ public class ScreenSaver : BasicGUIController {
         ExperimentVersionTrigger = 0xF
     }
 
+    /// <summary>
+    /// Converts SessionTrigger to TestTrigger so that missing triggers can be identified easily.
+    /// </summary>
+    /// <param name="trigger">SessionTrigger to Convert</param>
+    /// <returns>TestTriggerEquilavant</returns>
     private TestTrigger ConvertToTestTrigger(SessionTrigger trigger) {
         switch (trigger) {
             case SessionTrigger.CueShownTrigger:
@@ -457,6 +464,16 @@ public class ScreenSaver : BasicGUIController {
         return TestTrigger.NoTrigger;
     }
 
+    private void ProcessTrigger(AllFloatData data) {
+        if (data.dataType == DataTypes.MESSAGEEVENT) {
+            ProcessTrigger(((FEvent)data).trigger);
+        }
+    }
+
+    /// <summary>
+    /// Processes the Trigger by showing or hiding the cues.
+    /// </summary>
+    /// <param name="trigger">Current Trigger</param>
     private void ProcessTrigger(SessionTrigger trigger) {
         TestTrigger test = ConvertToTestTrigger(trigger);
 
@@ -507,7 +524,33 @@ public class ScreenSaver : BasicGUIController {
     }
 
     /// <summary>
-    /// Fires a raycast into the scene bases on the sample data.
+    /// Fires a raycast into the UI or Scene based on the sample data to determine what object the sample data is fixating upon.
+    /// </summary>
+    /// <param name="sample">Data sameple from edf file</param>
+    /// <param name="gRaycaster">GraphicRaycaster of UI seen by the subject</param>
+    /// <param name="objName">Name of object the gazed object</param>
+    /// <param name="relativePos">Local 2D offset of from the center of the object gazed</param>
+    /// <param name="objHitPos">World position of the object in the scene</param>
+    /// <param name="gazePoint">World position of the point where the gaze fixates the object</param>
+    /// <returns>True if an object was in the path of the gaze</returns>
+    private bool RaycastGazeData(Fsample sample,
+                                 GraphicRaycaster gRaycaster,
+                                 out string objName,
+                                 out Vector2 relativePos,
+                                 out Vector3 objHitPos,
+                                 out Vector3 gazePoint) {
+        //check for UI raycasts first
+        if (RaycastToUI(sample, gRaycaster, out objName, out relativePos, out objHitPos, out gazePoint)) {
+            return true;
+        }
+        else {
+            //check for scene raycast
+            return RaycastToScene(sample, out objName, out relativePos, out objHitPos, out gazePoint);
+        }
+    }
+
+    /// <summary>
+    /// Fires a raycast into the Scene based on the sample data to determine what object the sample data is fixating upon.
     /// </summary>
     /// <param name="sample">Data sameple from edf file</param>
     /// <param name="objName">Name of object the gazed object</param>
@@ -515,13 +558,60 @@ public class ScreenSaver : BasicGUIController {
     /// <param name="objHitPos">World position of the object in the scene</param>
     /// <param name="gazePoint">World position of the point where the gaze fixates the object</param>
     /// <returns>True if an object was in the path of the gaze</returns>
-    private bool RaycastGazeData(Fsample sample, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint) {
-        //check for UI raycasts first
-        List<RaycastResult> results = new List<RaycastResult>();
+    private bool RaycastToScene(Fsample sample,
+                                 out string objName,
+                                 out Vector2 relativePos,
+                                 out Vector3 objHitPos,
+                                 out Vector3 gazePoint) {
+        Ray r = viewport.ScreenPointToRay(sample.rightGaze);
 
-        PointerEventData data = new PointerEventData(EventSystem.current);
-        data.position = sample.rightGaze;
-        cueCaster.Raycast(data, results);
+        if (Physics.Raycast(r, out RaycastHit hit)) {
+            lineRenderer?.SetPositions(new Vector3[] { viewport.transform.position, hit.point });
+            Transform objhit = hit.transform;
+
+            objName = hit.transform.name;
+            relativePos = computeLocalPostion(objhit, hit); ;
+            objHitPos = objhit.position;
+            gazePoint = hit.point;
+
+            return false;
+
+        }
+        else {
+            objName = null;
+            relativePos = Vector2.zero;
+            gazePoint = Vector3.zero;
+            objHitPos = Vector3.zero;
+
+            //clear the line renderer
+            lineRenderer?.SetPositions(new Vector3[0]);
+
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Checks if there are any objects hit in th UI Canvas by the eye sample data
+    /// </summary>
+    /// <param name="sample">Fsample from eyelink</param>
+    /// <param name="gRaycaster">GraphicRaycaster of UI seen by the subject</param>
+    /// <param name="objName">Name of object the gazed object</param>
+    /// <param name="relativePos">Local 2D offset of from the center of the object gazed</param>
+    /// <param name="objHitPos">World position of the object in the scene</param>
+    /// <param name="gazePoint">World position of the point where the gaze fixates the object</param>
+    /// <returns>True if an object was in the path of the gaze</returns>
+    private bool RaycastToUI(Fsample sample,
+                             GraphicRaycaster gRaycaster,
+                             out string objName,
+                             out Vector2 relativePos,
+                             out Vector3 objHitPos,
+                             out Vector3 gazePoint) {
+        List<RaycastResult> results = new List<RaycastResult>(0);
+
+        PointerEventData data = new PointerEventData(EventSystem.current) {
+            position = sample.rightGaze
+        };
+        gRaycaster?.Raycast(data, results);
 
         if (results.Count > 0) {
             if (results.Count > 1) {
@@ -530,47 +620,23 @@ public class ScreenSaver : BasicGUIController {
 
             Vector2 objPosition = RectTransformUtility.WorldToScreenPoint(viewport, results[0].gameObject.transform.position);
 
-
+            // checking only the first element since the canvas is assumed to have no overlapping image objects.
             objName = results[0].gameObject.name;
-
             RectTransform t = results[0].gameObject.GetComponent<RectTransform>();
-
             RectTransformUtility.ScreenPointToWorldPointInRectangle(t, sample.rightGaze, viewport, out gazePoint);
-
             Vector3 imgWorldPos = t.TransformPoint(t.rect.center);
-
             relativePos = gazePoint - imgWorldPos;
-
             objHitPos = results[0].gameObject.transform.position;
 
             return true;
         }
-
-        //check for scene raycast
-        Ray r = viewport.ScreenPointToRay(sample.rightGaze);
-
-        if (Physics.Raycast(r, out RaycastHit hit)) {
-            lineRenderer?.SetPositions(new Vector3[] { viewport.transform.position, hit.point });
-            Transform objhit = hit.transform;
-
-            objName = hit.transform.name;
-            //not accurate did not consider the direction the object is facing
-            relativePos = computeLocalPostion(objhit, hit); ;
-            objHitPos = objhit.position;
-            //check this
-            gazePoint = hit.point;
-
-            return false;
-
-        }
         else {
             objName = null;
-            //not accurate did not consider the direction the object is facing
             relativePos = Vector2.zero;
-            //check this
             gazePoint = Vector3.zero;
             objHitPos = Vector3.zero;
 
+            //clear the line renderer
             lineRenderer?.SetPositions(new Vector3[0]);
 
             return false;
@@ -613,6 +679,11 @@ public class ScreenSaver : BasicGUIController {
         return FindNextEdfTrigger(pointer, firstOccurance);
     }
 
+    /// <summary>
+    /// Moves session Reader to point to the session reader.
+    /// </summary>
+    /// <param name="sessionReader">Session reader to move</param>
+    /// <param name="trigger">SessionTrigger to move to</param>
     private void FindNextSessionTrigger(SessionReader sessionReader, SessionTrigger trigger) {
         //move sessionReader to point to first trial
         while (sessionReader.NextData()) {
@@ -659,14 +730,15 @@ public class ScreenSaver : BasicGUIController {
     /// <param name="reader">The SessionReader to be read</param>
     /// <param name="frames">the Queue to store the data</param>
     /// <param name="trigger">The trigger where the loading stops</param>
-    /// <returns>Total time from the </returns>
+    /// <returns>Total time taken from one current trigger to the next</returns>
     private double LoadToNextTriggerSession(SessionReader reader, Queue<SessionData> frames, out SessionTrigger trigger) {
         double totalTime = 0;
 
         trigger = SessionTrigger.NoTrigger;
         bool isNextEventFound = false;
 
-        //bool checks is left to right do not rearrange this while condition
+        // Conditon evaluation is Left to Right and it short circuits.
+        // Please do not change the order of this if conditon.
         while (!isNextEventFound && reader.NextData()) {
             SessionData data = reader.currData;
             frames.Enqueue(data);
@@ -725,20 +797,28 @@ public class ScreenSaver : BasicGUIController {
         return 0;
     }
 
-    void MoveRobotTo(Transform robot, SessionData reader) {
+    /// <summary>
+    /// Positions the robot as stated in the Session file.
+    /// </summary>
+    /// <param name="robot">Transfrom of the robot to move</param>
+    /// <param name="reader">Session data of the Object</param>
+    private void MoveRobotTo(Transform robot, SessionData reader) {
         Vector3 pos = robot.position;
+        // Y is unchanged
         pos.x = reader.posX;
         pos.z = reader.posZ;
 
-        Vector3 test = robot.rotation.eulerAngles;
-        test.y = reader.rotY;
+        // Rotate around Y axis
+        Vector3 orientation = robot.rotation.eulerAngles;
+        orientation.y = reader.rotY;
 
-        Quaternion newrot = Quaternion.Euler(test);
+        //convert back to quaterion
+        Quaternion newrot = Quaternion.Euler(orientation);
 
         robot.SetPositionAndRotation(pos, newrot);
     }
 
-    void SaveScreen(Camera cam, string filename) {
+    private void SaveScreen(Camera cam, string filename) {
         Texture2D tex = new Texture2D(cam.pixelWidth, cam.pixelHeight, TextureFormat.RGB24, false);
         tex.ReadPixels(cam.pixelRect, 0, 0);
         tex.Apply();
