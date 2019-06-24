@@ -38,11 +38,11 @@ Compiling the game will speed up the generation of ray cast data because the com
 To compile the game, Click on *File > Build and Run*.
 
 ## Custom Implementation of Ray Casting
-Source code can be found in *ScreenSaver.cs*. VirtualMaze finds which maze to load from the session file.
+Source code can be found in [*ScreenSaver.cs*](https://github.com/H586390-RoboticVirtualNavigation/VirtualMaze/blob/feature/code_rewrite/Assets/Scripts/ScreenSaver.cs). VirtualMaze finds the name of the scene to load from the session file. Make sure that the scene is included in the build settings.
 
 To implement a custom scene, on your original project, Open op your project view and *Right-click > Select Dependencies*. Then *Right-click > Export Package*. In the Export Package Window, deselect all scripts other than the ones that required for the Scene to function.
 
-Next, open up VirtualMaze and import the package your have just exported. Make all necessary changes to ScreenSaver.
+Next, open up VirtualMaze and import the package your have just exported. Make all necessary changes to ScreenSaver.cs and add the new Scene to the build settings (*File > Build Settings*).
 
 ## Output
 A CSV (Comma Separated Value) file will be generated in the destination folder.
