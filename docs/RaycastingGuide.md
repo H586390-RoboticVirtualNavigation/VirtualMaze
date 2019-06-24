@@ -1,4 +1,4 @@
-# Raycasting guide
+# Ray Casting guide
 This utility takes eye-tracking data and generates information about the fixated surfaces or objects.
 ![data-generationScreenshot](/docs/images/data-generation.PNG)
 
@@ -25,11 +25,11 @@ This utility takes eye-tracking data and generates information about the fixated
 The screen size of the computer running the data generation must be the same as the screen size of the one used in the experiment.
 
 ## Steps to Use
-1. Open VirtualMaze project in Unity
-2. Select File->Open Scene menu command
-3. Navigate to VirtualMaze->Assets->Scenes and select Start.unity
-4. Select the files in the respective text boxes
-5. Select the destination folder to save the output file
+1. Open the VirtualMaze project in Unity.
+2. Select the File->Open Scene menu command.
+3. Navigate to VirtualMaze->Assets->Scenes and select Start.unity.
+4. Select the files in the respective text boxes in the GUI.
+5. Select the destination folder to save the output file.
 6. Click ***Generate*** to start processing the files.
 
 ###### Note:
@@ -37,12 +37,19 @@ Compiling the game will speed up the generation of ray cast data because the com
 
 To compile the game, Click on *File > Build and Run*.
 
-## Custom Implementation of Ray Casting
-Source code can be found in [*ScreenSaver.cs*](https://github.com/H586390-RoboticVirtualNavigation/VirtualMaze/blob/feature/code_rewrite/Assets/Scripts/ScreenSaver.cs). VirtualMaze finds the name of the scene to load from the session file. Make sure that the scene is included in the build settings.
+## Using your own scenes
+To run this utility on your own scenes:
 
-To implement a custom scene, on your original project, Open op your project view and *Right-click > Select Dependencies*. Then *Right-click > Export Package*. In the Export Package Window, deselect all scripts other than the ones that required for the Scene to function.
+1. Open your project in Unity. 
+2. Open up your project view, and *Right-click > Select Dependencies*. 
+3. *Right-click > Export Package*. In the Export Package Window, unselect all scripts other than the ones that are required for the scene to function.
+4. Open VirtualMaze in Unity.
+5. Import the package you just exported. 
+6. Make any necessary changes to ScreenSaver.cs, and add the new scene to the build settings (*File > Build Settings*).
 
-Next, open up VirtualMaze and import the package your have just exported. Make all necessary changes to ScreenSaver.cs and add the new Scene to the build settings (*File > Build Settings*).
+VirtualMaze finds the name of the scene to load from the session file. Make sure that the scene is included in the build settings.
+
+If you would like to modify this utility, the source code can be found in *ScreenSaver.cs*. 
 
 ## Output
 A CSV (Comma Separated Value) file will be generated in the destination folder.
