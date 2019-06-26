@@ -68,16 +68,15 @@ namespace Eyelink.Structs {
     }
 
     public class Fsample : AllFloatData {
-        private uint time;
-
         public readonly Vector2 rightGaze;
 
-        public Fsample(FSAMPLE sample, DataTypes datatype) : base(datatype) {
-            time = sample.time;
+        public Fsample(FSAMPLE sample, DataTypes datatype) : base(datatype, sample.time) {
             rightGaze = sample.RightGaze;
         }
 
-        public override uint Time => time;
+        public Fsample(uint time, float gx, float gy, DataTypes datatype) : base(datatype, time) {
+            rightGaze = new Vector2(gx, gy);
+        }
 
         public override string ToString() {
             return $"{dataType} @ {time} | {rightGaze}";

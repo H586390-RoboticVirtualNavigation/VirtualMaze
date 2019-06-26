@@ -40,16 +40,41 @@ To compile the game, Click on *File > Build and Run*.
 ## Using your own scenes
 To run this utility on your own scenes:
 
-1. Open your project in Unity. 
-2. Open up your project view, and *Right-click > Select Dependencies*. 
+1. Open your project in Unity.
+2. Open up your project view, and *Right-click > Select Dependencies*.
 3. *Right-click > Export Package*. In the Export Package Window, unselect all scripts other than the ones that are required for the scene to function.
 4. Open VirtualMaze in Unity.
-5. Import the package you just exported. 
+5. Import the package you just exported.
 6. Make any necessary changes to ScreenSaver.cs, and add the new scene to the build settings (*File > Build Settings*).
 
 VirtualMaze finds the name of the scene to load from the session file. Make sure that the scene is included in the build settings.
 
-If you would like to modify this utility, the source code can be found in *ScreenSaver.cs*. 
+If you would like to modify this utility, the source code can be found in *ScreenSaver.cs*.
+
+## Eyelink Data Input Types
+VirtualMaze accepts 2 formats for reading Eyelink Data Files (.edf) and Comma Separated Value (.csv) files.
+
+To use a .csv file, the file must **NOT** have any headers and the columns must be defined as follows:
+
+1. Timestamp (uint).
+2. FEVENT.type (int, 200 if it is a FSAMPLE type as defined in the EDF_ACCESS_API documentation from SR Research).
+3. FSAMPLE.gx (float, 0 or empty if the current row is a FEVENT type).
+4. FSAMPLE.gy (float, 0 or empty if the current row is a FEVENT type).
+5. message (string, empty if the current row is a FSAMPLE type).
+
+##### Note
+If a row is detected to be a FEVENT Type, the gx and gy column will be ignored and as for FSAMPLE, the message column will be ignored.
+
+#### Example
+```
+#FEVENT
+2204779,24,0,0,Trigger Version 84
+```
+
+```
+#FSample
+2204775,200,1241.2,-48.2,
+```
 
 ## Output
 A CSV (Comma Separated Value) file will be generated in the destination folder.

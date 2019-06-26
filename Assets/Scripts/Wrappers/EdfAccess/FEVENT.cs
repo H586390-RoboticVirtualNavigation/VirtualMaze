@@ -84,7 +84,7 @@ namespace Eyelink.Structs {
         /// <returns></returns>
         public unsafe SessionTrigger GetSessionTrigger() {
             //check that the message is a valid SessionTrigger.
-            if (!isSessionTrigger(GetMessage())) {
+            if (!IsSessionTrigger(GetMessage())) {
                 return SessionTrigger.NoTrigger;
             }
 
@@ -102,7 +102,7 @@ namespace Eyelink.Structs {
         }
 
 
-        private bool isSessionTrigger(string message) {
+        public static bool IsSessionTrigger(string message) {
             //pattern describes only 2 words and a 2 digit number
             const string pattern = @"^(\w+\s){2}\d{2}$";
 
@@ -126,17 +126,45 @@ namespace Eyelink.Structs {
     }
 
     public class FEvent : AllFloatData {
-        private uint time;
         public readonly string message;
         public readonly SessionTrigger trigger;
 
-        public FEvent(FEVENT ev, DataTypes dataType) : base(dataType) {
-            time = ev.sttime;
+        public FEvent(FEVENT ev, DataTypes dataType) : base(dataType, ev.sttime) {
             message = ev.GetMessage();
             trigger = ev.GetSessionTrigger();
         }
 
-        public override uint Time => time;
+        public FEvent(uint time, string message, DataTypes dataType) : base(dataType, time) {
+            this.message = message;
+
+            trigger = GetSessionTrigger(message);
+        }
+
+        /// <summary>
+        /// Since all messages sent to Eyelink is appended by the SessionTrigger, 
+        /// it is safe to get the second last char and convert it into a SessionTrigger.
+        /// 
+        /// eg.
+        /// MSG	1686949 Trigger Version 84
+        /// MSG	1689040	Start Trial 14
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private unsafe SessionTrigger GetSessionTrigger(string message) {
+            //check that the message is a valid SessionTrigger.
+            if (!FEVENT.IsSessionTrigger(message)) {
+                return SessionTrigger.NoTrigger;
+            }
+
+            //get index of trigger
+            int index = message.Length - 2;
+
+            //convert byte to char and subtract with the char '0' to get actual number.
+            int trigger = message[index] - '0';
+
+            // multipled by 10 due to the trigger being in the tens place
+            return (SessionTrigger)(trigger * 10);
+        }
 
         public override string ToString() {
             return $"{dataType} @ {time} | {trigger} | {message}";

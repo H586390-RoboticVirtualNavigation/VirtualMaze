@@ -1,5 +1,4 @@
-﻿using Eyelink.EdfAccess;
-using Eyelink.Structs;
+﻿using Eyelink.Structs;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -52,6 +51,14 @@ public class ScreenSaver : BasicGUIController {
         sessionInput.onEndEdit.AddListener(ChooseSession);
         folderInput.onEndEdit.AddListener(ChooseFolder);
 
+        List<Dropdown.OptionData> list = new List<Dropdown.OptionData>();
+
+        // starts at 1 since index 0 is Start Scene
+        for (int i = 1; i < SceneManager.sceneCountInBuildSettings; i++) {
+            string sceneName = Path.GetFileNameWithoutExtension(SceneUtility.GetScenePathByBuildIndex(i));
+            list.Add(new Dropdown.OptionData(sceneName));
+        }
+
         if (true) { //for testing purposes.
             ChooseEyelinkFile(@"D:\Program Files (D)\SR Research\EyeLink\EDF_Access_API\Example\181026.edf");
             ChooseSession(@"D:\Desktop\FYP Init\session01\RawData_T1-400\ShortVer.txt");
@@ -90,10 +97,29 @@ public class ScreenSaver : BasicGUIController {
             return;
         }
 
+
+
         SessionReader.ExtractInfo(sessionPath, out SessionContext context, out int numframes);
+
         progressBar.maxValue = numframes;
+
         SceneManager.sceneLoaded += OnSceneLoaded;
         SceneManager.LoadScene(context.trialName);
+    }
+
+    private bool IsCsvFile(string filePath) {
+        return IsFileWithExtension(filePath, ".csv");
+    }
+
+    private bool IsTxtFile(string filePath) {
+        return IsFileWithExtension(filePath, ".txt");
+    }
+    private bool IsEdfFile(string filePath) {
+        return IsFileWithExtension(filePath, ".edf");
+    }
+
+    private bool IsFileWithExtension(string filePath, string extension) {
+        return Path.GetExtension(filePath).Equals(extension, StringComparison.InvariantCultureIgnoreCase);
     }
 
     public void onBrowseSession() {
@@ -126,33 +152,48 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    void ChooseSession(string file) {
+    void ChooseSession(string filePath) {
         fb.OnFileBrowserExit -= ChooseSession;
-        if (string.IsNullOrEmpty(file)) return;
 
-        sessionInput.text = file;
-        if (File.Exists(file)) {
+        sessionInput.text = filePath;
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) {
+            SetInputFieldInvalid(sessionInput);
+            return;
+        }
+
+        bool success = false;
+        int numFrames = 0;
+        SessionContext context = null;
+
+        if (IsTxtFile(filePath)) {
+            try {
+                SessionReader.ExtractInfo(filePath, out context, out numFrames);
+                success = true;
+            }
+            catch (FormatException ex) {
+                success = false;
+                Debug.LogError(ex);
+            }
+        }
+
+        if (success) {
             SetInputFieldValid(sessionInput);
-
-            SessionReader.ExtractInfo(file, out SessionContext context, out int numFrames);
-
-            //from.text = "1";
-            //to.text = lineCount.ToString();
             sessionInfo.text = $"{numFrames} frames";
-            Console.Write(context.ToJsonString(true));
+            Console.Write(context?.ToJsonString(true));
         }
         else {
             SetInputFieldInvalid(sessionInput);
+            Console.Write("Invalid Session File Detected, Unsupported File Type or Data");
         }
     }
 
-    void ChooseEyelinkFile(string file) {
+    void ChooseEyelinkFile(string filePath) {
         fb.OnFileBrowserExit -= ChooseEyelinkFile;
-        if (string.IsNullOrEmpty(file)) return;
+        if (string.IsNullOrEmpty(filePath)) return;
 
-        eyeLinkFileInput.text = file;
+        eyeLinkFileInput.text = filePath;
 
-        if (File.Exists(file)) {
+        if (File.Exists(filePath)) {
             SetInputFieldValid(eyeLinkFileInput);
         }
         else {
@@ -201,32 +242,34 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    private uint Round(double value) {
-        //default Math.Round uses ToEven
-        return (uint)Math.Round(value, MidpointRounding.AwayFromZero);
-    }
-
     private IEnumerator ProcessSessionDataTask(string sessionPath, string edfPath, string toFolderPath) {
         //Setup
         fadeController.gameObject.SetActive(false);
-        EdfFilePointer pointer = EdfAccessWrapper.EdfOpenFile(edfPath, 0, 1, 1, out int errVal);
+        EyeDataReader eyeReader = null;
+
+        if (IsEdfFile(edfPath)) {
+            eyeReader = new EDFReader(edfPath, out int errVal);
+            if (errVal != 0) { //check if file can be parsed by library
+                String error = $"Unable to open .edf file";
+                Debug.LogError(error);
+                Console.WriteError(error);
+                yield break;
+            }
+        }
+        else {
+            eyeReader = new EyeCsvReader(edfPath);
+        }
+
         gazePointPool?.PreparePool();
 
         progressBar.value = 0;
         progressBar.gameObject.SetActive(true);
 
-        if (errVal != 0) { //check if file can be parsed by library
-            String error = $"Unable to open .edf file";
-            Debug.LogError(error);
-            Console.WriteError(error);
-            yield break;
-        }
-
         string filename = $"{Path.GetFileNameWithoutExtension(sessionPath)}_{Path.GetFileNameWithoutExtension(edfPath)}.csv";
         RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename);
 
         //process data
-        yield return ProcessSession(sessionPath, pointer, recorder);
+        yield return ProcessSession(sessionPath, eyeReader, recorder);
 
 
         //cleanup
@@ -238,14 +281,14 @@ public class ScreenSaver : BasicGUIController {
         SessionStatusDisplay.ResetStatus();
     }
 
-    private IEnumerator ProcessSession(string sessionPath, EdfFilePointer pointer, RayCastRecorder recorder) {
+    private IEnumerator ProcessSession(string sessionPath, EyeDataReader eyeReader, RayCastRecorder recorder) {
         int frameCounter = 0;
         int trialCounter = 1;
 
         SessionReader sessionReader = new SessionReader(sessionPath);
 
         //Move to first Trial Trigger
-        DataTypes currType = PrepareFiles(sessionReader, pointer, SessionTrigger.TrialStartedTrigger);
+        AllFloatData data = PrepareFiles(sessionReader, eyeReader, SessionTrigger.TrialStartedTrigger);
 
         Queue<SessionData> sessionFrames = new Queue<SessionData>();
         Queue<AllFloatData> fixations = new Queue<AllFloatData>();
@@ -253,7 +296,7 @@ public class ScreenSaver : BasicGUIController {
         DataTypes latestType = DataTypes.NULL;
 
         //feed in current Data
-        fixations.Enqueue(EdfAccessWrapper.EdfGetFloatData(pointer).ConvertToAllFloatData(currType));
+        fixations.Enqueue(data);
 
         int debugMaxMissedOffset = 0;
 
@@ -261,8 +304,8 @@ public class ScreenSaver : BasicGUIController {
             //buffer since sessionData.timeDelta is the time difference from the previous frame.
             sessionFrames.Enqueue(sessionReader.currData);
 
-            double sessionEventPeriod = LoadToNextTriggerSession(sessionReader, sessionFrames, out SessionTrigger sessionTrigger);
-            uint edfEventPeriod = LoadToNextTriggerEdf(pointer, fixations, out SessionTrigger edfTrigger, out uint timestamp, out latestType);
+            float sessionEventPeriod = LoadToNextTriggerSession(sessionReader, sessionFrames, out SessionTrigger sessionTrigger);
+            uint edfEventPeriod = LoadToNextTriggerEdf(eyeReader, fixations, out SessionTrigger edfTrigger, out uint timestamp, out latestType);
 
             bool missingTriggerDetected = false;
             bool isMissingEdfTrigger = false;
@@ -284,33 +327,33 @@ public class ScreenSaver : BasicGUIController {
                 }
                 else {
                     //edfFile should catch up
-                    edfEventPeriod += LoadToNextTriggerEdf(pointer, fixations, out edfTrigger, out timestamp, out latestType);
+                    edfEventPeriod += LoadToNextTriggerEdf(eyeReader, fixations, out edfTrigger, out timestamp, out latestType);
                     isMissingEdfTrigger = false;
                     missingTrigger = sessionTrigger;
                 }
             }
 
-            double excessTime = (sessionEventPeriod * 1000 - edfEventPeriod);
-            double timepassed = fixations.Peek().Time;
+            float excessTime = (sessionEventPeriod * 1000f - edfEventPeriod);
+            float timepassed = fixations.Peek().time;
 
             // if missing trigger detected and the time difference between the 2 files is less than 20ms
             if (missingTriggerDetected && Math.Abs(excessTime) > 20) {
                 IgnoreData(fixations, recorder);
             }
 
-            double timeOffset = excessTime / (sessionFrames.Count - 1);
+            float timeOffset = excessTime / (sessionFrames.Count - 1);
 
             print($"timeError: {excessTime}|{timeOffset} for {sessionFrames.Count} frames, ses: {sessionEventPeriod: 0.00}, edf: {edfEventPeriod}");
 
             uint gazeTime = 0;
 
-            double debugtimeOffset = 0;
+            float debugtimeOffset = 0;
 
             while (sessionFrames.Count > 0 && fixations.Count > 0) {
                 SessionData sessionData = sessionFrames.Dequeue();
                 AllFloatData currData = fixations.Peek();
 
-                double period;
+                float period;
                 if (sessionFrames.Count > 0) {
                     //peek since next sessionData holds the time it takes from this data to the next
                     period = (sessionFrames.Peek().timeDeltaMs) - timeOffset;
@@ -325,7 +368,7 @@ public class ScreenSaver : BasicGUIController {
                     SessionTrigger approxTrigger = sessionData.trigger;
                     if (approxTrigger != SessionTrigger.NoTrigger) {
                         ProcessTrigger(sessionData.trigger);
-                        recorder.WriteEvent(DataTypes.MESSAGEEVENT, currData.Time, $"Approximated Trigger {sessionData.flag}");
+                        recorder.WriteEvent(DataTypes.MESSAGEEVENT, currData.time, $"Approximated Trigger {sessionData.flag}");
                     }
                 }
 
@@ -335,13 +378,11 @@ public class ScreenSaver : BasicGUIController {
 
                 MoveRobotTo(robot, sessionData);
 
-                uint passes = Round(timepassed);
-
                 //due to the nature of floats, (1.0 == 10.0 / 10.0) might not return true every time
                 //therefore use Mathf.Approximately()
-                while ((gazeTime <  passes || Mathf.Approximately(passes, gazeTime))&& fixations.Count > 0) {
+                while ((gazeTime < timepassed || Mathf.Approximately(timepassed, gazeTime)) && fixations.Count > 0) {
                     currData = fixations.Dequeue();
-                    gazeTime = currData.Time;
+                    gazeTime = currData.time;
                     if (ProcessData(currData, recorder) == SessionTrigger.TrialStartedTrigger) {
                         trialCounter++;
                         SessionStatusDisplay.DisplayTrialNumber(trialCounter);
@@ -358,7 +399,7 @@ public class ScreenSaver : BasicGUIController {
             }
 
             Debug.LogWarning($"ses: {sessionFrames.Count}| fix: {fixations.Count}, timestamp {gazeTime}, timepassed{timepassed: 0.00}");
-            double finalExcess = gazeTime - timepassed;
+            float finalExcess = gazeTime - timepassed;
 
             Debug.LogWarning($"final excess: {finalExcess} | {finalExcess + sessionReader.currData.timeDeltaMs} || {sessionReader.currData.timeDeltaMs}");
             Debug.LogWarning($"whats this?: {debugtimeOffset} | {timepassed} vs {sessionEventPeriod} vs {edfEventPeriod}");
@@ -388,7 +429,7 @@ public class ScreenSaver : BasicGUIController {
                 Fsample fs = (Fsample)data;
 
                 RaycastGazeData(fs, cueCaster, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
-                recorder.WriteSample(data.dataType, data.Time, objName, relativePos, objHitPos, gazePoint, fs.rightGaze, robot.position, robot.rotation.eulerAngles.y);
+                recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, fs.rightGaze, robot.position, robot.rotation.eulerAngles.y);
 
                 gazePointPool?.AddGazePoint(GazeCanvas, viewport, fs.rightGaze);
 
@@ -397,7 +438,7 @@ public class ScreenSaver : BasicGUIController {
                 FEvent fe = (FEvent)data;
                 ProcessTrigger(fe.trigger);
 
-                recorder.WriteEvent(fe.dataType, fe.Time, fe.message);
+                recorder.WriteEvent(fe.dataType, fe.time, fe.message);
 
                 return fe.trigger;
             default:
@@ -414,13 +455,13 @@ public class ScreenSaver : BasicGUIController {
             switch (data.dataType) {
                 case DataTypes.SAMPLE_TYPE:
                     Fsample fs = (Fsample)data;
-                    recorder.IgnoreEvent(fs.dataType, fs.Time, fs.rightGaze);
+                    recorder.IgnoreEvent(fs.dataType, fs.time, fs.rightGaze);
 
                     break;
                 case DataTypes.MESSAGEEVENT:
                     FEvent fe = (FEvent)data;
                     ProcessTrigger(fe.trigger);
-                    recorder.WriteEvent(fe.dataType, fe.Time, $"Data ignored {fe.message}");
+                    recorder.WriteEvent(fe.dataType, fe.time, $"Data ignored {fe.message}");
 
                     break;
                 default:
@@ -615,7 +656,7 @@ public class ScreenSaver : BasicGUIController {
 
         if (results.Count > 0) {
             if (results.Count > 1) {
-                Debug.LogWarning($"There are overlapping graphics at time = {sample.Time}");
+                Debug.LogWarning($"There are overlapping graphics at time = {sample.time}");
             }
 
             Vector2 objPosition = RectTransformUtility.WorldToScreenPoint(viewport, results[0].gameObject.transform.position);
@@ -674,9 +715,9 @@ public class ScreenSaver : BasicGUIController {
         return result;
     }
 
-    private DataTypes PrepareFiles(SessionReader sessionReader, EdfFilePointer pointer, SessionTrigger firstOccurance) {
+    private AllFloatData PrepareFiles(SessionReader sessionReader, EyeDataReader eyeReader, SessionTrigger firstOccurance) {
         FindNextSessionTrigger(sessionReader, firstOccurance);
-        return FindNextEdfTrigger(pointer, firstOccurance);
+        return FindNextEdfTrigger(eyeReader, firstOccurance);
     }
 
     /// <summary>
@@ -698,26 +739,27 @@ public class ScreenSaver : BasicGUIController {
     /// Moves the current pointer to point to the next trigger. Any data between the current point and the 
     /// next trigger is ignored.
     /// </summary>
-    /// <param name="pointer">Pointer of the EDF file</param>
+    /// <param name="eyeReader"></param>
     /// <param name="trigger">The next trigger to find</param>
-    /// <returns>DataType of the object so the data can be processed</returns>
-    private DataTypes FindNextEdfTrigger(EdfFilePointer pointer, SessionTrigger trigger) {
-        DataTypes currType = DataTypes.NULL;
+    /// <returns>Current data pointed to by the eyeReader</returns>
+    private AllFloatData FindNextEdfTrigger(EyeDataReader eyeReader, SessionTrigger trigger) {
+        AllFloatData data = null;
 
         //move edfFile to point to first trial
         bool foundNextTrigger = false;
         while (!foundNextTrigger) {
-            currType = EdfAccessWrapper.EdfGetNextData(pointer);
-            if (currType == DataTypes.MESSAGEEVENT) {
-                ALLF_DATA data = EdfAccessWrapper.EdfGetFloatData(pointer);
-                FEVENT ev = data.fe;
-                if (ev.GetSessionTrigger() == trigger) {
-                    foundNextTrigger = true;
-                }
+            data = eyeReader.GetNextData();
+
+            if (data.dataType == DataTypes.MESSAGEEVENT) {
+                FEvent ev = (FEvent)data;
+                foundNextTrigger = ev.trigger == trigger;
+            }
+            else if (data.dataType == DataTypes.NO_PENDING_ITEMS) {
+                foundNextTrigger = true;
             }
         }
 
-        return currType;
+        return data;
     }
 
     /// <summary>
@@ -731,8 +773,8 @@ public class ScreenSaver : BasicGUIController {
     /// <param name="frames">the Queue to store the data</param>
     /// <param name="trigger">The trigger where the loading stops</param>
     /// <returns>Total time taken from one current trigger to the next</returns>
-    private double LoadToNextTriggerSession(SessionReader reader, Queue<SessionData> frames, out SessionTrigger trigger) {
-        double totalTime = 0;
+    private float LoadToNextTriggerSession(SessionReader reader, Queue<SessionData> frames, out SessionTrigger trigger) {
+        float totalTime = 0;
 
         trigger = SessionTrigger.NoTrigger;
         bool isNextEventFound = false;
@@ -757,13 +799,13 @@ public class ScreenSaver : BasicGUIController {
     /// position top the next Trigger
     /// 
     /// </summary>
-    /// <param name="file">EdfFilePointer Object to process</param>
+    /// <param name="reader">EyeDataReader to process</param>
     /// <param name="fixations">Queue to fill the data</param>
     /// <param name="trigger">The trigger where the loading stops at</param>
     /// <param name="timestamp">The timestamp of the trigger where the loading stops at</param>
     /// <param name="latestType">The Datatype of the last data point</param>
     /// <returns>Time taken from next data point to the last data point</returns>
-    private uint LoadToNextTriggerEdf(EdfFilePointer file,
+    private uint LoadToNextTriggerEdf(EyeDataReader reader,
                                       Queue<AllFloatData> fixations,
                                       out SessionTrigger trigger,
                                       out uint timestamp,
@@ -772,8 +814,8 @@ public class ScreenSaver : BasicGUIController {
         bool isNextEventFound = false;
 
         while (!isNextEventFound) {
-            DataTypes type = EdfAccessWrapper.EdfGetNextData(file);
-            AllFloatData data = EdfAccessWrapper.EdfGetFloatData(file).ConvertToAllFloatData(type);
+            AllFloatData data = reader.GetNextData();
+            DataTypes type = data.dataType;
 
             fixations.Enqueue(data);
 
@@ -781,10 +823,10 @@ public class ScreenSaver : BasicGUIController {
                 isNextEventFound = true;
                 FEvent ev = (FEvent)data;
                 trigger = ev.trigger;
-                timestamp = ev.Time;
+                timestamp = ev.time;
                 isNextEventFound = trigger != SessionTrigger.NoTrigger;
                 latestType = type;
-                return ev.Time - fixations.Peek().Time;
+                return ev.time - fixations.Peek().time;
             }
             else if (type == DataTypes.NO_PENDING_ITEMS) {
                 break;

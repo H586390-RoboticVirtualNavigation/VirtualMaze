@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -43,10 +42,6 @@ public class GazePointPool : MonoBehaviour {
             Image img = Instantiate(gazePointImage, transform);
             img.gameObject.SetActive(false);
         }
-    }
-
-    private void Awake() {
-        DontDestroyOnLoad(this);
     }
 
     /// <summary>

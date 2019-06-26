@@ -1,6 +1,5 @@
-﻿using UnityEngine;
-using System;
-using UnityEngine.Events;
+﻿using System;
+using UnityEngine;
 
 /// <summary>
 /// Script to control the movement of the robot
@@ -50,14 +49,16 @@ public class RobotMovement : ConfigurableComponent {
     private Rigidbody rigidBody;
     private bool enableMovement = true;
 
-    public float rotationSpeed;
-    public float movementSpeed;
+    private Settings settings;
 
-    public bool isJoystickEnabled;
-    public bool isReverseEnabled;
-    public bool isForwardEnabled;
-    public bool isRightEnabled;
-    public bool isLeftEnabled;
+    public float RotationSpeed { get => settings.rotationSpeed; set => settings.rotationSpeed = value; }
+    public float MovementSpeed { get => settings.movementSpeed; set => settings.movementSpeed = value; }
+
+    public bool IsForwardEnabled { get => settings.isForwardEnabled; set => settings.isForwardEnabled = value; }
+    public bool IsJoystickEnabled { get => settings.isJoystickEnabled; set => settings.isJoystickEnabled = value; }
+    public bool IsLeftEnabled { get => settings.isLeftEnabled; set => settings.isLeftEnabled = value; }
+    public bool IsRightEnabled { get => settings.isRightEnabled; set => settings.isRightEnabled = value; }
+    public bool IsReverseEnabled { get => settings.isReverseEnabled; set => settings.isReverseEnabled = value; }
 
     //drag in Unity Editior
     public Camera player_camera;// camera to shoot the ray from.
@@ -80,7 +81,7 @@ public class RobotMovement : ConfigurableComponent {
         float horizontal;
 
         // using joy stick
-        if (isJoystickEnabled) {
+        if (IsJoystickEnabled) {
             vertical = JoystickController.vertical;
             horizontal = JoystickController.horizontal;
         }
@@ -91,12 +92,12 @@ public class RobotMovement : ConfigurableComponent {
         }
 
         if (ShouldRotate(horizontal)) {
-            Quaternion rotateBy = Quaternion.Euler(0, horizontal * rotationSpeed * Time.deltaTime, 0);
+            Quaternion rotateBy = Quaternion.Euler(0, horizontal * RotationSpeed * Time.deltaTime, 0);
             rigidBody.rotation = (transform.rotation * rotateBy);
         }
 
         if (ShouldMove(vertical)) {
-            Vector3 moveBy = transform.forward * vertical * movementSpeed * Time.deltaTime;
+            Vector3 moveBy = transform.forward * vertical * MovementSpeed * Time.deltaTime;
             rigidBody.position = transform.position + moveBy;
         }
     }
@@ -114,8 +115,8 @@ public class RobotMovement : ConfigurableComponent {
     /// <param name="horizontal">Direction to rotate. Negative values means rotate left</param>
     /// <returns>True if should rotate, false if not</returns>
     private bool ShouldRotate(float horizontal) {
-        return (horizontal < 0 && isLeftEnabled) ||
-            (horizontal > 0 && isRightEnabled);
+        return (horizontal < 0 && IsLeftEnabled) ||
+            (horizontal > 0 && IsRightEnabled);
     }
 
     /// <summary>
@@ -124,8 +125,8 @@ public class RobotMovement : ConfigurableComponent {
     /// <param name="vertical">Direction to move. Positive values means move forward</param>
     /// <returns>True if should move, false if not</returns>
     private bool ShouldMove(float vertical) {
-        return (vertical < 0 && isReverseEnabled) ||
-            (vertical > 0 && isForwardEnabled);
+        return (vertical < 0 && IsReverseEnabled) ||
+            (vertical > 0 && IsForwardEnabled);
     }
 
     /// <summary>
@@ -167,24 +168,11 @@ public class RobotMovement : ConfigurableComponent {
     }
 
     public override ComponentSettings GetCurrentSettings() {
-        Settings settings = new Settings(rotationSpeed, movementSpeed,
-            isJoystickEnabled, isReverseEnabled, isForwardEnabled,
-            isRightEnabled, isLeftEnabled);
-
         return settings;
     }
 
     protected override void ApplySettings(ComponentSettings settings) {
-        Settings applySettings = (Settings)settings;
-
-        isJoystickEnabled = applySettings.isJoystickEnabled;
-        isForwardEnabled = applySettings.isForwardEnabled;
-        isReverseEnabled = applySettings.isReverseEnabled;
-        isLeftEnabled = applySettings.isLeftEnabled;
-        isRightEnabled = applySettings.isRightEnabled;
-
-        movementSpeed = applySettings.movementSpeed;
-        rotationSpeed = applySettings.rotationSpeed;
+        this.settings = (Settings)settings;
     }
 
     public override ComponentSettings GetDefaultSettings() {

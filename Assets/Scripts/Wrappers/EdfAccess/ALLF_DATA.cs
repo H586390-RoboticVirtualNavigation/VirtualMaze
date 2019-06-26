@@ -46,20 +46,19 @@ namespace Eyelink.Structs {
 
     public abstract class AllFloatData {
         public readonly DataTypes dataType;
-        public abstract uint Time { get; }
+        public readonly uint time;
 
-        public AllFloatData(DataTypes type) {
-            this.dataType = type;
+        public AllFloatData(DataTypes dataType, uint time) {
+            this.dataType = dataType;
+            this.time = time;
         }
 
         public abstract override string ToString();
     }
 
     public class EmptyData : AllFloatData {
-        public EmptyData(DataTypes type) : base(type) {
+        public EmptyData(DataTypes type) : base(type, 0) {
         }
-
-        public override uint Time => 0;
 
         public override string ToString() {
             return dataType.ToString();

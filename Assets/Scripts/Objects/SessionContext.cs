@@ -63,7 +63,9 @@ public class SessionContext {
         taskType = GetValue(line);
 
         line = reader.ReadLine();
-        ProcessPosterLocations(posterLocations, GetValue(line));
+        if(!ProcessPosterLocations(posterLocations, GetValue(line))) {
+            throw new FormatException();
+        }
 
         line = reader.ReadLine();
         trialName = GetValue(line);
@@ -96,22 +98,29 @@ public class SessionContext {
         rewardViewCriteria = float.Parse(GetValue(line));
     }
 
-    private void ProcessPosterLocations(List<PosterLocation> posterLocations, string line) {
+    private bool ProcessPosterLocations(List<PosterLocation> posterLocations, string line) {
         posterLocations.Clear();
         MatchCollection matches = Regex.Matches(line, posterRegex, RegexOptions.IgnoreCase);
 
         foreach (Match match in matches) {
             Vector3 location = Vector3.zero;
 
-            location.x = float.Parse(match.Groups[2].Value);
-            location.y = float.Parse(match.Groups[3].Value);
-            location.z = float.Parse(match.Groups[4].Value);
+            if(!float.TryParse(match.Groups[2].Value, out location.x)) {
+                return false;
+            }
+            if (!float.TryParse(match.Groups[3].Value, out location.y)) {
+                return false;
+            }
+
+            if (!float.TryParse(match.Groups[4].Value, out location.z)) {
+                return false;
+            }
 
             PosterLocation pLoc = new PosterLocation(location, match.Groups[1].Value);
 
             posterLocations.Add(pLoc);
-
         }
+        return true;
     }
 
     public string ToJsonString() {

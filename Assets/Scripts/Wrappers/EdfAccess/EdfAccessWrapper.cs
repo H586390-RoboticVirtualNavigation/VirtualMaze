@@ -21,6 +21,23 @@ namespace Eyelink.EdfAccess {
             out int errval
             );
 
+        /// <summary>
+        /// Opens the EDF file passed in by edf_file_name and preprocesses the EDF file.
+        /// </summary>
+        /// <param name="fname">Name of the EDF file to be opened.</param>
+        /// <param name="consistency">Consistency check control (for the time stamps of the start and end events, etc). 
+        ///                             0, no consistency check. 
+        ///                             1, check consistency and report. 
+        ///                             2, check consistency and fix.</param>
+        /// <param name="loadevents">load/skip loading events 
+        ///                             0, do not load events. 
+        ///                             1, load events.</param>
+        /// <param name="loadsamples">load/skip loading of samples 
+        ///                             0, do not load samples. 
+        ///                             1, load samples.</param>
+        /// <param name="errval">This parameter is used for returning error value. The pointer should be a valid pointer to an
+        ///                             integer. If the returned value is not 0 then an error occurred.</param>
+        /// <returns>An EdfFilePointer to access the edf file</returns>
         public static unsafe EdfFilePointer EdfOpenFile(
             string fname,
             int consistency,
