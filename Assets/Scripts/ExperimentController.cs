@@ -36,6 +36,7 @@ public class ExperimentController : ConfigurableComponent {
             this.isTrialIntermissionFixed = isTrialIntermissionFixed;
             this.restartOnTrialFail = restartOnTrialFail;
             this.resetPositionOnTrial = resetPositionOnTrial;
+            this.saveLocation = saveLocation;
 
             this.fixedTrialIntermissionDuration = fixedTrialIntermissionDuration;
             this.maxTrialIntermissionDuration = maxTrialIntermissionDuration;
@@ -43,7 +44,6 @@ public class ExperimentController : ConfigurableComponent {
             this.sessionIntermissionDuration = sessionIntermissionDuration;
             this.timeoutDuration = timeoutDuration;
             this.timeLimitDuration = timeLimitDuration;
-            this.saveLocation = saveLocation;
         }
     }
 
@@ -74,7 +74,6 @@ public class ExperimentController : ConfigurableComponent {
         robot = GameObject.FindGameObjectWithTag(Tags.Player).GetComponent<RobotMovement>();
         waitIfPaused = new WaitUntil(() => !isPaused);
 
-        print(VersionInfo.MajorVersion);
         print(VersionInfo.Version);
     }
 
@@ -140,7 +139,6 @@ public class ExperimentController : ConfigurableComponent {
         //ignore btn click if already started.
         if (started) return;
 
-        Console.Write("Experiment Started");
         started = true;
         sessionController.RestartIndex();
 
@@ -233,7 +231,6 @@ public class ExperimentController : ConfigurableComponent {
         // cache the trigger to be logged with the robot movement
         triggerCache = trigger;
         rewardIndexCache = targetIndex;
-        Debug.Log(trigger);
     }
 
     public void ActivateExternalDisplay() {

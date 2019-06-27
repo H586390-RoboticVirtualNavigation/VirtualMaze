@@ -20,23 +20,49 @@ public class FileBrowser : MonoBehaviour {
     public InputField filePath;
     public CanvasGroup canvasGroup;
 
+    private string prevDir;
+
     void Awake() {
-        Hide();
+        HideCanvas();
+        FileItem.FileClickedEvent += OnFileClicked;
     }
 
     private void Exit(string path) {
-        Hide();
+        HideCanvas();
         OnFileBrowserExit.Invoke(path);
     }
 
     public void Show(string initalPath) {
         InitWithDirectory(initalPath);
+        DisplayCanvas();
+    }
+
+    public bool TryShow(string initialPath, string defaultPath) {
+        if (File.Exists(initialPath)) {
+            Show(Path.GetDirectoryName(initialPath));
+            return true;
+        }
+        else if (Directory.Exists(initialPath)) {
+            Show(initialPath);
+            return true;
+        }
+        else {
+            Show(defaultPath);
+            return false;
+        }
+    }
+
+    public void OnFileDirectoryChanged(string newDir) {
+        
+    }
+
+    private void DisplayCanvas() {
         canvasGroup.alpha = 1f;
         canvasGroup.interactable = true;
         canvasGroup.blocksRaycasts = true;
     }
 
-    private void Hide() {
+    private void HideCanvas() {
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;
@@ -63,26 +89,26 @@ public class FileBrowser : MonoBehaviour {
     }
 
     private void InitWithDirectory(string path) {
-        directoryContents.InitWithContentsOfDirectory(path, OnFileClicked);
+        directoryContents.PopulateContents(path);
         filePath.text = directoryContents.currentDirectory.FullName;
+
     }
 
     public void GoToDirectory(string path) {
-        directoryContents.GetContentsOfDirectory(path);
+        directoryContents.PopulateContents(path);
         filePath.text = directoryContents.currentDirectory.FullName;
     }
 
     public void GoUpADirectory() {
-        directoryContents.GetContentsOfDirectory(directoryContents.currentDirectory.Parent.FullName);
-        filePath.text = directoryContents.currentDirectory.FullName;
+        GoToDirectory(directoryContents.currentDirectory.Parent.FullName);
     }
 
-    void OnFileClicked(FileItem item, bool wasDoubleClick) {
+    private void OnFileClicked(FileItem item, bool wasDoubleClick) {
 
         //double click
         if (wasDoubleClick) {
             //folder
-            if (item.isFolder) {
+            if (item.IsFolder) {
                 GoToDirectory(item.directoryInfo.FullName);
                 filePath.text = item.directoryInfo.FullName;
             }
@@ -95,7 +121,7 @@ public class FileBrowser : MonoBehaviour {
         //single click
         else {
             //folder
-            if (item.isFolder) {
+            if (item.IsFolder) {
                 filePath.text = item.directoryInfo.FullName;
             }
             //file

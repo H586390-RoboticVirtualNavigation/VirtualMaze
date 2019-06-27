@@ -20,6 +20,7 @@ public class EyeLink {
         }
 
         eyelink.sendMessage(msg);
+        Debug.Log($"Sent \"{msg}\" to Eyelink");
     }
 
     public static bool TryGetEyelinkConnectedStatus() {
@@ -56,22 +57,24 @@ public class EyeLink {
 
         bool isconnected = TryGetEyelinkConnectedStatus();
         Debug.Log("EL connected?:" + isconnected);
+
         if (isconnected) {
+            int flag = (int)trigger + triggerValue + 1;
             switch (trigger) {
-                case SessionTrigger.CueShownTrigger:
-                    TryEyemsg_Printf("Cue Offset " + triggerValue);
+                case SessionTrigger.CueOffsetTrigger:
+                    TryEyemsg_Printf($"Cue Offset {flag}");
                     break;
                 case SessionTrigger.TrialStartedTrigger:
-                    TryEyemsg_Printf("Start Trial " + triggerValue);
+                    TryEyemsg_Printf($"Start Trial {flag}");
                     break;
                 case SessionTrigger.TrialEndedTrigger:
-                    TryEyemsg_Printf("End Trial " + triggerValue);
+                    TryEyemsg_Printf($"End Trial {flag}");
                     break;
                 case SessionTrigger.TimeoutTrigger:
-                    TryEyemsg_Printf("Timeout " + triggerValue);
+                    TryEyemsg_Printf($"Timeout {flag}");
                     break;
                 case SessionTrigger.ExperimentVersionTrigger:
-                    TryEyemsg_Printf("Trigger Version " + GameController.versionNum);
+                    TryEyemsg_Printf($"Trigger Version {(int)trigger + GameController.versionNum}");
                     break;
             }
             #region OriginalCode

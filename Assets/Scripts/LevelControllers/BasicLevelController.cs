@@ -57,6 +57,10 @@ public class BasicLevelController : MonoBehaviour {
     private void Awake() {
         waitIfPaused = new WaitUntil(() => !isPaused);
 
+        //Prepare Eyelink
+        EyeLink.Initialize();
+        onSessionTrigger.AddListener(EyeLink.OnSessionTrigger);
+
         GameObject robot = GameObject.FindGameObjectWithTag(Tags.Player);
         robotMovement = robot.GetComponent<RobotMovement>();
         cueController = robot.GetComponentInChildren<CueController>();
@@ -112,10 +116,6 @@ public class BasicLevelController : MonoBehaviour {
         //disable robot movement
         robotMovement.SetMovementActive(false);
 
-        //Prepare Eyelink
-        EyeLink.Initialize();
-        onSessionTrigger.AddListener(EyeLink.OnSessionTrigger);
-
         // +1 since trailCounter is starts from 0
         SessionStatusDisplay.DisplayTrialNumber(trialCounter + 1);
 
@@ -135,7 +135,7 @@ public class BasicLevelController : MonoBehaviour {
         yield return FadeCanvas.fadeCanvas.FadeIn();
 
         // start the first trial.
-        StartCoroutine(GoNextTask(true)); // first task is always true.
+        StartCoroutine(GoNextTask(true));// first task always true
     }
 
     /// <summary>
@@ -184,22 +184,21 @@ public class BasicLevelController : MonoBehaviour {
 
         // check if a trial is considered cleared.
         if (IsTrialCompleteCondition(currentTaskCleared)) {
+            trialCounter++; // increment if a trial is completed
+            SessionStatusDisplay.DisplayTrialNumber(trialCounter);
+
             // checks if should pause else continue.
             if (isPaused) {
                 Console.Write("ExperimentPaused");
             }
             yield return waitIfPaused;
 
-            trialCounter++; // increment if a trial is completed
-            SessionStatusDisplay.DisplayTrialNumber(trialCounter);
-
-            onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
-
             // execute intertrial only it is not the first trial
             if (firstTask) {
                 firstTask = false;
             }
             else {
+                onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
                 yield return InterTrial(); //wait for interTrial to complete.
             }
         }
@@ -220,7 +219,7 @@ public class BasicLevelController : MonoBehaviour {
         PlayerAudio.instance.PlayStartClip(); // play start sound
 
         cueController.ShowCue();
-        onSessionTrigger.Invoke(SessionTrigger.CueShownTrigger, targetIndex);
+        onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
 
         yield return cueDisplayDuration;
 
@@ -231,7 +230,7 @@ public class BasicLevelController : MonoBehaviour {
         rewards[targetIndex].StartBlinking(); // start blinking if target has light
         robotMovement.SetMovementActive(true); // enable robot
 
-        onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
+        onSessionTrigger.Invoke(SessionTrigger.CueOffsetTrigger, targetIndex);
 
         StartTrialTimer();
     }

@@ -69,7 +69,7 @@ public class RobotMovement : ConfigurableComponent {
     protected override void Awake() {
         base.Awake();
         rigidBody = GetComponent<Rigidbody>();
-        rigidBody.constraints = RigidbodyConstraints.FreezePositionY;
+        rigidBody.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
     }
 
     // Update is called once per frame
