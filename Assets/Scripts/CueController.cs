@@ -60,4 +60,61 @@ public class CueController : MonoBehaviour {
         HideHint();
         HideCue();
     }
+
+    public static void ProcessTrigger(SessionTrigger trigger, CueController cueController, ITriggerActions actions = null) {
+        switch (trigger) {
+            case SessionTrigger.CueOffsetTrigger:
+                cueController.HideCue();
+                cueController.ShowHint();
+                SessionStatusDisplay.DisplaySessionStatus("Trial Running");
+                actions?.CueOffsetTriggerAction();
+                break;
+
+            case SessionTrigger.TrialStartedTrigger:
+                cueController.HideHint();
+                cueController.ShowCue();
+                SessionStatusDisplay.DisplaySessionStatus("Showing Cue");
+                actions?.TrialStartedTriggerAction();
+                break;
+
+            case SessionTrigger.TimeoutTrigger:
+                SessionStatusDisplay.DisplaySessionStatus("Time out");
+                cueController.HideAll();
+                actions?.TimeoutTriggerAction();
+                break;
+
+            case SessionTrigger.TrialEndedTrigger:
+                cueController.HideAll();
+                SessionStatusDisplay.DisplaySessionStatus("Trial Ended");
+                actions?.TrialEndedTriggerAction();
+                break;
+
+            case SessionTrigger.ExperimentVersionTrigger:
+                SessionStatusDisplay.DisplaySessionStatus("Next Session");
+                actions?.ExperimentVersionTriggerAction();
+                break;
+
+            case SessionTrigger.NoTrigger:
+                actions?.NoTriggerAction();
+                break;
+
+            default:
+                Debug.LogError($"Unidentified Session Trigger: {trigger}");
+                actions?.DefaultAction();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Implement this interface to add custom actions when processing triggers
+    /// </summary>
+    public interface ITriggerActions {
+        void TrialStartedTriggerAction();
+        void CueOffsetTriggerAction();
+        void TrialEndedTriggerAction();
+        void TimeoutTriggerAction();
+        void ExperimentVersionTriggerAction();
+        void NoTriggerAction();
+        void DefaultAction();
+    }
 }

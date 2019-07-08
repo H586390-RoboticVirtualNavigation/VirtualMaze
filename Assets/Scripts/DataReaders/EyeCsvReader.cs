@@ -26,7 +26,7 @@ public class EyeCsvReader : EyeDataReader {
 
             switch (type) {
                 case DataTypes.MESSAGEEVENT:
-                    current =  new FEvent(time, dataArr[4], type);
+                    current =  new MessageEvent(time, dataArr[4], type);
                     break;
 
                 case DataTypes.SAMPLE_TYPE:

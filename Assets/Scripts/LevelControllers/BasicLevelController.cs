@@ -87,27 +87,8 @@ public class BasicLevelController : MonoBehaviour {
         FadeCanvas.fadeCanvas.FadeOut();
     }
 
-    public RewardArea[] GetAllRewardsFromScene() {
-        //Find all rewardAreas in scene and populate rewards[].
-        GameObject[] objs = GameObject.FindGameObjectsWithTag(Tags.RewardArea);
-        RewardArea[] tempArr = new RewardArea[objs.Length];
-        for (int i = 0; i < objs.Length; i++) {
-            RewardArea area = objs[i].GetComponent<RewardArea>();
-            if (area != null) {
-                tempArr[i] = area;
-
-                // Deactivate all rewards at the start.
-                area.SetActive(false);
-            }
-            else {
-                Debug.LogWarning(string.Format(Format_NoRewardAreaComponentFound, objs[0].name));
-            }
-        }
-        return tempArr;
-    }
-
     private void Start() {
-        rewards = GetAllRewardsFromScene();
+        rewards = RewardArea.GetAllRewardsFromScene();
 
         //cache session
         SessionInfo.GetSessionInfo(out Session session);

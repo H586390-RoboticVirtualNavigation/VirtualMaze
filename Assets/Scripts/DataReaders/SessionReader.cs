@@ -13,6 +13,8 @@ public class SessionReader {
 
     public SessionContext context;
 
+    public int LineNumber { get; protected set; } = 0;
+
     public SessionReader(string filePath) {
         if (!File.Exists(filePath)) {
             throw new FileNotFoundException();
@@ -24,6 +26,7 @@ public class SessionReader {
     public bool NextData() {
         string currentData = reader.ReadLine();
         if (!string.IsNullOrEmpty(currentData)) {
+            LineNumber++;
             currData = ParseData(currentData);
             return true;
         }
@@ -32,11 +35,35 @@ public class SessionReader {
         }
     }
 
+    public void MoveToNextTrigger() {
+        //if current is already pointing to a trigger move forward first
+        if (currData != null && currData.flag != 0) {
+            NextData();
+        }
+
+        //search for next trigger/flag
+        while (currData != null && currData.flag == 0) {
+            NextData();
+        }
+    }
+
+    public void MoveToNextTrigger(SessionTrigger trigger) {
+        //if current is already pointing to a trigger move forward first
+        if (currData != null && currData.flag != 0) {
+            NextData();
+        }
+
+        //search for next trigger/flag
+        while (currData != null && currData.trigger != trigger) {
+            NextData();
+        }
+    }
+
     protected virtual SessionData ParseData(string data) {
         string[] dataArr = data.Trim().Split(' ');
 
         int flag = int.Parse(dataArr[0]);
-        float timeDelta = float.Parse(dataArr[1]);
+        decimal timeDelta = decimal.Parse(dataArr[1]);
         float posX = float.Parse(dataArr[2]);
         float posZ = float.Parse(dataArr[3]);
         float rotY = float.Parse(dataArr[4]);
@@ -54,10 +81,12 @@ public class SessionReader {
         // check if first line is a JsonObject
         if (currLine[0] == '{') { // newest version
             context = JsonUtility.FromJson<SessionContext>(currLine);
+            LineNumber++;
         }
         else {
             //parse as older header
             context = new SessionContext(currLine, r);
+            LineNumber += 14;
         }
     }
 
@@ -78,6 +107,6 @@ public class SessionReader {
     }
 
     public bool HasNext() {
-        return reader.Peek() > 0;
+        return reader.Peek() > -1;
     }
 }

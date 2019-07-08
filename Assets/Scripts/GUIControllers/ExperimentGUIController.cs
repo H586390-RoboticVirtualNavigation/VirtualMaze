@@ -13,7 +13,7 @@ public class ExperimentGUIController : DataGUIController {
     public InputField trialIntermissionMaxField;
     public InputField trialIntermissionMinField;
 
-    public InputField saveLocationField;
+    public FileSelector saveLocationField;
     public InputField sessionIntermissionDurationField;
     public InputField timeoutDurationField;
     public InputField timeLimitField;
@@ -30,19 +30,17 @@ public class ExperimentGUIController : DataGUIController {
     public Toggle restartOnTrialFailToggle;
     public Toggle resetPositionOnTrialToggle;
 
-    public Button browseSaveLocation;
     public Button startStopButton;
     public Button pauseButton;
 
     public ExperimentController experimentController;
-    public FileBrowser fileBrowser;
 
     private void Awake() {
         trialIntermissionFixedField.onEndEdit.AddListener(OnTrialIntermissionFixedEndEdit);
         trialIntermissionMaxField.onEndEdit.AddListener(OnTrialIntermissionMaxEndEdit);
         trialIntermissionMinField.onEndEdit.AddListener(OnTrialIntermissionMinEndEdit);
 
-        saveLocationField.onEndEdit.AddListener(OnSaveLocationFieldEndEdit);
+        saveLocationField.OnPathSelected.AddListener(OnSaveLocationSelected);
         sessionIntermissionDurationField.onEndEdit.AddListener(OnSessionIntermissionFieldEndEdit);
         timeoutDurationField.onEndEdit.AddListener(OnTimeoutDurationFieldEndEdit);
         timeLimitField.onEndEdit.AddListener(OnTimeLimitFieldEndEdit);
@@ -52,7 +50,6 @@ public class ExperimentGUIController : DataGUIController {
 
         pauseButton.onClick.AddListener(OnPauseButtonClicked);
         startStopButton.onClick.AddListener(OnExperimentStartStopButtonClicked);
-        browseSaveLocation.onClick.AddListener(OnBrowseSavelocationClicked);
 
         restartOnTrialFailToggle.onValueChanged.AddListener(toggleRestartOnTrialFail);
         resetPositionOnTrialToggle.onValueChanged.AddListener(toggleResetPosition);
@@ -78,26 +75,6 @@ public class ExperimentGUIController : DataGUIController {
         else {
             Console.Write("Experiment Stopped");
             experimentController.StopExperiment();
-        }
-    }
-
-    private void OnBrowseSavelocationClicked() {
-        fileBrowser.OnFileBrowserExit += OnFileBrowserExit;
-        string initialDir = Application.dataPath;
-
-        if (!string.IsNullOrEmpty(saveLocationField.text) && Directory.Exists(saveLocationField.text)) {
-            initialDir = saveLocationField.text;
-        }
-
-        fileBrowser.Show(initialDir);
-    }
-
-    private void OnFileBrowserExit(string path) {
-        fileBrowser.OnFileBrowserExit -= OnFileBrowserExit;
-
-        if (!string.IsNullOrEmpty(path)) {
-            saveLocationField.text = path;
-            OnSaveLocationFieldEndEdit(path);
         }
     }
 
@@ -163,7 +140,7 @@ public class ExperimentGUIController : DataGUIController {
         }
     }
 
-    private void OnSaveLocationFieldEndEdit(string text) {
+    private void OnSaveLocationSelected(string text) {
         if (IsValidSaveLocation(text)) {
             experimentController.SaveLocation = text;
             SetInputFieldValid(saveLocationField);

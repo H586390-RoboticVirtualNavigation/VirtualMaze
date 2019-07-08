@@ -14,6 +14,7 @@ public class GazePointPool : MonoBehaviour {
     private List<Image> pool = new List<Image>(0);
 
     private readonly int initalPool = 25;
+    private int activeNow = 0;
 
     /// <summary>
     /// Positions a gaze point on the intended canvas.
@@ -27,6 +28,8 @@ public class GazePointPool : MonoBehaviour {
         //calculate and posiiton the gaze point on the intended canvas
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, gazePoint, camera, out Vector2 localpoint)) {
             i.gameObject.SetActive(true);
+            activeNow++;
+
             i.rectTransform.localPosition = localpoint;
         }
     }
@@ -72,6 +75,7 @@ public class GazePointPool : MonoBehaviour {
                 i.gameObject.SetActive(false);
             }
         }
+        activeNow = 0;
     }
 
     /// <summary>

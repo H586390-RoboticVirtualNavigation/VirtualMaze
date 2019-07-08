@@ -36,6 +36,14 @@ public class RewardArea : MonoBehaviour {
     public static float requiredDistance = 2f;
 
     /// <summary>
+    /// The order of the reward in ascending order.
+    /// 
+    /// DO NOT change the value here change it in the Unity Editor
+    /// </summary>
+    [SerializeField]
+    private int rewardOrder = -1;
+
+    /// <summary>
     /// All rewards use the same trigger event. RewardArea script will be returned for extra processing
     /// </summary>
     /// <param name="rewardArea">Script of RewardArea that is triggered</param>
@@ -152,6 +160,9 @@ public class RewardArea : MonoBehaviour {
                 Debug.LogWarning(string.Format(Format_NoRewardAreaComponentFound, objs[0].name));
             }
         }
+
+        Array.Sort(tempArr, (a1, a2) => a1.rewardOrder.CompareTo(a2.rewardOrder));
+
         return tempArr;
     }
 }

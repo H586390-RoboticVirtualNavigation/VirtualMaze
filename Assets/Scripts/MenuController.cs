@@ -14,11 +14,13 @@ public class MenuController : MonoBehaviour {
     public Button hardwareControlMenuBtn;
     public Button robotMovementMenuBtn;
     public Button dataGenerationMenuBtn;
+    public Button dataViewerMenuBtn;
 
     public CanvasGroup experimentMenuCanvas;
     public CanvasGroup hardwareControlMenuCanvas;
     public CanvasGroup robotMovementMenuCanvas;
     public CanvasGroup dataGenerationMenuCanvas;
+    public CanvasGroup dataViewerMenuCanvas;
 
     private CanvasGroup currentMenu;
 
@@ -27,19 +29,25 @@ public class MenuController : MonoBehaviour {
         hardwareControlMenuBtn.onClick.AddListener(OnHardwareControlButtonClicked);
         robotMovementMenuBtn.onClick.AddListener(OnRobotMovementButtonClicked);
         dataGenerationMenuBtn.onClick.AddListener(OnDataGenerationButtonClicked);
+        dataViewerMenuBtn.onClick.AddListener(OnDataViewerButtonClicked);
 
         //default menu is experiment
-        SetVisibility( experimentMenuCanvas, true);
+        experimentMenuCanvas.SetVisibility(true);
         currentMenu = experimentMenuCanvas;
 
         //hide others
-        SetVisibility(hardwareControlMenuCanvas, false);
-        SetVisibility(robotMovementMenuCanvas, false);
-        SetVisibility(dataGenerationMenuCanvas, false);
+        hardwareControlMenuCanvas.SetVisibility(false);
+        robotMovementMenuCanvas.SetVisibility(false);
+        dataGenerationMenuCanvas.SetVisibility(false);
+        dataViewerMenuCanvas.SetVisibility(false);
     }
 
     private void OnDataGenerationButtonClicked() {
         ShowMenu(dataGenerationMenuCanvas);
+    }
+
+    private void OnDataViewerButtonClicked() {
+        ShowMenu(dataViewerMenuCanvas);
     }
 
     private void OnHardwareControlButtonClicked() {
@@ -62,25 +70,9 @@ public class MenuController : MonoBehaviour {
         //do nothing if current menu is already shown.
         if (menuCanvas.Equals(currentMenu)) return;
 
-        SetVisibility(currentMenu, false);
-        SetVisibility(menuCanvas, true);
+        currentMenu.SetVisibility(false);
+        menuCanvas.SetVisibility(true);
 
         currentMenu = menuCanvas;
-    }
-
-    /// <summary>
-    /// Helper method to hide or show a canvas group.
-    /// </summary>
-    /// <param name="canvasGroup">canvas group to hide or show</param>
-    /// <param name="shown">true to show, false to hide</param>
-    private void SetVisibility(CanvasGroup canvasGroup, bool shown) {
-        if (shown) {
-            canvasGroup.alpha = 1;
-        }
-        else {
-            canvasGroup.alpha = 0;
-        }
-        canvasGroup.blocksRaycasts = shown;
-        canvasGroup.interactable = shown;
     }
 }

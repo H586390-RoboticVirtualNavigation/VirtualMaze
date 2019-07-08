@@ -6,6 +6,7 @@ public class FadeCanvas : MonoBehaviour {
 
     public static FadeCanvas fadeCanvas;
 
+    public float Alpha { get => fade.alpha; set => fade.alpha = value; }
     private CanvasGroup fade;
     private WaitForSecondsRealtime timeIncrements = new WaitForSecondsRealtime(0.01f);
     public bool fadeOutDone { get; private set; }

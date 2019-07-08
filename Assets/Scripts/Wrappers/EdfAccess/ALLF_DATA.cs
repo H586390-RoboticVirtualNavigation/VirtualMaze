@@ -34,10 +34,37 @@ namespace Eyelink.Structs {
 
         public AllFloatData ConvertToAllFloatData(DataTypes type) {
             switch (type) {
-                case DataTypes.MESSAGEEVENT:
+                case DataTypes.ENDEVENTS:
+                case DataTypes.ENDBLINK:
+                case DataTypes.ENDSACC:
+                case DataTypes.ENDSAMPLES:
+                case DataTypes.ENDFIX:
+                case DataTypes.ENDPARSE:
+                    return new FEventEnd(fe, type);
+
+                case DataTypes.FIXUPDATE:
+                case DataTypes.BUTTONEVENT:
+                case DataTypes.INPUTEVENT:
+                case DataTypes.LOST_DATA_EVENT:
+                case DataTypes.STARTBLINK:
+                case DataTypes.STARTSACC:
+                case DataTypes.STARTFIX:
+                case DataTypes.STARTPARSE:
+                case DataTypes.STARTSAMPLES:
+                case DataTypes.STARTEVENTS:
                     return new FEvent(fe, type);
+                case DataTypes.MESSAGEEVENT:
+                    return new MessageEvent(fe, type);
+
                 case DataTypes.SAMPLE_TYPE:
                     return new Fsample(fs, type);
+                
+                case DataTypes.BREAKPARSE:
+                    //fill if needed
+                case DataTypes.RECORDING_INFO:
+                    //fill if needed
+                case DataTypes.NO_PENDING_ITEMS:
+                case DataTypes.NULL:
                 default:
                     return new EmptyData(type);
             }

@@ -60,9 +60,6 @@ public class RobotMovement : ConfigurableComponent {
     public bool IsRightEnabled { get => settings.isRightEnabled; set => settings.isRightEnabled = value; }
     public bool IsReverseEnabled { get => settings.isReverseEnabled; set => settings.isReverseEnabled = value; }
 
-    //drag in Unity Editior
-    public Camera player_camera;// camera to shoot the ray from.
-
     //movement broadcaster
     public event RobotMovementEvent OnRobotMoved;
 
@@ -132,7 +129,7 @@ public class RobotMovement : ConfigurableComponent {
     /// <summary>
     /// Move robot to the specified waypoint. 
     /// 
-    /// The rotation of the robot is maintained.
+    /// The rotation of the robot follows the Y rotation of the waypoint.
     /// </summary>
     /// <param name="waypoint"></param>
     public void MoveToWaypoint(Transform waypoint) {
@@ -155,18 +152,6 @@ public class RobotMovement : ConfigurableComponent {
         enableMovement = enable;
     }
 
-    /// <summary>
-    /// Fire a raycast from the center of the screen of the subject.
-    /// </summary>
-    /// <param name="maxDistance">Max distance to check for a hit</param>
-    /// <param name="hit">Resultant hit, null if raycast didnot hit anything</param>
-    /// <returns>True if somehting was hit</returns>
-    public bool FireRaycastFromViewCenter(float maxDistance, out RaycastHit hit) {
-        Ray r = player_camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-        //Debug.DrawRay(r.origin, r.direction, Color.blue);
-        return Physics.Raycast(r, out hit, maxDistance);
-    }
-
     public override ComponentSettings GetCurrentSettings() {
         return settings;
     }
@@ -181,5 +166,36 @@ public class RobotMovement : ConfigurableComponent {
 
     public override Type GetSettingsType() {
         return typeof(Settings);
+    }
+
+    public static void MoveRobotTo(Transform robot, RobotConfiguration config) {
+        if (config == null) {
+            return;
+        }
+
+        Vector3 pos = robot.position;
+        // Y is unchanged
+        pos.x = config.x;
+        pos.z = config.z;
+
+        // Rotate around Y axis
+        Vector3 orientation = robot.rotation.eulerAngles;
+        orientation.y = config.degreeY;
+
+        //convert back to quaterion
+        Quaternion newrot = Quaternion.Euler(orientation);
+
+        robot.SetPositionAndRotation(pos, newrot);
+    }
+}
+
+
+public class RobotConfiguration {
+    public readonly float x, z, degreeY;
+
+    public RobotConfiguration(float x, float z, float degreeY) {
+        this.x = x;
+        this.z = z;
+        this.degreeY = degreeY;
     }
 }

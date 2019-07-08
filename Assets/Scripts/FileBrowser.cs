@@ -11,7 +11,6 @@ using System.IO;
 public delegate void OnFileBrowserExitEvent(string path);
 
 public class FileBrowser : MonoBehaviour {
-
     // user of FileBrowser will suscribe his methods to this event
     public event OnFileBrowserExitEvent OnFileBrowserExit;
 
@@ -53,7 +52,9 @@ public class FileBrowser : MonoBehaviour {
     }
 
     public void OnFileDirectoryChanged(string newDir) {
-        
+
+        TryShow(newDir, filePath.text);
+
     }
 
     private void DisplayCanvas() {

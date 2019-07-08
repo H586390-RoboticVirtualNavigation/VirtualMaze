@@ -1,9 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEditor.UI;
+using UnityEngine.UI;
 
 [CustomEditor(typeof(DescriptiveSlider), false)]
 [CanEditMultipleObjects]

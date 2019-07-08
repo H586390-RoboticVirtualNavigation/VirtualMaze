@@ -125,19 +125,27 @@ namespace Eyelink.Structs {
         public byte c;
     }
 
-    public class FEvent : AllFloatData {
+    public class MessageEvent : FEvent {
         public readonly string message;
+        public readonly int flag;
         public readonly SessionTrigger trigger;
 
-        public FEvent(FEVENT ev, DataTypes dataType) : base(dataType, ev.sttime) {
+        public MessageEvent(FEVENT ev, DataTypes dataType) : base(ev, dataType) {
             message = ev.GetMessage();
             trigger = ev.GetSessionTrigger();
+
+            if (FEVENT.IsSessionTrigger(message)) {
+                flag = int.Parse(message.Substring(message.Length - 3, 2));
+            }
+            else {
+                flag = 0;
+            }
         }
 
-        public FEvent(uint time, string message, DataTypes dataType) : base(dataType, time) {
+        public MessageEvent(uint time, string message, DataTypes dataType) : base(time, dataType) {
             this.message = message;
-
             trigger = GetSessionTrigger(message);
+            flag = int.Parse(message.Substring(message.Length - 3, 2));
         }
 
         /// <summary>
@@ -167,7 +175,33 @@ namespace Eyelink.Structs {
         }
 
         public override string ToString() {
-            return $"{dataType} @ {time} | {trigger} | {message}";
+            return $"{dataType} @ {time} | {trigger} | {message} | {flag}";
+        }
+    }
+
+    public class FEvent : AllFloatData {
+        //events only have sttime and endtime
+        public FEvent(FEVENT ev, DataTypes dataType) : base(dataType, ev.sttime) {
+        }
+
+        public FEvent(uint time, DataTypes dataType) : base(dataType, time) {
+        }
+
+        public override string ToString() {
+            return $"{dataType} @ {time}";
+        }
+    }
+
+    public class FEventEnd : AllFloatData {
+        //events only have sttime and endtime
+        public FEventEnd(FEVENT ev, DataTypes dataType) : base(dataType, ev.entime) {
+        }
+
+        public FEventEnd(uint time, DataTypes dataType) : base(dataType, time) {
+        }
+
+        public override string ToString() {
+            return $"{dataType} @ {time}";
         }
     }
 }

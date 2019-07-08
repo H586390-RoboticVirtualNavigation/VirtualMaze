@@ -25,7 +25,7 @@ public class DirectoryContents : MonoBehaviour {
             Populate();
         }
         catch {
-            Debug.LogError("invalid directory path");
+            Debug.LogWarning($"Unable to open: {path}");
         }
     }
 

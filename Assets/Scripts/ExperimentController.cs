@@ -77,46 +77,6 @@ public class ExperimentController : ConfigurableComponent {
         print(VersionInfo.Version);
     }
 
-    private void OnDisable() {
-        SceneManager.sceneLoaded -= SceneLoaded;
-    }
-
-    private void SceneLoaded(Scene scene, LoadSceneMode mode) {
-        SceneManager.sceneLoaded -= SceneLoaded;
-        if (scene.name == "Start") return;
-
-        //add listener to the session
-        GameObject levelControllerObject = GameObject.FindWithTag(Tags.LevelController);
-        if (levelControllerObject == null) {
-            Debug.LogError("No GameObject found with the tag " + Tags.LevelController);
-            StopExperiment();
-        }
-        else {
-            levelController =
-                levelControllerObject.GetComponent<BasicLevelController>();
-            levelController.onSessionFinishEvent.AddListener(OnSessionEnd);
-            levelController.onSessionTrigger.AddListener(OnSessionTriggered);
-            levelController.isPaused = isPaused;
-            levelController.resetRobotPositionDuringInterTrial = resetPositionOnTrial;
-            levelController.restartOnTaskFail = restartOnTrialFail;
-
-            //validate logger
-            int sessionIndex = sessionController.index - 1;
-            Session session = sessionController.Sessions[sessionIndex];
-            SessionContext context = new SessionContext(session, SaveLoad.getCurrentSettings(),
-                    FindObjectsOfType<RewardArea>());
-            if (!logger.OpenSessionLog(sessionIndex, context)) {
-                Console.WriteError("failed to create save files");
-                StopExperiment();
-            }
-
-            levelController.StartSession();
-        }
-
-        //start logging robotmovement
-        robot.OnRobotMoved += OnRobotMoved;
-    }
-
     /// <summary>
     /// Toggles if the experiment should pause
     /// </summary>
@@ -175,15 +135,52 @@ public class ExperimentController : ConfigurableComponent {
             SessionInfo.SetSessionInfo(session);
 
             //start the scene
-            SceneManager.sceneLoaded += SceneLoaded;
-            SceneManager.LoadScene(session.level, LoadSceneMode.Single);
+
+            AsyncOperation task = SceneManager.LoadSceneAsync(session.level, LoadSceneMode.Single);
+            task.allowSceneActivation = true;
+            while (!task.isDone) {
+                yield return null;
+            }
+
+            PrepareLevelController();
+
+            //start logging robotmovement
+            robot.OnRobotMoved += OnRobotMoved;
 
             Console.Write(string.Format("session {0} started", sessionIndex));
-
         }
         else {
             StopExperiment();
             yield break; // stops the coroutine
+        }
+    }
+
+    private void PrepareLevelController() {
+        GameObject levelControllerObject = GameObject.FindWithTag(Tags.LevelController);
+        if (levelControllerObject == null) {
+            Debug.LogError("No GameObject found with the tag " + Tags.LevelController);
+            StopExperiment();
+        }
+        else {
+            levelController =
+                levelControllerObject.GetComponent<BasicLevelController>();
+            levelController.onSessionFinishEvent.AddListener(OnSessionEnd);
+            levelController.onSessionTrigger.AddListener(OnSessionTriggered);
+            levelController.isPaused = isPaused;
+            levelController.resetRobotPositionDuringInterTrial = resetPositionOnTrial;
+            levelController.restartOnTaskFail = restartOnTrialFail;
+
+            //validate logger
+            int sessionIndex = sessionController.index - 1;
+            Session session = sessionController.Sessions[sessionIndex];
+            SessionContext context = new SessionContext(session, SaveLoad.getCurrentSettings(),
+                    FindObjectsOfType<RewardArea>());
+            if (!logger.OpenSessionLog(sessionIndex, context)) {
+                Console.WriteError("failed to create save files");
+                StopExperiment();
+            }
+
+            levelController.StartSession();
         }
     }
 
