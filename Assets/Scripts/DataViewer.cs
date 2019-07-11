@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Threading;
-using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+
 
 public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     private const int Main_Screen = 0;
@@ -60,10 +60,6 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
             if (FrameIndex >= -1) {
                 ShowFrame(trials[TrialIndex], _frameindex);
-                fadeController.Alpha = 0f;
-            }
-            else if (FrameIndex >= trials[TrialIndex].GetFrameCount() - 1) {
-                fadeController.Alpha = 1f;
             }
 
             frameNumStatus.text = $"Frame: {_frameindex + 1}";
@@ -217,12 +213,11 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     }
 
     private void SelectTrial(int trialNum) {
+
         pool.ClearScreen();
         Trial t = trials[trialNum];
         scrubber.maxValue = t.GetFrameCount() - 1;
         FrameIndex = 0;
-
-        print(rewards);
 
         if (rewards != null) {
             cueController.SetTargetImage(rewards[t.RewardIndex].cueImage);
@@ -243,7 +238,6 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
             if (FrameIndex < trial.GetFrameCount() - 1) {
                 FrameIndex++;
-                //ShowFrame(trial, Frameindex);
             }
             else {
                 IsPlaying = false;
@@ -254,8 +248,6 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     private void ShowPrevFrame() {
         if (FrameIndex > 0) {
             FrameIndex--;
-
-            //ShowFrame(trials[TrialIndex], Frameindex);
         }
         else {
             IsPlaying = false;
@@ -325,18 +317,22 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
     public void TrialStartedTriggerAction() {
         sessionStatus.text = "Cue Shown";
+        fadeController.Alpha = 0;
     }
 
     public void CueOffsetTriggerAction() {
         sessionStatus.text = "TrialRunning";
+        fadeController.Alpha = 0;
     }
 
     public void TrialEndedTriggerAction() {
         sessionStatus.text = "Trial Success";
+        SimulateFade();
     }
 
     public void TimeoutTriggerAction() {
         sessionStatus.text = "Trial Timeout";
+        SimulateFade();
     }
 
     public void ExperimentVersionTriggerAction() {
@@ -348,174 +344,30 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     }
 
     public void DefaultAction() {
-        sessionStatus.text = "Impossible to show";
-    }
-}
-
-public class Trial {
-    private List<Frame> frames = new List<Frame>();
-    private Dictionary<int, SessionTrigger> triggerMap = new Dictionary<int, SessionTrigger>();
-
-    private Frame currentFrame = null;
-    public int RewardIndex { get; private set; }
-    private string _trialName;
-
-    public string TrialName {
-        get => _trialName;
-        set {
-            _trialName = value;
-            RewardIndex = (_trialName[_trialName.Length - 1] - '0') - 1;
-            Debug.Log(RewardIndex);
-        }
+        sessionStatus.text = "Impossible to happen";
     }
 
-    public Trial(string trialName) {
-        TrialName = trialName;
-    }
+    public void SimulateFade() {
+        float alpha = 0;
+        Trial currentTrial = trials[TrialIndex];
+        int triggerFrameNum = currentTrial.GetFrameNumAtTrigger(SessionTrigger.TrialEndedTrigger);
 
-    public void AddData(PlaybackData playBackData) {
-        if (currentFrame == null) {
-            NextFrame(null);
-        }
-        //event data not added into trial as they have the same time as the sample before or after it
-        if (playBackData is PlaybackEvent ev) {
-            triggerMap.Add(frames.Count - 1, ev.trigger);
-        }
-        else {
-            currentFrame.AddData(playBackData);
-        }
-    }
-
-    public void NextFrame(RobotConfiguration config = null) {
-        if (currentFrame != null) {
-            currentFrame.Config = config;
-        }
-
-        currentFrame = new Frame();
-        frames.Add(currentFrame);
-    }
-
-    public Frame GetFrameAt(int i) {
-        //clamp values
-        int index = Math.Min(frames.Count - 1, i);
-        index = Math.Max(i, 0);
-
-        return frames[index];
-    }
-
-    public int GetFrameCount() {
-        return frames.Count;
-    }
-
-    public SessionTrigger GetLatestTriggerAtFrame(int frameNum) {
-        int latestIndex = -1;
-        foreach (int triggerIndex in triggerMap.Keys) {
-            if (frameNum >= triggerIndex) {
-                latestIndex = Math.Max(latestIndex, triggerIndex);
-            }
-        }
-
-        if (triggerMap.TryGetValue(latestIndex, out SessionTrigger value)) {
-            return value;
-        }
-        else {
-            return SessionTrigger.NoTrigger;
-        }
-    }
-}
-
-public class Frame : IEnumerable<PlaybackData> {
-    List<PlaybackData> fixations = new List<PlaybackData>();
-    public RobotConfiguration Config { get; set; }
-
-    public int DataCount { get => fixations.Count; }
-
-    private uint startTime;
-    private uint endTime;
-
-    private AudioClip spikeTrain = null;
-
-    private const int Sampling_Rate = 48000;
-    private const int Samples_Per_Millis = Sampling_Rate / 1000;
-
-    private static float[] tone = null;
-    private static float[] negTone = null;
-
-
-    public Frame() {
-        if (tone == null) {
-            tone = new float[Samples_Per_Millis];
-            negTone = new float[Samples_Per_Millis];
-            for (int i = 0; i < Samples_Per_Millis; i++) {
-                tone[i] = 1f;
-                negTone[i] = -1f;
-            }
-        }
-    }
-
-    public void AddData(PlaybackData playBackData) {
-        if (fixations.Count == 0) {
-            startTime = playBackData.timestamp;
-        }
-        fixations.Add(playBackData);
-
-        endTime = playBackData.timestamp;
-    }
-
-    public AudioClip GetAudioClip() {
-        if (spikeTrain == null) {
-            if (fixations.Count != 0) {
-                spikeTrain = AudioClip.Create(ToString(), fixations.Count * Samples_Per_Millis, 1, Sampling_Rate, false);
+        if (triggerFrameNum != -1) {
+            for (int i = triggerFrameNum; i < FrameIndex && alpha < 1000f; i++) {
+                alpha += currentTrial.GetFrameAt(i).DataCount;
             }
 
-            for (int i = 0; i < fixations.Count; i++) {
-                if (fixations[i].HasSpike) {
-                    spikeTrain.SetData(tone, Samples_Per_Millis * i);
+            //approximate to check if current frame shoule be starting to fade in
+            int approxFadein = currentTrial.GetFrameCount() - (int)(1000 * ((FrameIndex - triggerFrameNum) / (alpha)));
+
+            if (FrameIndex > approxFadein && alpha != 0) {
+                alpha = 0f;
+                for (int i = currentTrial.GetFrameCount() - 1; i > FrameIndex && alpha < 1000f; i--) {
+                    alpha += currentTrial.GetFrameAt(i).DataCount;
                 }
-
             }
         }
-        return spikeTrain;
-    }
 
-    IEnumerator<PlaybackData> IEnumerable<PlaybackData>.GetEnumerator() {
-        return ((IEnumerable<PlaybackData>)fixations).GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator() {
-        return ((IEnumerable<PlaybackData>)fixations).GetEnumerator();
-    }
-}
-
-public abstract class PlaybackData {
-    public readonly DataTypes type;
-    public readonly uint timestamp;
-    public bool HasSpike;
-
-    public PlaybackData(DataTypes type, uint timestamp) {
-        this.type = type;
-        this.timestamp = timestamp;
-    }
-}
-
-public class PlaybackEvent : PlaybackData {
-    public readonly string message;
-    public readonly SessionTrigger trigger;
-
-    public PlaybackEvent(string message, SessionTrigger trigger, DataTypes type, uint timestamp) : base(type, timestamp) {
-        this.message = message;
-        this.trigger = trigger;
-    }
-}
-
-public class PlaybackSample : PlaybackData {
-    public readonly Vector2 gaze;
-    public readonly Vector3 pos;
-    public readonly float rotY;
-
-    public PlaybackSample(Vector2 gaze, Vector3 pos, float rotY, DataTypes type, uint timestamp) : base(type, timestamp) {
-        this.gaze = gaze;
-        this.pos = pos;
-        this.rotY = rotY;
+        fadeController.Alpha = alpha * 0.001f;
     }
 }

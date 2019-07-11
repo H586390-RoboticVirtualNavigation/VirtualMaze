@@ -173,8 +173,8 @@ public class ExperimentController : ConfigurableComponent {
             //validate logger
             int sessionIndex = sessionController.index - 1;
             Session session = sessionController.Sessions[sessionIndex];
-            SessionContext context = new SessionContext(session, SaveLoad.getCurrentSettings(),
-                    FindObjectsOfType<RewardArea>());
+            SessionContext context = new SessionContext(session, SaveLoad.getCurrentSettings(), RewardArea.GetAllRewardsFromScene()
+                    );
             if (!logger.OpenSessionLog(sessionIndex, context)) {
                 Console.WriteError("failed to create save files");
                 StopExperiment();

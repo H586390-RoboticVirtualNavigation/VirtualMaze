@@ -63,7 +63,7 @@ public class SessionContext {
         taskType = GetValue(line);
 
         line = reader.ReadLine();
-        if(!ProcessPosterLocations(posterLocations, GetValue(line))) {
+        if (!ProcessPosterLocations(posterLocations, GetValue(line))) {
             throw new FormatException();
         }
 
@@ -105,7 +105,7 @@ public class SessionContext {
         foreach (Match match in matches) {
             Vector3 location = Vector3.zero;
 
-            if(!float.TryParse(match.Groups[2].Value, out location.x)) {
+            if (!float.TryParse(match.Groups[2].Value, out location.x)) {
                 return false;
             }
             if (!float.TryParse(match.Groups[3].Value, out location.y)) {

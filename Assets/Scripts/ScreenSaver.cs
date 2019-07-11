@@ -10,7 +10,6 @@ using UnityEngine.UI;
 
 /// <summary>
 /// TODO cancel button
-/// trial number
 /// </summary>
 
 public class ScreenSaver : BasicGUIController {
@@ -72,8 +71,10 @@ public class ScreenSaver : BasicGUIController {
             string sceneName = Path.GetFileNameWithoutExtension(SceneUtility.GetScenePathByBuildIndex(i));
             list.Add(new Dropdown.OptionData(sceneName));
         }
+    }
 
-        if (true) { //for testing purposes.
+    private void Start() {
+        if (Application.isEditor) { //for testing purposes.
             ChooseEyelinkFile(@"D:\Program Files (D)\SR Research\EyeLink\EDF_Access_API\Example\181026.edf");
             ChooseSession(@"D:\Desktop\FYP Init\session01\RawData_T1-400\ShortVer.txt");
             ChooseFolder(@"D:\Documents\GitHub\VirtualMaze\out");

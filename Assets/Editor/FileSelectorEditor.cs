@@ -24,7 +24,6 @@ public class FileSelectorEditor : InputFieldEditor {
     public override void OnInspectorGUI() {
         mytarget.fb = (FileBrowser)EditorGUILayout.ObjectField("File Browser", mytarget.fb, typeof(FileBrowser), true);
         mytarget.browseBtn = (Button)EditorGUILayout.ObjectField("BrowseButton", mytarget.browseBtn, typeof(Button), true);
-        Debug.Log(mytarget.fb);
 
         EditorGUILayout.PropertyField(OnPathSelected);
         base.OnInspectorGUI();

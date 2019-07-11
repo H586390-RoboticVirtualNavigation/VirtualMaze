@@ -43,6 +43,8 @@ public class RewardArea : MonoBehaviour {
     [SerializeField]
     private int rewardOrder = -1;
 
+    public bool IsActivated { get; set; } = true;
+
     /// <summary>
     /// All rewards use the same trigger event. RewardArea script will be returned for extra processing
     /// </summary>
@@ -66,7 +68,9 @@ public class RewardArea : MonoBehaviour {
     }
 
     private void OnTriggerStay(Collider other) {
-        CheckFieldOfView(other.transform);
+        if (IsActivated) {
+            CheckFieldOfView(other.transform);
+        }
     }
 
     /// <summary>
@@ -148,13 +152,14 @@ public class RewardArea : MonoBehaviour {
         //Find all rewardAreas in scene and populate rewards[].
         GameObject[] objs = GameObject.FindGameObjectsWithTag(Tags.RewardArea);
         RewardArea[] tempArr = new RewardArea[objs.Length];
+
         for (int i = 0; i < objs.Length; i++) {
             RewardArea area = objs[i].GetComponent<RewardArea>();
             if (area != null) {
                 tempArr[i] = area;
 
                 // Deactivate all rewards at the start.
-                area.SetActive(false);
+                area.IsActivated = false;
             }
             else {
                 Debug.LogWarning(string.Format(Format_NoRewardAreaComponentFound, objs[0].name));
