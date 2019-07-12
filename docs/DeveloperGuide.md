@@ -26,6 +26,9 @@
 
 5. You should have VirtualMaze ready for development now.
 
+##### Note:
+A good place to start understanding the project will be to look into *BasicLevelController.cs* and *ExperimentController.cs*. These 2 files are where most of the logic regarding the experiment process is held.
+
 # SR Research Eyelink SDK
 
 This project makes use of the Eyelink SDK. Information and the SDK can be found at the [SR Research Forum](https://www.sr-support.com/forum). To gain access to the forum create a free account.
@@ -37,17 +40,17 @@ A folder named `out` in the root of the project folder is created for developers
 Developers can also build their games here for convenience as then contents of the folder is ignored by Git and will not be uploaded to the remote repository.
 
 # Creating edfapi.bundle for MacOS
-The MAC developer kit provided does not have an out of the box .bundle file to be used as a plugin Unity. This section serves to provide steps to create the .bundle file if the library needs to be updated.
+The MAC developer kit for EDF_ACCESS_API provided does not have an out of the box .bundle file to be used as a plugin Unity. This section serves to provide steps to create the .bundle file if the library needs to be updated.
 
 Prerequisites:
-- Eyelink SDK for MacOS is already installed.
+- Eyelink SDK for MacOS is already installed on the MacOs Computer.
 
 To create a plugin, use XCode create a new .bundle project.
 In the project settings at the *General > Linked Frameworks and Libraries*, Select *Add Other...* and add the *edfapi.framework* from the MacOS *Library > Frameworks* folder.
 
 Copy all of the .c and .h files from *Application > Eyelink > EDF_ACCESS_API > Example* into the project.
 
-Run and build. An error encountered is the missing *edf_data.h* file. A way to solve this is to copy the *edf_data.h* into the project.
+Run and build. A possible error that occurs is the missing *edf_data.h* file. A way to solve this is to copy the *edf_data.h* into the project.
 
 # Documentation
 To write this documentation, the text editor [Atom](https://atom.io/) was used as it supports syntax highlighting and preview of Markdown files(.md).
