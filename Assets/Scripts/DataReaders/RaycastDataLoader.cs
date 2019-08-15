@@ -61,6 +61,10 @@ public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
 
     private static RobotConfiguration GetRobotConfig(IList<string> dataArr) {
         if (dataArr != null) {
+            if (dataArr[2].Contains("ignored")) {
+                return new RobotConfiguration(default, default, default);
+            }
+
             float posX, posZ, rotY;
             try {
 
@@ -89,7 +93,7 @@ public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
             case "SAMPLE_TYPE":
                 return DataTypes.SAMPLE_TYPE;
             default:
-                throw new Exception();
+                throw new Exception($"unknown type {s}");
         }
     }
 

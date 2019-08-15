@@ -13,7 +13,7 @@ using UnityEngine.UI;
 /// </summary>
 
 public class ScreenSaver : BasicGUIController {
-    private const int Frame_Per_Batch = 100;
+    private const int Frame_Per_Batch = 200;
 
     private const int No_Missing = 0x0;
     private const int Ignore_Data = 0x1;
@@ -75,8 +75,8 @@ public class ScreenSaver : BasicGUIController {
 
     private void Start() {
         if (Application.isEditor) { //for testing purposes.
-            ChooseEyelinkFile(@"D:\Program Files (D)\SR Research\EyeLink\EDF_Access_API\Example\181026.edf");
-            ChooseSession(@"D:\Desktop\FYP Init\session01\RawData_T1-400\ShortVer.txt");
+            ChooseEyelinkFile(@"D:\Desktop\NUS\FYP\rawdata\20180810");
+            ChooseSession(@"D:\Desktop\NUS\FYP\rawdata\20180810");
             ChooseFolder(@"D:\Documents\GitHub\VirtualMaze\out");
         }
     }
@@ -124,6 +124,10 @@ public class ScreenSaver : BasicGUIController {
         return IsFileWithExtension(filePath, ".edf");
     }
 
+    private bool isMatFile(string filePath) {
+        return IsFileWithExtension(filePath, ".mat");
+    }
+
     private bool IsFileWithExtension(string filePath, string extension) {
         return Path.GetExtension(filePath).Equals(extension, StringComparison.InvariantCultureIgnoreCase);
     }
@@ -159,6 +163,9 @@ public class ScreenSaver : BasicGUIController {
                 success = false;
                 Debug.LogError(ex);
             }
+        }
+        else if (isMatFile(filePath)) {
+            success = true;
         }
 
         if (success) {
@@ -244,6 +251,9 @@ public class ScreenSaver : BasicGUIController {
                 yield break;
             }
         }
+        else if (isMatFile(edfPath)) {
+            eyeReader = new EyeMatReader(edfPath);
+        }
         else {
             eyeReader = new EyeCsvReader(edfPath);
         }
@@ -258,42 +268,45 @@ public class ScreenSaver : BasicGUIController {
         //process data
         if (isMultipleSession) {
             foreach (string path in GetSessionFilesFromDirectory(sessionPath)) {
-                SessionReader.ExtractInfo(path, out SessionContext context, out int numframes);
-
-                string filename = $"{Path.GetFileNameWithoutExtension(path)}_{Path.GetFileNameWithoutExtension(edfPath)}.csv";
-
-                RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename);
-
-                progressBar.maxValue = numframes;
-                PrepareScene(context.trialName);
+                if (!isMatFile(path)) {
+                    SessionReader.ExtractInfo(path, out SessionContext context, out int numframes);
+                    progressBar.maxValue = numframes;
+                    PrepareScene(context.trialName);
+                }
+                else {
+                    PrepareScene("Double Tee");
+                }
 
                 yield return IsSceneLoaded;
                 isloaded = false;
 
-                yield return ProcessSession(path, eyeReader, recorder);
+                string filename = $"{Path.GetFileNameWithoutExtension(path)}_{Path.GetFileNameWithoutExtension(edfPath)}.csv";
 
-                progressBar.value = 0;
-
-                recorder.Close();
-                expected = TestTrigger.TrialStartedTrigger;
+                using (RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename)) {
+                    yield return ProcessSession(path, eyeReader, recorder);
+                    progressBar.value = 0;
+                    expected = TestTrigger.TrialStartedTrigger;
+                }
             }
         }
         else {
-            SessionReader.ExtractInfo(sessionPath, out SessionContext context, out int numframes);
-            progressBar.maxValue = numframes;
-
+            if (!isMatFile(sessionPath)) {
+                SessionReader.ExtractInfo(sessionPath, out SessionContext context, out int numframes);
+                progressBar.maxValue = numframes;
+                PrepareScene(context.trialName);
+            }
+            else {
+                PrepareScene("Double Tee");
+            }
             string filename = $"{Path.GetFileNameWithoutExtension(sessionPath)}_{Path.GetFileNameWithoutExtension(edfPath)}.csv";
-            RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename);
-
-            PrepareScene(context.trialName);
 
             yield return IsSceneLoaded;
             isloaded = false;
 
-            yield return ProcessSession(sessionPath, eyeReader, recorder);
-
-            recorder.Close();
-            expected = TestTrigger.TrialStartedTrigger;
+            using (RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename)) {
+                yield return ProcessSession(sessionPath, eyeReader, recorder);
+                expected = TestTrigger.TrialStartedTrigger;
+            }
         }
 
         //cleanup
@@ -308,7 +321,7 @@ public class ScreenSaver : BasicGUIController {
         return type != DataTypes.NO_PENDING_ITEMS || trigger == SessionTrigger.ExperimentVersionTrigger;
     }
 
-    private decimal LoadAndFix(Queue<SessionData> sessionFrames, SessionReader sessionReader, Queue<AllFloatData> fixations, EyeDataReader eyeReader, Queue<MessageEvent> missingTriggers) {
+    private decimal LoadAndFix(Queue<SessionData> sessionFrames, ISessionDataReader sessionReader, Queue<AllFloatData> fixations, EyeDataReader eyeReader, Queue<MessageEvent> missingTriggers) {
         decimal sessionEventPeriod = LoadToNextTriggerSession(sessionReader, sessionFrames, out SessionData sessionTrigger);
         uint edfEventPeriod = LoadToNextTriggerEdf(eyeReader, fixations, missingTriggers, out MessageEvent data, out SessionTrigger edfTrigger);
 
@@ -316,7 +329,7 @@ public class ScreenSaver : BasicGUIController {
         return (sessionEventPeriod * 1000m - edfEventPeriod);
     }
 
-    private decimal LoadAndApproximate(Queue<SessionData> sessionFrames, SessionReader sessionReader, Queue<AllFloatData> fixations, EyeDataReader eyeReader, out int status, out string reason) {
+    private decimal LoadAndApproximate(Queue<SessionData> sessionFrames, ISessionDataReader sessionReader, Queue<AllFloatData> fixations, EyeDataReader eyeReader, out int status, out string reason) {
         decimal sessionEventPeriod = LoadToNextTriggerSession(sessionReader, sessionFrames, out SessionData sessionData);
         uint edfEventPeriod = LoadToNextTriggerEdf(eyeReader, fixations, out MessageEvent edfdata, out SessionTrigger edfTrigger);
 
@@ -325,7 +338,7 @@ public class ScreenSaver : BasicGUIController {
         reason = null;
 
         //check and account for missing trigger
-        while (sessionData.trigger != edfTrigger && HasEdfSessionEnded(edfdata.dataType, edfTrigger) && sessionReader.HasNext()) {
+        while (sessionData.trigger != edfTrigger && HasEdfSessionEnded(edfdata.dataType, edfTrigger) && sessionReader.HasNext) {
             string errorMessage = $"Missing trigger detected at approx {fixations.Peek().time + sessionEventPeriod * 1000m}. session: {sessionData.trigger}| edf: {edfTrigger}";
             Console.WriteError(errorMessage);
             Debug.LogWarning(errorMessage);
@@ -358,19 +371,160 @@ public class ScreenSaver : BasicGUIController {
         return excessTime;
     }
 
+    private ISessionDataReader CreateSessionReader(string filePath) {
+        switch (Path.GetExtension(filePath).ToLower()) {
+            case ".txt":
+                return new SessionReader(filePath);
+            case ".mat":
+                return new MatSessionReader(filePath);
+            default:
+                throw new NotSupportedException($"File extension not supported{filePath}");
+        }
+    }
+
     private IEnumerator ProcessSession(string sessionPath, EyeDataReader eyeReader, RayCastRecorder recorder) {
         int frameCounter = 0;
         int trialCounter = 1;
 
-        SessionReader sessionReader = new SessionReader(sessionPath);
+        using (ISessionDataReader sessionReader = CreateSessionReader(sessionPath)) {
 
-        //Move to first Trial Trigger
-        AllFloatData data = PrepareFiles(sessionReader, eyeReader, SessionTrigger.TrialStartedTrigger);
+            //Move to first Trial Trigger
+            AllFloatData data = PrepareFiles(sessionReader, eyeReader, SessionTrigger.TrialStartedTrigger);
 
-        Queue<SessionData> sessionFrames = new Queue<SessionData>();
-        Queue<AllFloatData> fixations = new Queue<AllFloatData>();
-        Queue<MessageEvent> missingevents = new Queue<MessageEvent>();
+            Queue<SessionData> sessionFrames = new Queue<SessionData>();
+            Queue<AllFloatData> fixations = new Queue<AllFloatData>();
+            Queue<MessageEvent> missingevents = new Queue<MessageEvent>();
 
+            LoadMissingTriggers("", missingevents);
+
+            DataTypes latestType = DataTypes.NULL;
+            SessionTrigger edfTrigger = SessionTrigger.NoTrigger;
+
+            //feed in current Data due to preparation moving the data pointer forward
+            fixations.Enqueue(data);
+
+            int debugMaxMissedOffset = 0;
+
+            while (sessionReader.HasNext && HasEdfSessionEnded(latestType, edfTrigger)) {
+                //add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
+                sessionFrames.Enqueue(sessionReader.CurrentData);
+
+                decimal excessTime;
+                int status = No_Missing;
+                string reason = null;
+
+                if (missingevents.Count > 0) {
+                    excessTime = LoadAndFix(sessionFrames, sessionReader, fixations, eyeReader, missingevents);
+                }
+                else {
+                    excessTime = LoadAndApproximate(sessionFrames, sessionReader, fixations, eyeReader, out status, out reason);
+                }
+
+                decimal timepassed = fixations.Peek().time;
+
+                decimal timeOffset = excessTime / (sessionFrames.Count - 1);
+
+                print($"timeError: {excessTime}|{timeOffset} for {sessionFrames.Count} frames @ {sessionReader.CurrentIndex} and {fixations.Count} fix");
+
+                uint gazeTime = 0;
+
+                decimal debugtimeOffset = 0;
+
+                while (sessionFrames.Count > 0 && fixations.Count > 0) {
+                    SessionData sessionData = sessionFrames.Dequeue();
+
+                    decimal period;
+                    if (sessionFrames.Count > 0) {
+                        //peek since next sessionData holds the time it takes from this data to the next
+                        period = (sessionFrames.Peek().timeDeltaMs) - timeOffset;
+                    }
+                    else {
+                        //use current data's timedelta to approximate
+                        period = (sessionData.timeDeltaMs) - timeOffset;
+                    }
+
+                    // does not matter if trigger in session file is missing since "true" timing is based on edf file
+                    if (status == Approx_From_Session) {
+                        //approx edf trigger from session file
+                        SessionTrigger approxTrigger = sessionData.trigger;
+                        if (approxTrigger != SessionTrigger.NoTrigger && ((ConvertToTestTrigger(approxTrigger) | expected) == expected)) {
+                            expected = ProcessTrigger(sessionData.trigger, expected, cueController);
+                            //if trigger is approximated, the apporximated trigger will always be the end of a frame because VirtualMaze logs
+                            // once every update() which represents a frame
+                            recorder.WriteEvent(DataTypes.MESSAGEEVENT, gazeTime, $"Approximated Trigger {sessionData.flag}", true);
+                        }
+                    }
+
+                    debugtimeOffset += timeOffset;
+
+                    timepassed += period;
+
+                    MoveRobotTo(robot, sessionData);
+
+                    //due to the nature of floats, (1.0 == 10.0 / 10.0) might not return true every time
+                    //therefore use Mathf.Approximately()
+                    while (gazeTime <= timepassed && fixations.Count > 0) {
+
+
+                        AllFloatData currData = fixations.Dequeue();
+                        gazeTime = currData.time;
+
+                        bool isLastSampleInFrame = gazeTime > timepassed;
+
+                        if (status == Ignore_Data) {
+                            IgnoreData(currData, recorder, reason, isLastSampleInFrame);
+                        }
+                        else if (ProcessData(currData, recorder, isLastSampleInFrame) == SessionTrigger.TrialStartedTrigger) {
+                            trialCounter++;
+                            SessionStatusDisplay.DisplayTrialNumber(trialCounter);
+                        }
+                    }
+
+                    frameCounter++;
+                    frameCounter %= Frame_Per_Batch;
+                    if (frameCounter == 0) {
+                        progressBar.value += Frame_Per_Batch;
+                        yield return null;
+                    }
+                    gazePointPool?.ClearScreen();
+                }
+
+                Debug.Log($"ses: {sessionFrames.Count}| fix: {fixations.Count}, timestamp {gazeTime:F4}, timepassed{timepassed:F4}");
+                decimal finalExcess = gazeTime - timepassed;
+
+                Debug.Log($"FINAL EXCESS: {finalExcess} | {finalExcess + sessionReader.CurrentData.timeDeltaMs} || {sessionReader.CurrentData.timeDeltaMs}");
+                Debug.Log($"Frame End total time offset: {debugtimeOffset}");
+
+                //clear queues to prepare for next trigger
+                sessionFrames.Clear();
+
+                if (fixations.Count > 0) {
+                    throw new Exception("remaining fixations");
+                }
+
+                if (Math.Abs(finalExcess) > 3) {
+                    if (status != Ignore_Data)
+                        Debug.LogError("excess to large");
+                    else
+                        Debug.LogError("excess to large so data ignored");
+                }
+
+
+                while (fixations.Count > 0) {
+                    debugMaxMissedOffset = Math.Max(fixations.Count, debugMaxMissedOffset);
+                    //excess frames are taken to be belonging to the next frame, therefore is not last sample in frame
+                    if (ProcessData(fixations.Dequeue(), recorder, false) == SessionTrigger.TrialStartedTrigger) {
+                        trialCounter++;
+                        SessionStatusDisplay.DisplayTrialNumber(trialCounter);
+                    }
+                }
+            }
+
+            Debug.LogError(debugMaxMissedOffset);
+        }
+    }
+
+    private void LoadMissingTriggers(string v, Queue<MessageEvent> missingevents) {
         //missingevents.Enqueue(new MessageEvent(1822017, "Cue Offset 25", DataTypes.MESSAGEEVENT));
         //missingevents.Enqueue(new MessageEvent(2015432, "End Trial 34", DataTypes.MESSAGEEVENT));
         //missingevents.Enqueue(new MessageEvent(2078579, "Start Trial 11", DataTypes.MESSAGEEVENT));
@@ -378,132 +532,6 @@ public class ScreenSaver : BasicGUIController {
         //missingevents.Enqueue(new MessageEvent(2203264, "Timeout 41", DataTypes.MESSAGEEVENT));
         //missingevents.Enqueue(new MessageEvent(2209282, "Start Trial 11", DataTypes.MESSAGEEVENT));
         //missingevents.Enqueue(new MessageEvent(2210318, "Cue Offset 21", DataTypes.MESSAGEEVENT));
-
-        DataTypes latestType = DataTypes.NULL;
-        SessionTrigger edfTrigger = SessionTrigger.NoTrigger;
-
-        //feed in current Data
-        fixations.Enqueue(data);
-
-        int debugMaxMissedOffset = 0;
-
-        while (sessionReader.HasNext() && HasEdfSessionEnded(latestType, edfTrigger)) {
-            //add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
-            sessionFrames.Enqueue(sessionReader.currData);
-
-            decimal excessTime;
-            int status = No_Missing;
-            string reason = null;
-
-            if (missingevents.Count > 0) {
-                excessTime = LoadAndFix(sessionFrames, sessionReader, fixations, eyeReader, missingevents);
-            }
-            else {
-                excessTime = LoadAndApproximate(sessionFrames, sessionReader, fixations, eyeReader, out status, out reason);
-            }
-
-            Decimal timepassed = fixations.Peek().time;
-
-            decimal timeOffset = excessTime / (sessionFrames.Count - 1);
-
-            print($"timeError: {excessTime}|{timeOffset} for {sessionFrames.Count} frames @ {sessionReader.LineNumber} and {fixations.Count} fix");
-
-            uint gazeTime = 0;
-
-            decimal debugtimeOffset = 0;
-
-            while (sessionFrames.Count > 0 && fixations.Count > 0) {
-                SessionData sessionData = sessionFrames.Dequeue();
-
-                decimal period;
-                if (sessionFrames.Count > 0) {
-                    //peek since next sessionData holds the time it takes from this data to the next
-                    period = (sessionFrames.Peek().timeDeltaMs) - timeOffset;
-                }
-                else {
-                    //use current data's timedelta to approximate
-                    period = (sessionData.timeDeltaMs) - timeOffset;
-                }
-
-                // does not matter if trigger in session file is missing since "true" timing is based on edf file
-                if (status == Approx_From_Session) {
-                    //approx edf trigger from session file
-                    SessionTrigger approxTrigger = sessionData.trigger;
-                    if (approxTrigger != SessionTrigger.NoTrigger && ((ConvertToTestTrigger(approxTrigger) | expected) == expected)) {
-                        expected = ProcessTrigger(sessionData.trigger, expected, cueController);
-                        //if trigger is approximated, the apporximated trigger will always be the end of a frame because VirtualMaze logs
-                        // once every update() which represents a frame
-                        recorder.WriteEvent(DataTypes.MESSAGEEVENT, gazeTime, $"Approximated Trigger {sessionData.flag}", true);
-                    }
-                }
-
-                debugtimeOffset += timeOffset;
-
-                timepassed += period;
-
-                MoveRobotTo(robot, sessionData);
-
-                //due to the nature of floats, (1.0 == 10.0 / 10.0) might not return true every time
-                //therefore use Mathf.Approximately()
-                while (gazeTime <= timepassed && fixations.Count > 0) {
-
-
-                    AllFloatData currData = fixations.Dequeue();
-                    gazeTime = currData.time;
-
-                    bool isLastSampleInFrame = gazeTime > timepassed;
-
-                    if (status == Ignore_Data) {
-                        IgnoreData(currData, recorder, reason, isLastSampleInFrame);
-                    }
-                    else if (ProcessData(currData, recorder, isLastSampleInFrame) == SessionTrigger.TrialStartedTrigger) {
-                        trialCounter++;
-                        SessionStatusDisplay.DisplayTrialNumber(trialCounter);
-                    }
-                }
-
-                frameCounter++;
-                frameCounter %= Frame_Per_Batch;
-                if (frameCounter == 0) {
-                    progressBar.value += Frame_Per_Batch;
-                    yield return null;
-                }
-                gazePointPool?.ClearScreen();
-            }
-
-            Debug.Log($"ses: {sessionFrames.Count}| fix: {fixations.Count}, timestamp {gazeTime:F4}, timepassed{timepassed:F4}");
-            decimal finalExcess = gazeTime - timepassed;
-
-            Debug.Log($"FINAL EXCESS: {finalExcess} | {finalExcess + sessionReader.currData.timeDeltaMs} || {sessionReader.currData.timeDeltaMs}");
-            Debug.Log($"Frame End total time offset: {debugtimeOffset}");
-
-            //clear queues to prepare for next trigger
-            sessionFrames.Clear();
-
-            if (fixations.Count > 0) {
-                throw new Exception("remaining fixations");
-            }
-
-            if (Math.Abs(finalExcess) > 3) {
-                if (status != Ignore_Data)
-                    Debug.LogError("excess to large");
-                else
-                    Debug.LogError("excess to large so data ignored");
-            }
-
-
-            while (fixations.Count > 0) {
-                debugMaxMissedOffset = Math.Max(fixations.Count, debugMaxMissedOffset);
-                //excess frames are taken to be belonging to the next frame, therefore is not last sample in frame
-                if (ProcessData(fixations.Dequeue(), recorder, false) == SessionTrigger.TrialStartedTrigger) {
-                    trialCounter++;
-                    SessionStatusDisplay.DisplayTrialNumber(trialCounter);
-                }
-            }
-        }
-
-        Debug.LogError(debugMaxMissedOffset);
-        sessionReader.Close();
     }
 
     private SessionTrigger ProcessData(AllFloatData data, RayCastRecorder recorder, bool isLastSampleInFrame) {
@@ -790,7 +818,7 @@ public class ScreenSaver : BasicGUIController {
         return result;
     }
 
-    private AllFloatData PrepareFiles(SessionReader sessionReader, EyeDataReader eyeReader, SessionTrigger firstOccurance) {
+    private AllFloatData PrepareFiles(ISessionDataReader sessionReader, EyeDataReader eyeReader, SessionTrigger firstOccurance) {
         FindNextSessionTrigger(sessionReader, firstOccurance);
         return FindNextEdfTrigger(eyeReader, firstOccurance);
     }
@@ -800,11 +828,11 @@ public class ScreenSaver : BasicGUIController {
     /// </summary>
     /// <param name="sessionReader">Session reader to move</param>
     /// <param name="trigger">SessionTrigger to move to</param>
-    private void FindNextSessionTrigger(SessionReader sessionReader, SessionTrigger trigger) {
+    private void FindNextSessionTrigger(ISessionDataReader sessionReader, SessionTrigger trigger) {
         //move sessionReader to point to first trial
-        while (sessionReader.NextData()) {
-            if (sessionReader.currData.trigger == trigger) {
-                MoveRobotTo(robot, sessionReader.currData);
+        while (sessionReader.Next()) {
+            if (sessionReader.CurrentData.trigger == trigger) {
+                MoveRobotTo(robot, sessionReader.CurrentData);
                 break;
             }
         }
@@ -849,7 +877,7 @@ public class ScreenSaver : BasicGUIController {
     /// <param name="frames">the Queue to store the data</param>
     /// <param name="trigger">The trigger where the loading stops</param>
     /// <returns>Total time taken from one current trigger to the next</returns>
-    private decimal LoadToNextTriggerSession(SessionReader reader, Queue<SessionData> frames, out SessionData data) {
+    private decimal LoadToNextTriggerSession(ISessionDataReader reader, Queue<SessionData> frames, out SessionData data) {
         decimal totalTime = 0;
 
         data = null;
@@ -857,8 +885,8 @@ public class ScreenSaver : BasicGUIController {
 
         // Conditon evaluation is Left to Right and it short circuits.
         // Please do not change the order of this if conditon.
-        while (!isNextEventFound && reader.NextData()) {
-            data = reader.currData;
+        while (!isNextEventFound && reader.Next()) {
+            data = reader.CurrentData;
             frames.Enqueue(data);
             totalTime += data.timeDelta;
 
@@ -874,6 +902,12 @@ public class ScreenSaver : BasicGUIController {
 
         while (!isNextEventFound) {
             AllFloatData data = reader.GetNextData();
+
+            if (data == null) {
+                isNextEventFound = true;
+                continue;
+            }
+
             DataTypes type = data.dataType;
 
             fixations.Enqueue(data);
@@ -926,7 +960,7 @@ public class ScreenSaver : BasicGUIController {
         Texture2D tex = new Texture2D(cam.pixelWidth, cam.pixelHeight, TextureFormat.RGB24, false);
         tex.ReadPixels(cam.pixelRect, 0, 0);
         tex.Apply();
-        byte[] bytes = tex.EncodeToJPG();
+        byte[] bytes = tex.EncodeToPNG();
         Destroy(tex);
 
         File.WriteAllBytes(filename, bytes);

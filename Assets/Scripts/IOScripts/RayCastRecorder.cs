@@ -1,10 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Text;
+using System;
 using System.IO;
 using UnityEngine;
 
-public class RayCastRecorder {
+public class RayCastRecorder : IDisposable{
     //index reference
     public const int Type = 0;
     public const int Time = 1;
@@ -104,12 +104,6 @@ public class RayCastRecorder {
         s.Flush();
     }
 
-    public void Close() {
-        s.Flush();
-        s.Dispose();
-        s.Close();
-    }
-
     public string Vector3ToString(Vector3 v) {
         if (v == null) {
             return $"{delimiter}{delimiter}";
@@ -122,5 +116,11 @@ public class RayCastRecorder {
             return $"{delimiter}";
         }
         return $"{v.x}{delimiter}{v.y}";
+    }
+
+    public void Dispose() {
+        s.Flush();
+        s.Dispose();
+        s.Close();
     }
 }

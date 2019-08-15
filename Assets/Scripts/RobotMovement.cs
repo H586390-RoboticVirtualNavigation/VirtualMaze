@@ -175,12 +175,12 @@ public class RobotMovement : ConfigurableComponent {
 
         Vector3 pos = robot.position;
         // Y is unchanged
-        pos.x = config.x;
-        pos.z = config.z;
+        pos.x = Convert.ToSingle(config.x);
+        pos.z = Convert.ToSingle(config.z);
 
         // Rotate around Y axis
         Vector3 orientation = robot.rotation.eulerAngles;
-        orientation.y = config.degreeY;
+        orientation.y = Convert.ToSingle(config.degreeY);
 
         //convert back to quaterion
         Quaternion newrot = Quaternion.Euler(orientation);
@@ -191,11 +191,14 @@ public class RobotMovement : ConfigurableComponent {
 
 
 public class RobotConfiguration {
-    public readonly float x, z, degreeY;
+    public readonly double x, z, degreeY;
 
-    public RobotConfiguration(float x, float z, float degreeY) {
+    public RobotConfiguration(double x, double z, double degreeY) {
         this.x = x;
         this.z = z;
         this.degreeY = degreeY;
+    }
+
+    public RobotConfiguration(Vector3 transformPosition, double degreeY) : this(transformPosition.x, transformPosition.y, degreeY) {
     }
 }

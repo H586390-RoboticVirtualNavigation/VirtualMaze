@@ -15,7 +15,7 @@ public class SessionData {
 
     public decimal timeDeltaMs { get { return timeDelta * 1000m; } }
 
-    public SessionData(int flag, decimal timeDelta, float posX, float posZ, float rotY) {
+    public SessionData(int flag, decimal timeDelta, double posX, double posZ, double rotY) {
         this.flag = flag;
         this.timeDelta = timeDelta;
 

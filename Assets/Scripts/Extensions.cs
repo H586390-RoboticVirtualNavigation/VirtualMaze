@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 
 /// <summary>
 /// Class to contain all extension methods for faster development
@@ -18,5 +19,29 @@ public static class Extensions {
         }
         canvasGroup.blocksRaycasts = shown;
         canvasGroup.interactable = shown;
+    }
+
+    public static SessionTrigger NextTrigger(this SessionTrigger trigger, bool clearedTrial = true) {
+        switch (trigger) {
+            case SessionTrigger.NoTrigger:
+                return SessionTrigger.NoTrigger;
+            case SessionTrigger.TrialStartedTrigger:
+                return SessionTrigger.CueOffsetTrigger;
+            case SessionTrigger.CueOffsetTrigger:
+                if (clearedTrial) {
+                    return SessionTrigger.TrialEndedTrigger;
+                }
+                else {
+                    return SessionTrigger.TimeoutTrigger;
+                }
+            case SessionTrigger.TrialEndedTrigger:
+                return SessionTrigger.TrialStartedTrigger;
+            case SessionTrigger.TimeoutTrigger:
+                return SessionTrigger.TrialStartedTrigger;
+            case SessionTrigger.ExperimentVersionTrigger:
+                return SessionTrigger.ExperimentVersionTrigger;
+            default:
+                throw new NotImplementedException($"Trigger {trigger} not implemented.");
+        }
     }
 }
