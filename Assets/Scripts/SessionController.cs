@@ -1,22 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class SessionController : ConfigurableComponent {
     [Serializable]
     public class Settings : ComponentSettings {
-        public List<Session> sessions;
+        public List<Tuple<int, string>> serializableSessions;
 
         public Settings() {
-            sessions = new List<Session>();
+            serializableSessions = new List<Tuple<int, string>>();
         }
 
-        public Settings(List<Session> sessions) {
-            this.sessions = new List<Session>(sessions);
+        public Settings(List<Session> sessions) : this() {
+            foreach (Session s in sessions) {
+                serializableSessions.Add(new Tuple<int, string>(s.numTrials, s.maze.MazeName));
+            }
+        }
+
+        public void LoadSessions(List<Session> sessions, MazeList mazeList) {
+            foreach (Tuple<int, string> data in serializableSessions) {
+                if (mazeList.TryGetMaze(data.Item2, out AbstractMaze maze)) {
+                    sessions.Add(new Session(data.Item1, maze));
+                }
+            }
         }
     }
 
-    public List<Session> Sessions { get; private set; } = new List<Session>();
+    public MazeList masterList;
+    public List<Session> sessions { get; private set; } = new List<Session>();
     public int index { get; private set; } = 0;
 
     public void RestartIndex() {
@@ -24,45 +34,38 @@ public class SessionController : ConfigurableComponent {
     }
 
     public bool HasNextLevel() {
-        return (index + 1) <= Sessions.Count;
+        return (index + 1) <= sessions.Count;
     }
 
     public Session NextLevel() {
-        Session session = Sessions[index];
+        if (index < sessions.Count) {
+            Session session = sessions[index];
+            index++;
 
-        switch (session.level) {
-            case Session.RandLRFLevel:
-                session = new Session(session.numTrials, Session.GetRandomLRFLevel());
-                break;
-            case Session.RandomLevel:
-                session = new Session(session.numTrials, Session.GetRandomLevel());
-                break;
-            default:
-                break;
+            return session;
         }
-
-        index++;
-
-        return session;
+        else {
+            return null;
+        }
     }
 
     //updates the session Name at the given position
-    public void UpdateSessionNameAt(int pos, string newName) {
-        Sessions[pos].level = newName;
+    public void UpdateSessionNameAt(int pos, AbstractMaze maze) {
+        sessions[pos].maze = maze;
     }
 
     //updates the session Name at the given position
     public void UpdateSessionNumTrialAt(int pos, int numTrial) {
-        Sessions[pos].numTrials = numTrial;
+        sessions[pos].numTrials = numTrial;
     }
 
     public void RemoveSessionAt(int pos) {
-        Sessions.RemoveAt(pos);
+        sessions.RemoveAt(pos);
     }
 
     public Session AddSession() {
-        Session s = new Session();
-        Sessions.Add(s);
+        Session s = new Session(masterList.DefaultMaze);//masterList.DefaultMaze));
+        sessions.Add(s);
         return s;
     }
 
@@ -75,13 +78,13 @@ public class SessionController : ConfigurableComponent {
     }
 
     public override ComponentSettings GetCurrentSettings() {
-        return new Settings(Sessions);
+        return new Settings(sessions);
     }
 
     protected override void ApplySettings(ComponentSettings loadedSettings) {
         Settings s = (Settings)loadedSettings;
         //fill sessions with the saved sessions.
-        Sessions.Clear();
-        Sessions.AddRange(s.sessions);
+        sessions.Clear();
+        s.LoadSessions(sessions, masterList);
     }
 }

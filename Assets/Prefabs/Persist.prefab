@@ -6731,6 +6731,7 @@ MonoBehaviour:
         m_CallState: 2
     m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
+  masterList: {fileID: 11400000, guid: 4e145607c9f98154ebe22cddb9bc3fcb, type: 2}
 --- !u!223 &3132949637916175762
 Canvas:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 using Random = UnityEngine.Random;
 
 /// <summary>
@@ -9,17 +10,7 @@ using Random = UnityEngine.Random;
 /// </summary>
 [Serializable]
 public class Session {
-    /// <summary>
-    /// Special level to signify a small random range of other levels where 
-    /// levels are designed for restricted movement.
-    /// </summary>
-    public const String RandLRFLevel = "RandLRF";
-
-    /// <summary>
-    /// Special level to signify a small random range of other levels
-    /// </summary>
-    public const String RandomLevel = "Random";
-
+    //scriptable object this?
     // Configs for all sessions (Class variables)
     public static int timeoutDuration;
     public static int trialTimeLimit; // time to complete each trial.
@@ -33,120 +24,28 @@ public class Session {
     public static int minTrialIntermissionDuration;
 
     /// <summary>
-    /// Array of all possible Levels to be used.
+    /// number of trails to run in this maze
     /// 
-    /// If a level exists here, make sure Unity has the scene created and 
-    /// added into the build settings of VirtualMaze or the option is properly mapped
-    /// to other levels in SessionController.
-    /// </summary>
-    [NonSerialized]
-    public static readonly string[] AllLevels = {
-        RandomLevel,
-        RandLRFLevel,
-        "Step1",
-        "Step2",
-        "Step3",
-        "Linear",
-        "Four-Arm",
-        "TrainForward",
-        "TrainRight",
-        "TrainLeft",
-        "Double Tee",
-        "Tee",
-        "Tee Left",
-        "Tee Left Block",
-        "Tee Right",
-        "Tee Right Block",
-        "Back and Forth3"
-    };
-
-    /// <summary>
-    /// Pool of levels to be randomised.
-    /// 
-    /// If a level exists here, make sure Unity has the scene created and 
-    /// added into the build settings of VirtualMaze or the option is properly mapped
-    /// to other levels in SessionController.
-    /// </summary>
-    [NonSerialized]
-    public static readonly string[] RandomLevels = {
-        "Linear",
-        "Tee",
-        "Four-Arm",
-        "TrainForward",
-        "TrainRight",
-        "TrainLeft",
-        "Double Tee",
-        "Tee Left",
-        "Tee Left Block",
-        "Tee Right",
-        "Tee Right Block",
-        "Back and Forth3"
-    };
-
-    /// <summary>
-    /// Pool of levels to train restricted directional mazes.
-    /// 
-    /// If a level exists here, make sure Unity has the scene created and 
-    /// added into the build settings of VirtualMaze or the option is properly mapped
-    /// to other levels in SessionController.
-    /// </summary>
-    [NonSerialized]
-    private static readonly string[] RandomLRFLevels = {
-        "TrainForward",
-        "TrainRight",
-        "TrainLeft",
-    };
-
-    /// <summary>
-    /// number of trails to run in this session
+    /// Note this should not be in the proposed scriptable object
     /// </summary>
     public int numTrials;
 
-    
-    private string _level;
-    /// <summary>
-    /// Name or Identifier for this Session. Name must exists in the AllLevels
-    /// </summary>
-    public string level {
-        get { return _level; }
-        set {
-            if (Array.IndexOf(AllLevels, value) != -1) {
-                _level = value;
-            }
-            else {
-                throw new ArgumentOutOfRangeException("Level Must Exist in AllLevels array");
-            }
-        }
-    }
 
-    /// <summary>
-    /// True if session is generated randomly
-    /// </summary>
-    public bool isRandom { get; private set; } = true; //true since default value is random.
+    public AbstractMaze maze = null;
+    public string MazeScene { get => maze.Scene; }
+
+    //Give a new instance of logic scriptable object
+    public IMazeLogicProvider MazeLogic { get => UnityEngine.Object.Instantiate(maze.Logic); }
 
     //Constructors
-    //default trails is the first on in the All trials array.
-    public Session() : this(AllLevels[0]){ }
-
     //default number of trials in a session is 1.
-    public Session(string level) : this(1, level) { }
+    public Session(AbstractMaze maze) : this(1, maze) { }
 
-    public Session(int numTrial, string level) {
-        this.numTrials = numTrial;
-        this.level = level;
+    public Session(int numTrials, AbstractMaze maze) {
+        this.numTrials = numTrials;
+        this.maze = maze;
     }
 
-    public static string GetRandomLRFLevel() {
-        int random = Random.Range(0, RandomLRFLevels.Length);
-        
-        return RandomLRFLevels[random];
-    }
-
-    public static string GetRandomLevel() {
-        int random = Random.Range(0, AllLevels.Length);
-
-        return AllLevels[random];
-    }
 
     /// <summary>
     /// Returns the amount of time to delay, Fixed or Randomised.
@@ -162,6 +61,6 @@ public class Session {
     }
 
     public override string ToString() {
-        return "numtrials: " + numTrials + "\nlevel: " + level;
+        return "numtrials: " + numTrials + "\nlevel: " + maze.MazeName;
     }
 }

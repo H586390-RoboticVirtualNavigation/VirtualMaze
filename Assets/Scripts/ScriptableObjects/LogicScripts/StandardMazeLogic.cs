@@ -23,7 +23,7 @@ public class StandardMazeLogic : MazeLogic {
         return nextTarget;
     }
 
-    public override bool IsTrialCompleteAfterReward() {
+    public override bool IsTrialCompleteAfterReward(bool currentTaskSuccess) {
         return true; // 1 poster per trial
     }
 

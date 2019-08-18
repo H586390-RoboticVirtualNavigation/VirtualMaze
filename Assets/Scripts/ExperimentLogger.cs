@@ -1,9 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using System;
+﻿using System;
 using System.IO;
-using System.Threading.Tasks;
+using UnityEngine;
 
 /// <summary>
 /// Logs information regarding the Experiment in to a text file.

@@ -1,35 +1,42 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
-public class MazeList : MonoBehaviour {
-    private static MazeList _instance;
-
+[CreateAssetMenu(menuName = "Mazes/MazeList")]
+public class MazeList : ScriptableObject {
     [SerializeField]
     private AbstractMaze[] _mazes = null;
 
-    public AbstractMaze[] Mazes { get => _mazes; }
-    public static MazeList Instance { get => _instance; }
-
-    private void Awake() {
-        if (_instance != null && _instance != this) {
-            Destroy(gameObject); // destroy self
-        }
-        else {
-            _instance = this;
-        }
-
-        DontDestroyOnLoad(this);
-    }
+    //First Maze is the default maze
+    public AbstractMaze DefaultMaze { get => _mazes[0]; }
 
     public AbstractMaze this[int idx] {
-        get => _mazes[idx];
+        get => Instantiate(_mazes[idx]);
     }
 
-    private void Start() {
+    public int Length { get => _mazes.Length; }
 
-        foreach (AbstractMaze m in MazeList.Instance.Mazes) {
-            print(m.MazeName);
-            print(m.Scene);
-            print(m.Logic.IsTrialCompleteAfterReward());
+    private Dictionary<string, AbstractMaze> nameMazeMap = new Dictionary<string, AbstractMaze>();
+
+    private void PopulateMap() {
+        foreach (AbstractMaze m in _mazes) {
+            nameMazeMap.Add(m.MazeName, m);
         }
+    }
+
+    public bool TryGetMaze(string mazeName, out AbstractMaze maze) {
+        if (nameMazeMap.Count == 0) {
+            PopulateMap();
+        }
+
+        bool success = nameMazeMap.TryGetValue(mazeName, out AbstractMaze m);
+        if (success) {
+            // return a new copy so that data will not be shared across all places that use this object.
+            maze = Instantiate(m);
+        }
+        else {
+            maze = null;
+        }
+
+        return success;
     }
 }

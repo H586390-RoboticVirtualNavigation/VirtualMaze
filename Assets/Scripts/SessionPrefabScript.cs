@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.Events;
-using System;
 using UnityEngine.UI;
 
 public class SessionPrefabScript : MonoBehaviour {
@@ -9,7 +9,7 @@ public class SessionPrefabScript : MonoBehaviour {
     /// the new level name is returned
     /// </summary>
     [Serializable]
-    public class OnValueChanged : UnityEvent<int, string> { }
+    public class OnValueChanged : UnityEvent<int, AbstractMaze> { }
 
     /// <summary>
     /// when the level/scene is changed, the position of the item and 
@@ -28,7 +28,7 @@ public class SessionPrefabScript : MonoBehaviour {
     private int index = 0;
 
     //drag from editor
-    public string[] levels; // could have placed Sessions.AllLevels here but it will increase the coupling of the 2 classes.
+    public MazeList levels;
     public Button levelButton;
     public InputField numTrialsField;
 
@@ -67,11 +67,11 @@ public class SessionPrefabScript : MonoBehaviour {
         //circular array
         index = (index + 1) % levels.Length;
 
-        string level = levels[index];
-        buttonLabel.text = level;
+        AbstractMaze maze = levels[index];
+        buttonLabel.text = maze.MazeName;
 
         //call onValueChanged after value is changed.
-        onValueChanged.Invoke(transform.GetSiblingIndex(), level);
+        onValueChanged.Invoke(transform.GetSiblingIndex(), maze);
     }
 
     public void PrevLevel() {
@@ -82,11 +82,11 @@ public class SessionPrefabScript : MonoBehaviour {
         temp = temp < 0 ? levels.Length - 1 : temp;
         index = temp;
 
-        string level = levels[index];
-        buttonLabel.text = level;
-        
+        AbstractMaze maze = levels[index];
+        buttonLabel.text = maze.MazeName;
+
         //call onValueChanged after value is changed.
-        onValueChanged.Invoke(transform.GetSiblingIndex(), level);
+        onValueChanged.Invoke(transform.GetSiblingIndex(), maze);
     }
 
     public void Remove() {
@@ -111,7 +111,7 @@ public class SessionPrefabScript : MonoBehaviour {
     }
 
     public void SetSession(Session s) {
-        buttonLabel.text = s.level;
+        buttonLabel.text = s.maze.MazeName;
         numTrialsField.text = s.numTrials.ToString();
     }
 

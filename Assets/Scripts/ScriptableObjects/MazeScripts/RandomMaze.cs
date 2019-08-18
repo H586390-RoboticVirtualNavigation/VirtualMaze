@@ -1,6 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 [CreateAssetMenu(menuName = "Mazes/Random Maze")]
+[Serializable]
 public class RandomMaze : AbstractMaze {
 
     private int idx = -1;
@@ -13,11 +15,11 @@ public class RandomMaze : AbstractMaze {
     /// </summary>
     public override string Scene {
         get {
-            if (idx == -1) {
-                // In the editor, the first random value does not seem to change across runs
-                // but it does change as expected when the game is built.
-                idx = Random.Range(0, scenePool.Length);
-            }
+
+            // In the editor, the first random value does not seem to change across runs
+            // but it does change as expected when the game is built.
+            idx = UnityEngine.Random.Range(0, scenePool.Length);
+
 
             return scenePool[idx].Scene;
         }

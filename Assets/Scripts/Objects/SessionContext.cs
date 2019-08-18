@@ -1,8 +1,8 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
-using System;
 using System.IO;
+using System.Text.RegularExpressions;
+using UnityEngine;
 
 /// <summary>
 /// Class for encapsulation the data required to parse and unparse settings to be logged into
@@ -34,7 +34,7 @@ public class SessionContext {
         version = GameController.versionInfo;
         triggerVersion = GameController.pportInfo;
         taskType = "Continuous";
-        trialName = session.level;
+        trialName = session.maze.MazeName;
         rewardsNumber = session.numTrials;
 
         foreach (RewardArea reward in rewards) {

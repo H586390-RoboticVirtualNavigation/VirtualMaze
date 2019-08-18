@@ -123,7 +123,7 @@ public class TeeLevelController : MonoBehaviour {
 	
 	IEnumerator FadeOutBeforeLevelEnd(){
 		//fade out when end
-		fade.FadeOut ();
+		fade.AutoFadeOut ();
 		while (fade.fadeOutDone == false) {
 			yield return new WaitForSeconds(0.05f);
 		}
@@ -135,7 +135,7 @@ public class TeeLevelController : MonoBehaviour {
 		robotMovement.enabled = false;
 		
 		//fade out
-		fade.FadeOut ();
+		fade.AutoFadeOut ();
 		while (fade.fadeOutDone == false) {
 			yield return new WaitForSeconds(0.2f);
 		}

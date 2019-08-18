@@ -1,6 +1,5 @@
-﻿using UnityEngine;
-using System.Collections;
-using UnityEngine.UI;
+﻿using System.Collections;
+using UnityEngine;
 
 public class FadeCanvas : MonoBehaviour {
 
@@ -13,6 +12,8 @@ public class FadeCanvas : MonoBehaviour {
     public bool fadeInDone { get; private set; }
     public bool isFadedOut { get; private set; }
 
+    public bool isTransiting { get => !fadeInDone || !fadeOutDone; }
+
     void Awake() {
         fadeCanvas = this;
         fade = GetComponent<CanvasGroup>();
@@ -21,15 +22,15 @@ public class FadeCanvas : MonoBehaviour {
         isFadedOut = true;
     }
 
-    public Coroutine FadeIn() {
-        return StartCoroutine(_FadeIn());
+    public Coroutine AutoFadeIn() {
+        return StartCoroutine(FadeIn());
     }
 
-    public Coroutine FadeOut() {
-        return StartCoroutine(_FadeOut());
+    public Coroutine AutoFadeOut() {
+        return StartCoroutine(FadeOut());
     }
 
-    IEnumerator _FadeOut() {
+    public IEnumerator FadeOut() {
         if (isFadedOut) {
             yield break;
         }
@@ -47,7 +48,7 @@ public class FadeCanvas : MonoBehaviour {
         fadeOutDone = true;
     }
 
-    IEnumerator _FadeIn() {
+    public IEnumerator FadeIn() {
         if (!isFadedOut) {
             yield break;
         }

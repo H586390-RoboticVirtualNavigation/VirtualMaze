@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class ExperimentController : ConfigurableComponent {
     [Serializable]
@@ -54,24 +51,27 @@ public class ExperimentController : ConfigurableComponent {
 
     public bool started { get; private set; } = false;
     private ExperimentLogger logger = new ExperimentLogger();
-    private RobotMovement robot;
+
     //coroutine reference for properly stopping coroutine
     private Coroutine goNextLevelCoroutine;
 
     // Caches the SessionTrigger for logging the trigger with the robot movement
     private SessionTrigger triggerCache = SessionTrigger.NoTrigger;
     private int rewardIndexCache = 0; // value will be ignored when NoTrigger, 0 based
-    private BasicLevelController levelController;
+
     private bool isPaused = false;
 
     private WaitUntil waitIfPaused;
 
     //drag in Unity Editor
     public SessionController sessionController;
+    public LevelController lvlController;
+
+    [SerializeField]
+    private RobotMovement robot = null;
 
     protected override void Awake() {
         base.Awake();
-        robot = GameObject.FindGameObjectWithTag(Tags.Player).GetComponent<RobotMovement>();
         waitIfPaused = new WaitUntil(() => !isPaused);
 
         print(VersionInfo.Version);
@@ -91,7 +91,7 @@ public class ExperimentController : ConfigurableComponent {
             robot.OnRobotMoved += OnRobotMoved;
         }
 
-        levelController.isPaused = isPaused;
+        lvlController.isPaused = isPaused;
         return isPaused;
     }
 
@@ -121,7 +121,7 @@ public class ExperimentController : ConfigurableComponent {
         }
         yield return waitIfPaused;
 
-        if (sessionController.HasNextLevel()) {
+        while (sessionController.HasNextLevel() && started) {
             Session session = sessionController.NextLevel();
             int sessionIndex = sessionController.index;
 
@@ -131,56 +131,44 @@ public class ExperimentController : ConfigurableComponent {
             yield return SessionStatusDisplay.Countdown("Starting Session", countDownTime);
             SessionStatusDisplay.DisplaySessionNumber(sessionIndex);
 
-            //prepare data for the session
-            SessionInfo.SetSessionInfo(session);
-
-            //start the scene
-
-            AsyncOperation task = SceneManager.LoadSceneAsync(session.level, LoadSceneMode.Single);
-            task.allowSceneActivation = true;
-            while (!task.isDone) {
+            while (FadeCanvas.fadeCanvas.isTransiting) {
                 yield return null;
             }
 
             PrepareLevelController();
 
-            //start logging robotmovement
-            robot.OnRobotMoved += OnRobotMoved;
-
-            Console.Write(string.Format("session {0} started", sessionIndex));
-        }
-        else {
-            StopExperiment();
-            yield break; // stops the coroutine
-        }
-    }
-
-    private void PrepareLevelController() {
-        GameObject levelControllerObject = GameObject.FindWithTag(Tags.LevelController);
-        if (levelControllerObject == null) {
-            Debug.LogError("No GameObject found with the tag " + Tags.LevelController);
-            StopExperiment();
-        }
-        else {
-            levelController =
-                levelControllerObject.GetComponent<BasicLevelController>();
-            levelController.onSessionFinishEvent.AddListener(OnSessionEnd);
-            levelController.onSessionTrigger.AddListener(OnSessionTriggered);
-            levelController.isPaused = isPaused;
-            levelController.resetRobotPositionDuringInterTrial = resetPositionOnTrial;
-            levelController.restartOnTaskFail = restartOnTrialFail;
-
             //validate logger
-            int sessionIndex = sessionController.index - 1;
-            Session session = sessionController.Sessions[sessionIndex];
-            SessionContext context = new SessionContext(session, SaveLoad.getCurrentSettings(), RewardArea.GetAllRewardsFromScene()
-                    );
+            SessionContext context = new SessionContext(session, SaveLoad.getCurrentSettings(), RewardArea.GetAllRewardsFromScene());
             if (!logger.OpenSessionLog(sessionIndex, context)) {
                 Console.WriteError("failed to create save files");
                 StopExperiment();
             }
 
-            levelController.StartSession();
+            //start the scene
+            yield return lvlController.StartSession(session);
+            //start logging robotmovement
+            robot.OnRobotMoved += OnRobotMoved;
+
+            yield return new WaitWhile(() => !sessionEnded);
+            sessionEnded = false;
+        }
+
+        StopExperiment();
+
+    }
+
+    private void PrepareLevelController() {
+        if (lvlController == null) {
+            Debug.LogError("No GameObject found with the tag " + Tags.LevelController);
+            StopExperiment();
+        }
+        else {
+
+            lvlController.onSessionFinishEvent.AddListener(OnSessionEnd);
+            lvlController.onSessionTrigger.AddListener(OnSessionTriggered);
+            lvlController.isPaused = isPaused;
+            lvlController.resetRobotPositionDuringInterTrial = resetPositionOnTrial;
+            lvlController.restartOnTaskFail = restartOnTrialFail;
         }
     }
 
@@ -192,16 +180,18 @@ public class ExperimentController : ConfigurableComponent {
         }
 
         robot.OnRobotMoved -= OnRobotMoved;
-        levelController?.StopLevel();
+        lvlController.StopLevel();
         started = false;
         //Clean up when Experiment is stopped adruptly.
         logger.CloseLog();
     }
 
+    bool sessionEnded = false;
+
     private void OnSessionEnd() {
-        logger.CloseLog();
         robot.OnRobotMoved -= OnRobotMoved;
-        goNextLevelCoroutine = StartCoroutine(GoToNextSession());
+        logger.CloseLog();
+        sessionEnded = true;
     }
 
     private void OnRobotMoved(Transform t) {

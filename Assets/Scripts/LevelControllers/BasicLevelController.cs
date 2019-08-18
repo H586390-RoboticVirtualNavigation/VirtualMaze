@@ -84,7 +84,7 @@ public class BasicLevelController : MonoBehaviour {
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
         StopTrialTimer();
         StopAllCoroutines();
-        FadeCanvas.fadeCanvas.FadeOut();
+        FadeCanvas.fadeCanvas.AutoFadeOut();
     }
 
     private void Start() {
@@ -239,14 +239,14 @@ public class BasicLevelController : MonoBehaviour {
 
     private IEnumerator FadeOutBeforeLevelEnd() {
         //fade out when end
-        yield return FadeCanvas.fadeCanvas.FadeOut();
+        yield return FadeCanvas.fadeCanvas.AutoFadeOut();
         onSessionFinishEvent.Invoke();
     }
 
     protected virtual IEnumerator InterTrial() {
         if (resetRobotPositionDuringInterTrial) {
             //fadeout and wait for fade out to finish.
-            yield return FadeCanvas.fadeCanvas.FadeOut();
+            yield return FadeCanvas.fadeCanvas.AutoFadeOut();
             robotMovement.MoveToWaypoint(startWaypoint);
         }
 
@@ -285,7 +285,7 @@ public class BasicLevelController : MonoBehaviour {
         float timeoutDuration = Session.timeoutDuration / 1000f;
 
         if (resetRobotPositionDuringInterTrial && restartOnTaskFail) {
-            yield return FadeCanvas.fadeCanvas.FadeOut();
+            yield return FadeCanvas.fadeCanvas.AutoFadeOut();
             robotMovement.MoveToWaypoint(startWaypoint);
         }
 

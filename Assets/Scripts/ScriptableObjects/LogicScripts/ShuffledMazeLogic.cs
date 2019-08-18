@@ -9,7 +9,7 @@ public class ShuffledMazeLogic : MazeLogic {
         return order[index++];
     }
 
-    public override bool IsTrialCompleteAfterReward() {
+    public override bool IsTrialCompleteAfterReward(bool currentTaskSuccess) {
         bool completed = (index == order.Length);
         if (completed) {
             Shuffle(order);

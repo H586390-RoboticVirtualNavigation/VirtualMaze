@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.InteropServices; //important for DLLs
 using UnityEngine;
-using SREYELINKLib;
 
 public class EyeLink {
 #if (UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX)
@@ -56,7 +52,6 @@ public class EyeLink {
         }
 
         bool isconnected = TryGetEyelinkConnectedStatus();
-        Debug.Log("EL connected?:" + isconnected);
 
         if (isconnected) {
             int flag = (int)trigger + triggerValue + 1;
@@ -103,6 +98,9 @@ public class EyeLink {
             //    }
             //}
             #endregion
+        }
+        else {
+            Debug.LogWarning("Eyelink not connected!");
         }
     }
 }

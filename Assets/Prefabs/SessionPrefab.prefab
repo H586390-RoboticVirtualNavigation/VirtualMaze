@@ -1176,36 +1176,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 117edf3da339a42e6989ea5185a4a438, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levels:
-  - RandLRF
-  - Linear
-  - Tee
-  - Four-Arm
-  - TrainForward
-  - TrainRight
-  - TrainLeft
-  - Double Tee
-  - Tee Left
-  - Tee Left Block
-  - Tee Right
-  - Tee Right Block
-  - Back and Forth3
+  levels: {fileID: 11400000, guid: 4e145607c9f98154ebe22cddb9bc3fcb, type: 2}
   levelButton: {fileID: 11436252}
   numTrialsField: {fileID: 11431032}
   onValueChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: SessionPrefabScript+OnValueChanged, Assembly-CSharp, Version=0.0.0.0,
+    m_TypeName: SessionPrefabScript+OnValueChanged, Assembly-CSharp, Version=4.1.7169.20684,
       Culture=neutral, PublicKeyToken=null
   onItemRemove:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: SessionPrefabScript+OnItemRemove, Assembly-CSharp, Version=0.0.0.0,
+    m_TypeName: SessionPrefabScript+OnItemRemove, Assembly-CSharp, Version=4.1.7169.20684,
       Culture=neutral, PublicKeyToken=null
   onNumTrialsChanged:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: SessionPrefabScript+OnNumTrialsChanged, Assembly-CSharp, Version=0.0.0.0,
+    m_TypeName: SessionPrefabScript+OnNumTrialsChanged, Assembly-CSharp, Version=4.1.7169.20684,
       Culture=neutral, PublicKeyToken=null
 --- !u!1 &195872
 GameObject:

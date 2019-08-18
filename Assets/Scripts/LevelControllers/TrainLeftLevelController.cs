@@ -184,7 +184,7 @@ public class TrainLeftLevelController : MonoBehaviour {
 		inTrial = false;
 		
 		//fade out when end
-		fade.FadeOut ();
+		fade.AutoFadeOut ();
 		while (fade.fadeOutDone == false) {
 			yield return new WaitForSeconds(0.05f);
 		}
@@ -196,7 +196,7 @@ public class TrainLeftLevelController : MonoBehaviour {
 		inTrial = false;
 		
 		
-		fade.FadeOut ();
+		fade.AutoFadeOut ();
 		while (fade.fadeOutDone == false) {
 			yield return new WaitForSeconds(0.05f);
 		}

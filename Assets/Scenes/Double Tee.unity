@@ -453,16 +453,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: RabitPoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 8fc8ec353d42bd744a9a97166ee99ce7, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -474,6 +464,16 @@ PrefabInstance:
       propertyPath: rewardOrder
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: RabitPoster
+      objectReference: {fileID: 0}
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 8fc8ec353d42bd744a9a97166ee99ce7, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
 --- !u!4 &293240968 stripped
@@ -575,7 +575,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &365419809
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1242,16 +1242,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: CrocodilePoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 7afebd764e37f574a8dc8c55984e01b7, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -1263,6 +1253,16 @@ PrefabInstance:
       propertyPath: rewardOrder
       value: 5
       objectReference: {fileID: 0}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: CrocodilePoster
+      objectReference: {fileID: 0}
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 7afebd764e37f574a8dc8c55984e01b7, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
 --- !u!4 &613689079 stripped
@@ -1278,11 +1278,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2618775191987380134, guid: eac68ceb644ebce4a9d4ee85c4631f92,
-        type: 3}
-      propertyPath: m_Name
-      value: WallsCeilingGround
-      objectReference: {fileID: 0}
     - target: {fileID: 2618775191987380133, guid: eac68ceb644ebce4a9d4ee85c4631f92,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1337,6 +1332,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2618775191987380134, guid: eac68ceb644ebce4a9d4ee85c4631f92,
+        type: 3}
+      propertyPath: m_Name
+      value: WallsCeilingGround
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: eac68ceb644ebce4a9d4ee85c4631f92, type: 3}
@@ -2095,16 +2095,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: DonkeyPoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 5e3395afa19931c48bf6d7620f486c4d, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -2116,6 +2106,16 @@ PrefabInstance:
       propertyPath: rewardOrder
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: DonkeyPoster
+      objectReference: {fileID: 0}
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 5e3395afa19931c48bf6d7620f486c4d, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
 --- !u!4 &1325035148 stripped
@@ -2133,6 +2133,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1357036018}
+  - component: {fileID: 1357036019}
   m_Layer: 0
   m_Name: waypoint_start
   m_TagString: Untagged
@@ -2154,6 +2155,18 @@ Transform:
   m_Father: {fileID: 1064022421}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1357036019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1357036017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d893254d1ad57924b947e9bf52f61a0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1411502207
 GameObject:
   m_ObjectHideFlags: 0
@@ -2788,16 +2801,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: CamelPoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 13c0df2bb78e99c4181365616f005cdd, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -2809,6 +2812,16 @@ PrefabInstance:
       propertyPath: rewardOrder
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: CamelPoster
+      objectReference: {fileID: 0}
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 13c0df2bb78e99c4181365616f005cdd, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
 --- !u!4 &1591579539 stripped
@@ -3102,16 +3115,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: PigPoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 690bfe87dd3ab0049bafe7add203521f, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -3123,6 +3126,16 @@ PrefabInstance:
       propertyPath: rewardOrder
       value: 6
       objectReference: {fileID: 0}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: PigPoster
+      objectReference: {fileID: 0}
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 690bfe87dd3ab0049bafe7add203521f, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
 --- !u!4 &1890611753 stripped
@@ -3275,16 +3288,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: CatPoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 17822ed0faf6a8c45ac7b3654442e066, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -3296,6 +3299,16 @@ PrefabInstance:
       propertyPath: rewardOrder
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: CatPoster
+      objectReference: {fileID: 0}
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 17822ed0faf6a8c45ac7b3654442e066, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
 --- !u!4 &1926017369 stripped

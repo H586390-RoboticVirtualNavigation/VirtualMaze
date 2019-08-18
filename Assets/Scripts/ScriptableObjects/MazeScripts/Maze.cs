@@ -1,6 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 [CreateAssetMenu(menuName = "Mazes/Maze")]
+[Serializable]
 public class Maze : AbstractMaze {
     [SerializeField]
     private string scene = null;

@@ -1,5 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
+[Serializable]
 public abstract class AbstractMaze : ScriptableObject {
     public int numTrials = 0;
 

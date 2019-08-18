@@ -27,7 +27,7 @@ public class SessionConfigGUIController : DataGUIController {
 
     public override void UpdateSettingsGUI() {
         ClearSessionItems();
-        foreach (Session session in sessionController.Sessions) {
+        foreach (Session session in sessionController.sessions) {
             CreateSessionItem(session);
         }
     }
@@ -42,7 +42,6 @@ public class SessionConfigGUIController : DataGUIController {
         //instantiate new level
         GameObject session = Instantiate(sessionItemPrefab, scrollRect.content.transform, false);
         SessionPrefabScript sessionScript = session.GetComponent<SessionPrefabScript>();
-        sessionScript.levels = Session.AllLevels;
 
         sessionScript.onValueChanged.AddListener(sessionController.UpdateSessionNameAt);
         sessionScript.onItemRemove.AddListener(sessionController.RemoveSessionAt);

@@ -38,33 +38,18 @@ public class SaveLoad : MonoBehaviour {
 
     //A simple way of knowing where the settings file is saved it to Debug.Log(SaveFileLocation)
     //SaveFileLocation declared in Awake();
-    private static string SaveFileLocation;
+    private static string saveFileLocation;
 
     //key: settingName, value: Settings
     private Dictionary<string, ExperimentSettings> _settingsDictionary;
     private BinaryFormatter bf = new BinaryFormatter();
 
     private void Awake() {
-        SaveFileLocation = Application.persistentDataPath + SettingsFileName;
-
+        saveFileLocation = Application.persistentDataPath + SettingsFileName;
+        print($"Persistent Data Path: {saveFileLocation}");
         //load saved settings (if any)
-        if (File.Exists(SaveFileLocation)) {
-            FileStream file = File.Open(SaveFileLocation, FileMode.Open);
-            try {
-                _settingsDictionary = bf.Deserialize(file) as Dictionary<string, ExperimentSettings>;
-                if (_settingsDictionary == null) {
-                    Debug.LogWarning(Msg_DeserializationWarning);
-                    _settingsDictionary = new Dictionary<string, ExperimentSettings>();
-                }
-            }
-            catch (Exception e) {
-                // Fail with logging
-                Debug.LogException(e);
-                _settingsDictionary = new Dictionary<string, ExperimentSettings>();
-            }
-            finally {
-                file.Close();
-            }
+        if (File.Exists(saveFileLocation)) {
+            readFile();
         }
         else {
             _settingsDictionary = new Dictionary<string, ExperimentSettings>();
@@ -139,8 +124,28 @@ public class SaveLoad : MonoBehaviour {
     /// </summary>
     private void WriteFile() {
         //Creates or overrides file
-        FileStream file = File.Create(SaveFileLocation);
+        FileStream file = File.Create(saveFileLocation);
         bf.Serialize(file, _settingsDictionary);
+        JsonUtility.ToJson(_settingsDictionary);
         file.Close();
+    }
+
+    private void readFile() {
+        FileStream file = File.Open(saveFileLocation, FileMode.Open);
+        try {
+            _settingsDictionary = bf.Deserialize(file) as Dictionary<string, ExperimentSettings>;
+            if (_settingsDictionary == null) {
+                Debug.LogWarning(Msg_DeserializationWarning);
+                _settingsDictionary = new Dictionary<string, ExperimentSettings>();
+            }
+        }
+        catch (Exception e) {
+            // Fail with logging
+            Debug.LogException(e);
+            _settingsDictionary = new Dictionary<string, ExperimentSettings>();
+        }
+        finally {
+            file.Close();
+        }
     }
 }
