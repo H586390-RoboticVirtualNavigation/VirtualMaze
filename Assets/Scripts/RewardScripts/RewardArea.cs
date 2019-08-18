@@ -60,14 +60,14 @@ public class RewardArea : MonoBehaviour {
 
     private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent but is tagged as a reward";
     private const string emissionKeyword = "_EMISSION";
-    private void Start() {
+    protected virtual void Start() {
         if (blinkLight != null) {
             blinkLight.material.DisableKeyword(emissionKeyword);
             blinkState = false;
         }
     }
 
-    private void OnTriggerStay(Collider other) {
+    protected virtual void OnTriggerStay(Collider other) {
         if (IsActivated) {
             CheckFieldOfView(other.transform);
         }
@@ -105,10 +105,6 @@ public class RewardArea : MonoBehaviour {
                 Debug.Log("inView!!!" + Vector3.Distance(target.position, robot.position) + " " + distanceWithOffset);
             }
         }
-    }
-
-    public RobotMovement.RobotMovementEvent Haha(Transform t) {
-        return null;
     }
 
     /// <summary>
