@@ -4,6 +4,22 @@ using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
 public class LevelController : MonoBehaviour {
+    /// <summary>
+    /// Triggers when the player enters the reward area
+    /// </summary>
+    /// <param name="rewardArea">RewardArea of the trigger zone entered</param>
+    /// /// <param name="isTarget">If the area the current target</param>
+    public delegate void OnEnterTriggerZone(RewardArea rewardArea, bool isTarget);
+    public static event OnEnterTriggerZone OnEnteredTriggerZone;
+
+    /// <summary>
+    /// Triggers when the player leaves the reward area
+    /// </summary>
+    /// <param name="rewardArea">RewardArea of the trigger zone entered</param>
+    /// <param name="isTarget">If the area the current target</param>
+    public delegate void OnExitTriggerZone(RewardArea rewardArea, bool isTarget);
+    public static event OnExitTriggerZone OnExitedTriggerZone;
+
     // Broadcasts when the session is finshed.
     public UnityEvent onSessionFinishEvent = new UnityEvent();
 
@@ -50,14 +66,31 @@ public class LevelController : MonoBehaviour {
     private void Awake() {
         waitIfPaused = new WaitUntil(() => !isPaused);
 
+        RewardArea.OnEnteredTriggerZone += OnZoneEnter;
+        RewardArea.OnExitedTriggerZone += OnZoneExit;
+
         //Prepare Eyelink
         EyeLink.Initialize();
         onSessionTrigger.AddListener(EyeLink.OnSessionTrigger);
         DontDestroyOnLoad(this);
     }
 
+    private void OnDestroy() {
+        RewardArea.OnEnteredTriggerZone -= OnZoneEnter;
+        RewardArea.OnExitedTriggerZone -= OnZoneExit;
+    }
+
+    private void OnZoneExit(RewardArea rewardArea) {
+        OnExitedTriggerZone?.Invoke(rewardArea, rewardArea.Equals(rewards[targetIndex]));
+    }
+
+    private void OnZoneEnter(RewardArea rewardArea) {
+        OnEnteredTriggerZone?.Invoke(rewardArea, rewardArea.Equals(rewards[targetIndex]));
+    }
+
     //stop and reset levelcontroller
     public void StopLevel() {
+        logicProvider.Cleanup(rewards);
         cueController.HideAll();
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
         StopAllCoroutines();

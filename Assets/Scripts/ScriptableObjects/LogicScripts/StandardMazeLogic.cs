@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-[CreateAssetMenu]
+[CreateAssetMenu(menuName = "MazeLogic/StandardMazeLogic")]
 public class StandardMazeLogic : MazeLogic {
     /// <summary>
     /// Returns the next non-repeating target for the subject.

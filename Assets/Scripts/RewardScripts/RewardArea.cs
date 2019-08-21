@@ -1,6 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -46,11 +45,25 @@ public class RewardArea : MonoBehaviour {
     public bool IsActivated { get; set; } = true;
 
     /// <summary>
-    /// All rewards use the same trigger event. RewardArea script will be returned for extra processing
+    /// All rewards use the same trigger event. RewardArea object will be returned for extra processing
     /// </summary>
-    /// <param name="rewardArea">Script of RewardArea that is triggered</param>
+    /// <param name="rewardArea">RewardArea that is triggered</param>
     public delegate void OnRewardTriggeredEvent(RewardArea rewardArea);
     public static event OnRewardTriggeredEvent OnRewardTriggered;
+
+    /// <summary>
+    /// Triggers when the player enter the reward area
+    /// </summary>
+    /// <param name="rewardArea">RewardArea of the trigger zone entered</param>
+    public delegate void OnEnterTriggerZone(RewardArea rewardArea);
+    public static event OnEnterTriggerZone OnEnteredTriggerZone;
+
+    /// <summary>
+    /// Triggers when the player leaves the reward area
+    /// </summary>
+    /// <param name="rewardArea">RewardArea of the trigger zone entered</param>
+    public delegate void OnExitTriggerZone(RewardArea rewardArea);
+    public static event OnExitTriggerZone OnExitedTriggerZone;
 
     private bool blinkState;
     private readonly WaitForSeconds half_period = new WaitForSeconds(0.5f);
@@ -71,6 +84,14 @@ public class RewardArea : MonoBehaviour {
         if (IsActivated) {
             CheckFieldOfView(other.transform);
         }
+    }
+
+    private void OnTriggerEnter(Collider other) {
+        OnEnteredTriggerZone?.Invoke(this);
+    }
+
+    private void OnTriggerExit(Collider other) {
+        OnExitedTriggerZone?.Invoke(this);
     }
 
     /// <summary>

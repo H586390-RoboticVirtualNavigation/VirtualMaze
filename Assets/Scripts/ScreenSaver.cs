@@ -82,9 +82,6 @@ public class ScreenSaver : BasicGUIController {
     }
 
     private void OnSceneLoaded(Scene s, LoadSceneMode mode) {
-        BasicLevelController levelcontroller = FindObjectOfType<BasicLevelController>();
-        levelcontroller.gameObject.SetActive(false);
-
         SceneManager.sceneLoaded -= OnSceneLoaded;
         isloaded = true;
     }
