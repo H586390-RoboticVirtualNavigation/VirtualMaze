@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
+using Random = System.Random;
 
 [CreateAssetMenu(menuName = "MazeLogic/StandardMazeLogic")]
 public class StandardMazeLogic : MazeLogic {
+
+    private static Random rand = new Random();
     /// <summary>
     /// Returns the next non-repeating target for the subject.
     /// </summary>
@@ -13,18 +16,18 @@ public class StandardMazeLogic : MazeLogic {
         }
 
         // minimally inclusive, maximally exclusive, therefore you will get random numbers between 0 to the number of rewards
-        int nextTarget = Random.Range(0, rewards.Length);
+        int nextTarget = rand.Next(0, rewards.Length);
 
         // retries if the random target number generated is the same as the current target number
         while (rewards.Length != 1 && nextTarget == currentTarget) {
-            nextTarget = Random.Range(0, rewards.Length);
+            nextTarget = rand.Next(0, rewards.Length);
         }
-
+        Debug.LogError($"{currentTarget}, {nextTarget}");
         return nextTarget;
     }
 
     public override bool IsTrialCompleteAfterReward(bool currentTaskSuccess) {
-        return true; // 1 poster per trial
+        return currentTaskSuccess; // 1 poster per trial
     }
 
     public override void Setup(RewardArea[] rewards) {

@@ -128,31 +128,30 @@ public class LevelController : MonoBehaviour {
             // +1 since trailCounter is starts from 0
             SessionStatusDisplay.DisplayTrialNumber(trialCounter + 1);
 
-            // start the first trial.
+            // start the first task.
             if (firstTrial) {
                 firstTrial = false;
-                PrepareTask(true);// first task always true
+                PrepareNextTask(true);// first task always true
             }
             else {
                 yield return InterTrial();
-                PrepareTask(success);
             }
+
             yield return ShowCues();
             yield return TrialTimer();
 
             if (!success) {
                 float timeoutDuration = Session.timeoutDuration / 1000f;
 
+                yield return SessionStatusDisplay.Countdown("Timeout", timeoutDuration);
+
                 if (resetRobotPositionDuringInterTrial && restartOnTaskFail) {
                     yield return FadeCanvas.fadeCanvas.AutoFadeOut();
                     robotMovement.MoveToWaypoint(startWaypoint);
                 }
-
-                yield return SessionStatusDisplay.Countdown("Timeout", timeoutDuration);
             }
 
             if (logicProvider.IsTrialCompleteAfterReward(success)) {
-                success = false; //reset the success
                 trialCounter++;
                 // checks if should pause else continue.
                 if (isPaused) {
@@ -160,6 +159,9 @@ public class LevelController : MonoBehaviour {
                 }
                 yield return waitIfPaused;
             }
+
+            PrepareNextTask(success);
+            success = false; //reset the success
         }
 
 
@@ -186,7 +188,7 @@ public class LevelController : MonoBehaviour {
     /// Method to decide the next target.
     /// </summary>
     /// <param name="currentTaskSuccess">flag if the curent task is successful</param>
-    private void PrepareTask(bool currentTaskSuccess) {
+    private void PrepareNextTask(bool currentTaskSuccess) {
         //restart trial unless indicated
         if (!currentTaskSuccess && restartOnTaskFail) {
             Console.Write("Restart Trial");
