@@ -6,7 +6,10 @@ public class FadeCanvas : MonoBehaviour {
     public static FadeCanvas fadeCanvas;
 
     public float Alpha { get => fade.alpha; set => fade.alpha = value; }
-    private CanvasGroup fade;
+
+    [SerializeField]
+    private CanvasGroup fade = null;
+
     private WaitForSecondsRealtime timeIncrements = new WaitForSecondsRealtime(0.01f);
     public bool fadeOutDone { get; private set; }
     public bool fadeInDone { get; private set; }
@@ -15,8 +18,12 @@ public class FadeCanvas : MonoBehaviour {
     public bool isTransiting { get => !fadeInDone || !fadeOutDone; }
 
     void Awake() {
-        fadeCanvas = this;
-        fade = GetComponent<CanvasGroup>();
+        if (fadeCanvas != null && fadeCanvas != this) {
+            Destroy(this);
+        }
+        else {
+            fadeCanvas = this;
+        }
         fadeInDone = true;
         fadeOutDone = true;
         isFadedOut = true;

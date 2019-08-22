@@ -10,6 +10,9 @@ public class EyeMatReader : EyeDataReader {
     [DllImport("hdf5")]
     private static extern void test();
 
+    [DllImport("hdf5_hl")]
+    private static extern void test2();
+
     private AllFloatData currentData = null;
 
     private EyelinkMatFile file;
