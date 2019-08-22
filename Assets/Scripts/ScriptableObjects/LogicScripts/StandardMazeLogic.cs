@@ -22,7 +22,6 @@ public class StandardMazeLogic : MazeLogic {
         while (rewards.Length != 1 && nextTarget == currentTarget) {
             nextTarget = rand.Next(0, rewards.Length);
         }
-        Debug.LogError($"{currentTarget}, {nextTarget}");
         return nextTarget;
     }
 

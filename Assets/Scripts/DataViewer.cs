@@ -13,7 +13,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     private List<Trial> trials = new List<Trial>();
     private RewardArea[] rewards = null;
 
-    public AudioSource hahasource;
+    public AudioSource audioSource;
 
     //Drag and drop
     public CanvasGroup gui;
@@ -163,8 +163,8 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         while (!sceneLoadingOperation.isDone) {
             yield return null;
         }
-        BasicLevelController controller = GameObject.FindWithTag(Tags.LevelController).GetComponent<BasicLevelController>();
-        rewards = controller.rewards;
+
+        rewards = RewardArea.GetAllRewardsFromScene();
 
         TrialIndex = 0;
     }
@@ -193,6 +193,12 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     private void ToggleSubjectScreen() {
         if (trials.Count > 0) {
             gui.SetVisibility(IsShowingSubjectScreen);
+            if (IsShowingSubjectScreen) {
+                subjectView.targetDisplay = 1;
+            }
+            else {
+                subjectView.targetDisplay = 0;
+            }
             IsShowingSubjectScreen = !IsShowingSubjectScreen;
         }
     }
@@ -220,6 +226,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         FrameIndex = 0;
 
         if (rewards != null) {
+            print($"{t.RewardIndex}, {rewards.Length}");
             cueController.SetTargetImage(rewards[t.RewardIndex].cueImage);
         }
     }
@@ -260,7 +267,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         Frame frame = trial.GetFrameAt(frameNum);
 
 
-        hahasource.PlayOneShot(frame.GetAudioClip());
+        audioSource.PlayOneShot(frame.GetAudioClip());
 
         CueController.ProcessTrigger(trial.GetLatestTriggerAtFrame(frameNum), cueController, this);
 
