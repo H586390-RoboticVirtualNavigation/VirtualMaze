@@ -273,10 +273,15 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
         RobotMovement.MoveRobotTo(robot, frame.Config);
 
+        Image i = null;
+
         foreach (PlaybackData data in frame) {
             if (data is PlaybackSample sample) {
-                pool.AddGazePoint(gazeRect, subjectView, sample.gaze);
+                i = pool.AddGazePoint(gazeRect, subjectView, sample.gaze);
             }
+        }
+        if (i != null) {
+            i.color = Color.red;
         }
     }
 

@@ -7,6 +7,8 @@ using UnityEngine.UI;
 /// Attach this to a canvas component.
 /// </summary>
 public class GazePointPool : MonoBehaviour {
+    private static Color defaultColor = new Color(103 / 255f, 207 / 255f, 95 / 255f);
+
     // Image to represent the gaze points (Prefab)
     public Image gazePointImage;
 
@@ -22,9 +24,10 @@ public class GazePointPool : MonoBehaviour {
     /// <param name="canvasRect">RectTransform of the canvas to place the image</param>
     /// <param name="camera">Camera which renders what the subject sees</param>
     /// <param name="gazePoint">X and Y position of the gaze sample</param>
-    public void AddGazePoint(RectTransform canvasRect, Camera camera, Vector2 gazePoint) {
+    /// <returns>Image for extra processing</returns>
+    public Image AddGazePoint(RectTransform canvasRect, Camera camera, Vector2 gazePoint) {
         Image i = GetPooledGazePoint();
-
+        i.color = defaultColor;
         //calculate and posiiton the gaze point on the intended canvas
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, gazePoint, camera, out Vector2 localpoint)) {
             i.gameObject.SetActive(true);
@@ -32,6 +35,7 @@ public class GazePointPool : MonoBehaviour {
 
             i.rectTransform.localPosition = localpoint;
         }
+        return i;
     }
 
     /// <summary>
