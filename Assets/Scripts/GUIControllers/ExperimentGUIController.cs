@@ -1,7 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System.IO;
+using System.Threading.Tasks;
 using UnityEngine.UI;
 
 public class ExperimentGUIController : DataGUIController {
@@ -35,6 +33,8 @@ public class ExperimentGUIController : DataGUIController {
 
     public ExperimentController experimentController;
 
+    private Text startStopBtnTxt;
+
     private void Awake() {
         trialIntermissionFixedField.onEndEdit.AddListener(OnTrialIntermissionFixedEndEdit);
         trialIntermissionMaxField.onEndEdit.AddListener(OnTrialIntermissionMaxEndEdit);
@@ -50,6 +50,7 @@ public class ExperimentGUIController : DataGUIController {
 
         pauseButton.onClick.AddListener(OnPauseButtonClicked);
         startStopButton.onClick.AddListener(OnExperimentStartStopButtonClicked);
+        startStopBtnTxt = startStopButton.GetText();
 
         restartOnTrialFailToggle.onValueChanged.AddListener(toggleRestartOnTrialFail);
         resetPositionOnTrialToggle.onValueChanged.AddListener(toggleResetPosition);
@@ -67,13 +68,19 @@ public class ExperimentGUIController : DataGUIController {
         willPauseAtNextTrialToggle.isOn = experimentController.TogglePause();
     }
 
-    private void OnExperimentStartStopButtonClicked() {
+    private async void OnExperimentStartStopButtonClicked() {
+        while (FadeCanvas.fadeCanvas.isTransiting) {
+            await Task.Delay(10);
+        }
+
         if (!experimentController.started) {
             Console.Write("Experiment Started");
+            startStopBtnTxt.text = "Stop Experiment";
             experimentController.StartExperiment();
         }
         else {
             Console.Write("Experiment Stopped");
+            startStopBtnTxt.text = "Start Experiment";
             experimentController.StopExperiment();
         }
     }

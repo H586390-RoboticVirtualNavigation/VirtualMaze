@@ -52,8 +52,6 @@ public class LevelController : MonoBehaviour {
     [SerializeField]
     private CueController cueController = null;
 
-    protected WaitForSecondsRealtime CueDisplayDuration { get; private set; } = new WaitForSecondsRealtime(1f);
-
     // cache waitForUnpause for efficiency
     private WaitUntil waitIfPaused;
 
@@ -207,7 +205,7 @@ public class LevelController : MonoBehaviour {
         cueController.ShowCue();
         onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
 
-        yield return CueDisplayDuration;
+        yield return new WaitForSecondsRealtime(1f);
 
         cueController.HideCue();
         cueController.ShowHint();

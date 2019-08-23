@@ -1,5 +1,6 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
+using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Class to contain all extension methods for faster development
@@ -43,5 +44,9 @@ public static class Extensions {
             default:
                 throw new NotImplementedException($"Trigger {trigger} not implemented.");
         }
+    }
+
+    public static Text GetText(this Button button) {
+        return button.GetComponentInChildren<Text>();
     }
 }
