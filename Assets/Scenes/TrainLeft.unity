@@ -1239,58 +1239,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 462349722}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &492161489
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 492161491}
-  - component: {fileID: 492161490}
-  m_Layer: 0
-  m_Name: LevelController
-  m_TagString: LevelController
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &492161490
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 492161489}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 187dd69a8195c40089353b611e5e0ad0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  onSessionFinishEvent:
-    m_PersistentCalls:
-      m_Calls: []
-    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
-      Culture=neutral, PublicKeyToken=null
-  isPaused: 0
-  startWaypoint: {fileID: 2007114031}
-  restartOnTaskFail: 1
-  resetRobotPositionDuringInterTrial: 0
---- !u!4 &492161491
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 492161489}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -7.730151, y: 3.3570838, z: 2.4866545}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &525991587
 GameObject:
   m_ObjectHideFlags: 0
@@ -1524,7 +1472,7 @@ PrefabInstance:
     - target: {fileID: 4449618568864015268, guid: 957909166f187ee40a1e4a5857a5962e,
         type: 3}
       propertyPath: m_RootOrder
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 4449618568864015268, guid: 957909166f187ee40a1e4a5857a5962e,
         type: 3}
@@ -2562,7 +2510,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1358861369
 GameObject:
@@ -2923,7 +2871,7 @@ Transform:
   - {fileID: 1408441874}
   - {fileID: 1104644278}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1709693983
 GameObject:
@@ -3662,6 +3610,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2007114031}
+  - component: {fileID: 2007114032}
   m_Layer: 0
   m_Name: waypoint_start
   m_TagString: Untagged
@@ -3683,6 +3632,18 @@ Transform:
   m_Father: {fileID: 442745445}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2007114032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2007114030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d893254d1ad57924b947e9bf52f61a0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2037154908
 GameObject:
   m_ObjectHideFlags: 0

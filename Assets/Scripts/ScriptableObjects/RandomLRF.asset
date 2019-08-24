@@ -9,15 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6d470ee69ee05ed4eaece2d5bde29bb7, type: 3}
-  m_Name: MasterList
+  m_Script: {fileID: 11500000, guid: 2fa86e7fdd6cc294d88ae7a9bd8fcca4, type: 3}
+  m_Name: RandomLRF
   m_EditorClassIdentifier: 
-  _mazes:
-  - {fileID: 11400000, guid: aaccc7a377262694c9a9d08533da8075, type: 2}
-  - {fileID: 11400000, guid: ef73dfe3c40395f408ee9d204c0c051d, type: 2}
+  numTrials: 0
+  mazeName: RandomLRF
+  scenePool:
   - {fileID: 11400000, guid: 1d788c35ccee8df45be35b3a4eb2b96b, type: 2}
   - {fileID: 11400000, guid: 2dacdd283b0773d44be7605bbf63f259, type: 2}
   - {fileID: 11400000, guid: 6bc9b4fecd3d9444a9bb815262fa1313, type: 2}
-  - {fileID: 11400000, guid: 9ce8c02f74e5030409d90dd6567e41dc, type: 2}
-  - {fileID: 11400000, guid: d7efc5e2996754142ae035aa40fae396, type: 2}
-  - {fileID: 11400000, guid: d9f09ac0c0227664583c7ae17c179d7c, type: 2}

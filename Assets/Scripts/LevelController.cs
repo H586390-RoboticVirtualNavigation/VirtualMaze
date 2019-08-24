@@ -118,6 +118,7 @@ public class LevelController : MonoBehaviour {
 
     IEnumerator MainLoop() {
         int trialCounter = 0;
+        targetIndex = 0;//reset targetindex
         bool firstTrial = true;
 
         yield return FadeInAndStartSession();
