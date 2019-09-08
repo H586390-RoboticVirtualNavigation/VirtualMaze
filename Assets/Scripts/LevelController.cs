@@ -88,7 +88,7 @@ public class LevelController : MonoBehaviour {
 
     //stop and reset levelcontroller
     public void StopLevel() {
-        logicProvider.Cleanup(rewards);
+        logicProvider?.Cleanup(rewards);
         cueController.HideAll();
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
         StopAllCoroutines();
@@ -121,6 +121,7 @@ public class LevelController : MonoBehaviour {
         targetIndex = 0;//reset targetindex
         bool firstTrial = true;
 
+        yield return waitIfPaused;
         yield return FadeInAndStartSession();
 
         while (trialCounter < numTrials) {
@@ -153,10 +154,6 @@ public class LevelController : MonoBehaviour {
             if (logicProvider.IsTrialCompleteAfterReward(success)) {
                 trialCounter++;
                 // checks if should pause else continue.
-                if (isPaused) {
-                    Console.Write("ExperimentPaused");
-                }
-                yield return waitIfPaused;
             }
 
             PrepareNextTask(success);
@@ -238,6 +235,11 @@ public class LevelController : MonoBehaviour {
             yield return FadeCanvas.fadeCanvas.AutoFadeOut();
             robotMovement.MoveToWaypoint(startWaypoint);
         }
+
+        if (isPaused) {
+            Console.Write("ExperimentPaused");
+        }
+        yield return waitIfPaused;
 
         //delay for inter trial window
         float countDownTime = Session.getTrailIntermissionDuration() / 1000.0f;

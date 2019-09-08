@@ -109,20 +109,20 @@ public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
             case DataTypes.SAMPLE_TYPE:
                 string msg = data[RayCastRecorder.ObjName_Message];
                 if (msg.Contains("ignored")) {
-                    return new PlaybackSample(default, default, default, type, timestamp);
+                    return new PlaybackSample(default, default, default, timestamp);
                 }
 
                 Vector2 gaze = new Vector2(float.Parse(data[RayCastRecorder.Gx]), float.Parse(data[RayCastRecorder.Gy]));
                 Vector3 pos = new Vector3(float.Parse(data[RayCastRecorder.PosX]), float.Parse(data[RayCastRecorder.PosY]), float.Parse(data[RayCastRecorder.PosZ]));
                 float rotY = float.Parse(data[RayCastRecorder.RotY]);
 
-                return new PlaybackSample(gaze, pos, rotY, type, timestamp);
+                return new PlaybackSample(gaze, pos, rotY, timestamp);
 
             case DataTypes.MESSAGEEVENT:
                 string message = data[RayCastRecorder.ObjName_Message].Trim();
                 SessionTrigger trigger = (SessionTrigger)((message[message.Length - 2] - '0') * 10);
 
-                return new PlaybackEvent(message, trigger, type, timestamp);
+                return new PlaybackEvent(message, trigger, timestamp);
         }
 
         return null;

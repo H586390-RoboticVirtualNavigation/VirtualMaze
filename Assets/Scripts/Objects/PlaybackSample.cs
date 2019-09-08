@@ -5,8 +5,8 @@ public class PlaybackSample : PlaybackData {
     public readonly Vector3 pos;
     public readonly float rotY;
 
-    public PlaybackSample(Vector2 gaze, Vector3 pos, float rotY, DataTypes type, uint timestamp) : base(type, timestamp) {
-        this.gaze = gaze;
+    public PlaybackSample(Vector2 gaze, Vector3 pos, float rotY, uint timestamp) : base(DataTypes.SAMPLE_TYPE, timestamp) {
+        this.gaze = gaze.ConvertToUnityOriginCoordinate();
         this.pos = pos;
         this.rotY = rotY;
     }

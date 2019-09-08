@@ -123,7 +123,8 @@ public class RewardArea : MonoBehaviour {
                 OnRewardTriggered?.Invoke(this);
             }
             else {
-                Debug.Log("inView!!!" + Vector3.Distance(target.position, robot.position) + " " + distanceWithOffset);
+                if (Debug.isDebugBuild)
+                    Debug.Log("inView!!!" + Vector3.Distance(target.position, robot.position) + " " + distanceWithOffset);
             }
         }
     }

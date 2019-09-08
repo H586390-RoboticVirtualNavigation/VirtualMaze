@@ -54,6 +54,9 @@ public class ScreenSaver : BasicGUIController {
     private bool isloaded = false;
     private WaitUntil IsSceneLoaded;
 
+    private static readonly Vector2Int minBound = Vector2Int.zero;
+    private static readonly Vector2Int maxBound = new Vector2Int(1920, 1080);
+
     // for debugging
     public LineRenderer lineRenderer;
 
@@ -458,8 +461,6 @@ public class ScreenSaver : BasicGUIController {
 
                     MoveRobotTo(robot, sessionData);
 
-                    //due to the nature of floats, (1.0 == 10.0 / 10.0) might not return true every time
-                    //therefore use Mathf.Approximately()
                     while (gazeTime <= timepassed && fixations.Count > 0) {
 
 
@@ -535,12 +536,16 @@ public class ScreenSaver : BasicGUIController {
         switch (data.dataType) {
             case DataTypes.SAMPLE_TYPE:
                 Fsample fs = (Fsample)data;
+                if (InScreenBounds(fs.rawRightGaze)) {
+                    RaycastGazeData(fs, cueCaster, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
+                    recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
 
-                RaycastGazeData(fs, cueCaster, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
-                recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, fs.rightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
-
-                gazePointPool?.AddGazePoint(GazeCanvas, viewport, fs.rightGaze);
-
+                    gazePointPool?.AddGazePoint(GazeCanvas, viewport, fs.RightGaze);
+                }
+                else {
+                    //ignore if gaze is out of bounds
+                    recorder.IgnoreEvent(fs.dataType, fs.time, fs.rawRightGaze, isLastSampleInFrame);
+                }
                 return SessionTrigger.NoTrigger;
             case DataTypes.MESSAGEEVENT:
                 MessageEvent fe = (MessageEvent)data;
@@ -556,11 +561,16 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
+    private bool InScreenBounds(Vector2 gazeXY) {
+        return !((gazeXY.x > maxBound.x) || (gazeXY.y > maxBound.y) || (gazeXY.x < minBound.x) || (gazeXY.y < minBound.y));
+    }
+
     private void IgnoreData(AllFloatData data, RayCastRecorder recorder, string ignoreReason, bool isLastSampleInFrame) {
         switch (data.dataType) {
             case DataTypes.SAMPLE_TYPE:
                 Fsample fs = (Fsample)data;
-                recorder.IgnoreEvent(fs.dataType, fs.time, fs.rightGaze, isLastSampleInFrame);
+                //record the raw gaze data
+                recorder.IgnoreEvent(fs.dataType, fs.time, fs.rawRightGaze, isLastSampleInFrame);
 
                 break;
             case DataTypes.MESSAGEEVENT:
@@ -704,7 +714,7 @@ public class ScreenSaver : BasicGUIController {
                                  out Vector2 relativePos,
                                  out Vector3 objHitPos,
                                  out Vector3 gazePoint) {
-        Ray r = viewport.ScreenPointToRay(sample.rightGaze);
+        Ray r = viewport.ScreenPointToRay(sample.RightGaze);
 
         if (Physics.Raycast(r, out RaycastHit hit)) {
             lineRenderer?.SetPositions(new Vector3[] { viewport.transform.position, hit.point });
@@ -750,7 +760,7 @@ public class ScreenSaver : BasicGUIController {
         List<RaycastResult> results = new List<RaycastResult>(0);
 
         PointerEventData data = new PointerEventData(EventSystem.current) {
-            position = sample.rightGaze
+            position = sample.RightGaze
         };
         gRaycaster?.Raycast(data, results);
 
@@ -764,7 +774,7 @@ public class ScreenSaver : BasicGUIController {
             // checking only the first element since the canvas is assumed to have no overlapping image objects.
             objName = results[0].gameObject.name;
             RectTransform t = results[0].gameObject.GetComponent<RectTransform>();
-            RectTransformUtility.ScreenPointToWorldPointInRectangle(t, sample.rightGaze, viewport, out gazePoint);
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(t, sample.RightGaze, viewport, out gazePoint);
             Vector3 imgWorldPos = t.TransformPoint(t.rect.center);
             relativePos = gazePoint - imgWorldPos;
             objHitPos = results[0].gameObject.transform.position;

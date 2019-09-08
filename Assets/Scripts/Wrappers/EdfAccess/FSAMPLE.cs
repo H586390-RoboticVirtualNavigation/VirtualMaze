@@ -1,7 +1,5 @@
 ﻿using System.Text;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using SREYELINKLib;
 
 //the arrays may need to be set as unsafe | fixed float gxvel[3];
 namespace Eyelink.Structs {
@@ -67,19 +65,31 @@ namespace Eyelink.Structs {
         }
     }
 
+    /// <summary>
+    /// wrapper class to hold required values from the struct used for marshalling.
+    /// </summary>
     public class Fsample : AllFloatData {
-        public readonly Vector2 rightGaze;
+        /// <summary>
+        /// Returns the gaze data read from the file.
+        /// </summary>
+        public readonly Vector2 rawRightGaze;
+
+        /// <summary>
+        /// Unity uses the bottom left as origin (0,0) but eyelink uses top right as origin.
+        /// This property returns converted gaze data.
+        /// </summary>
+        public Vector2 RightGaze { get => rawRightGaze.ConvertToUnityOriginCoordinate(); }
 
         public Fsample(FSAMPLE sample, DataTypes datatype) : base(datatype, sample.time) {
-            rightGaze = sample.RightGaze;
+            rawRightGaze = sample.RightGaze;
         }
 
         public Fsample(uint time, float gx, float gy, DataTypes datatype) : base(datatype, time) {
-            rightGaze = new Vector2(gx, gy);
+            rawRightGaze = new Vector2(gx, gy);
         }
 
         public override string ToString() {
-            return $"{dataType} @ {time} | {rightGaze}";
+            return $"{dataType} @ {time} | {rawRightGaze}";
         }
     }
 }

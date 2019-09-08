@@ -47,6 +47,8 @@ public class RobotMovement : ConfigurableComponent {
     }
 
     private Rigidbody rigidBody;
+    [SerializeField]
+    private CharacterController charController = null; //drag and drop
     private bool enableMovement = true;
 
     private Settings settings;
@@ -95,7 +97,8 @@ public class RobotMovement : ConfigurableComponent {
 
         if (ShouldMove(vertical)) {
             Vector3 moveBy = transform.forward * vertical * MovementSpeed * Time.deltaTime;
-            rigidBody.position = transform.position + moveBy;
+            charController.Move(moveBy);
+            //rigidBody.position = transform.position + moveBy;
         }
     }
 

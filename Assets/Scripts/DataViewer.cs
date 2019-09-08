@@ -17,6 +17,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
     //Drag and drop
     public CanvasGroup gui;
+    public CanvasGroup dataViewerGUI;
     public CanvasGroup selfMenu;
     public Camera subjectView;
     public RectTransform gazeRect;
@@ -81,6 +82,27 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     private bool _isPlaying;
 
     private void Start() {
+        dataViewerGUI.SetVisibility(false);
+
+        Image i = pool.AddGazePoint(gazeRect, subjectView, Vector2.zero);
+        i.color = Color.cyan;
+
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(0, 1080));
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(1920, 0));
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(1920, 1080));
+
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(0, 100));
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(0, 200));
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(0, 300));
+
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(50, 0));
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(100, 0));
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(150, 0));
+
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(900, 1000));
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(800, 1000)).color = Color.yellow;
+        pool.AddGazePoint(gazeRect, subjectView, new Vector2(900, 900)).color = Color.red;
+
         processBtn.onClick.AddListener(OnProcessBtnClicked);
 
         trialSelect.onValueChanged.AddListener(OnTrialSelected);
@@ -183,6 +205,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     // Update is called once per frame 
     void Update() {
         if (IsVisible()) {
+            ProcessKeyDown();
             ProcessKeyPress();
         }
         if (IsPlaying) {
@@ -193,6 +216,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     private void ToggleSubjectScreen() {
         if (trials.Count > 0) {
             gui.SetVisibility(IsShowingSubjectScreen);
+            dataViewerGUI.SetVisibility(!IsShowingSubjectScreen);
             if (IsShowingSubjectScreen) {
                 subjectView.targetDisplay = 1;
             }
@@ -295,7 +319,37 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         return selfMenu.alpha > 0;
     }
 
+    //framerate dependent
+    private readonly int pressDelay = 6;
+    private int counter = 6;
+
     private void ProcessKeyPress() {
+        if (Input.GetKey(KeyCode.RightArrow)) {
+            if (counter > 0) {
+                counter--;
+            }
+            else {
+                ShowNextFrame(true);
+            }
+        }
+        else if (Input.GetKey(KeyCode.LeftArrow)) {
+            if (counter > 0) {
+                counter--;
+            }
+            else {
+                ShowPrevFrame();
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.RightArrow)) {
+            counter = pressDelay;
+        }
+        if (Input.GetKeyUp(KeyCode.LeftArrow)) {
+            counter = pressDelay;
+        }
+    }
+
+    private void ProcessKeyDown() {
         if (Input.GetKeyDown(KeyCode.UpArrow)) {
             print("previous trial");
             IsPlaying = false;

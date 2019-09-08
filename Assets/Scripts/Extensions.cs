@@ -49,4 +49,14 @@ public static class Extensions {
     public static Text GetText(this Button button) {
         return button.GetComponentInChildren<Text>();
     }
+
+    /// <summary>
+    /// Unity uses the bottom left as origin (0,0) but eyelink uses top right as origin.
+    /// This property returns converted gaze data.
+    /// 
+    /// Height of Unity screen is fixed as 1080.
+    /// </summary>
+    public static Vector2 ConvertToUnityOriginCoordinate(this Vector2 gazeVector) {
+        return new Vector2(gazeVector.x, 1080 - gazeVector.y);
+    }
 }
