@@ -57,9 +57,6 @@ public class ScreenSaver : BasicGUIController {
     private static readonly Vector2Int minBound = Vector2Int.zero;
     private static readonly Vector2Int maxBound = new Vector2Int(1920, 1080);
 
-    // for debugging
-    public LineRenderer lineRenderer;
-
     private void Awake() {
         IsSceneLoaded = new WaitUntil(() => isloaded);
 
@@ -78,8 +75,8 @@ public class ScreenSaver : BasicGUIController {
 
     private void Start() {
         if (Application.isEditor) { //for testing purposes.
-            ChooseEyelinkFile(@"D:\Desktop\NUS\FYP\rawdata\20180810");
-            ChooseSession(@"D:\Desktop\NUS\FYP\rawdata\20180810");
+            ChooseEyelinkFile(@"D:\Desktop\NUS\FYP\rawdata\20180824");
+            ChooseSession(@"D:\Desktop\NUS\FYP\rawdata\20180824");
             ChooseFolder(@"D:\Documents\GitHub\VirtualMaze\out");
         }
     }
@@ -316,9 +313,9 @@ public class ScreenSaver : BasicGUIController {
         //SessionStatusDisplay.ResetStatus();
     }
 
-    private bool HasEdfSessionEnded(DataTypes type, SessionTrigger trigger) {
+    private bool HasEdfSessionEnded(MessageEvent msgEvent, SessionTrigger trigger) {
         //there exits edf files with multiple sessions in them, each session is divided by a ExperimentVersionTrigger
-        return type != DataTypes.NO_PENDING_ITEMS || trigger == SessionTrigger.ExperimentVersionTrigger;
+        return msgEvent == null || msgEvent.dataType == DataTypes.NO_PENDING_ITEMS || trigger == SessionTrigger.ExperimentVersionTrigger;
     }
 
     private decimal LoadAndFix(Queue<SessionData> sessionFrames, ISessionDataReader sessionReader, Queue<AllFloatData> fixations, EyeDataReader eyeReader, Queue<MessageEvent> missingTriggers) {
@@ -326,7 +323,7 @@ public class ScreenSaver : BasicGUIController {
         uint edfEventPeriod = LoadToNextTriggerEdf(eyeReader, fixations, missingTriggers, out MessageEvent data, out SessionTrigger edfTrigger);
 
         print($"ses: { sessionEventPeriod: 0.00}, edf: { edfEventPeriod}");
-        return (sessionEventPeriod * 1000m - edfEventPeriod);
+        return (sessionEventPeriod - edfEventPeriod);
     }
 
     private decimal LoadAndApproximate(Queue<SessionData> sessionFrames, ISessionDataReader sessionReader, Queue<AllFloatData> fixations, EyeDataReader eyeReader, out int status, out string reason) {
@@ -338,8 +335,8 @@ public class ScreenSaver : BasicGUIController {
         reason = null;
 
         //check and account for missing trigger
-        while (sessionData.trigger != edfTrigger && HasEdfSessionEnded(edfdata.dataType, edfTrigger) && sessionReader.HasNext) {
-            string errorMessage = $"Missing trigger detected at approx {fixations.Peek().time + sessionEventPeriod * 1000m}. session: {sessionData.trigger}| edf: {edfTrigger}";
+        while (sessionData.trigger != edfTrigger && !HasEdfSessionEnded(edfdata, edfTrigger) && sessionReader.HasNext) {
+            string errorMessage = $"Missing trigger detected at approx {fixations.Peek().time + sessionEventPeriod}. session: {sessionData.trigger}| edf: {edfTrigger}";
             Console.WriteError(errorMessage);
             Debug.LogWarning(errorMessage);
 
@@ -356,7 +353,7 @@ public class ScreenSaver : BasicGUIController {
             }
         }
 
-        decimal excessTime = (sessionEventPeriod * 1000m - edfEventPeriod);
+        decimal excessTime = (sessionEventPeriod - edfEventPeriod);
 
         // if missing trigger detected and the time difference between the 2 files is less than 20ms
         if (SessionTrigger.NoTrigger != missingTrigger && Math.Abs(excessTime) > Time_Diff_Accept) {
@@ -367,7 +364,7 @@ public class ScreenSaver : BasicGUIController {
             status = Approx_From_Session;
         }
 
-        print($"ses: { sessionEventPeriod:F4}, edf: { edfEventPeriod:F4}, excess: {excessTime:F4} | {status} | {fixations.Peek().ToString()}");
+        print($"ses: { sessionEventPeriod:F4}, edf: { edfEventPeriod:F4}, excess: {excessTime:F4} | {status} |{fixations.Peek().ToString()} {sessionFrames.Count}");
         return excessTime;
     }
 
@@ -397,15 +394,12 @@ public class ScreenSaver : BasicGUIController {
 
             LoadMissingTriggers("", missingevents);
 
-            DataTypes latestType = DataTypes.NULL;
-            SessionTrigger edfTrigger = SessionTrigger.NoTrigger;
-
             //feed in current Data due to preparation moving the data pointer forward
             fixations.Enqueue(data);
 
             int debugMaxMissedOffset = 0;
 
-            while (sessionReader.HasNext && HasEdfSessionEnded(latestType, edfTrigger)) {
+            while (sessionReader.HasNext) {
                 //add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
                 sessionFrames.Enqueue(sessionReader.CurrentData);
 
@@ -462,8 +456,6 @@ public class ScreenSaver : BasicGUIController {
                     MoveRobotTo(robot, sessionData);
 
                     while (gazeTime <= timepassed && fixations.Count > 0) {
-
-
                         AllFloatData currData = fixations.Dequeue();
                         gazeTime = currData.time;
 
@@ -475,6 +467,11 @@ public class ScreenSaver : BasicGUIController {
                         else if (ProcessData(currData, recorder, isLastSampleInFrame) == SessionTrigger.TrialStartedTrigger) {
                             trialCounter++;
                             SessionStatusDisplay.DisplayTrialNumber(trialCounter);
+                        }
+
+                        //update UI objects
+                        if(currData is MessageEvent) {
+                            yield return new WaitForEndOfFrame();
                         }
                     }
 
@@ -496,10 +493,6 @@ public class ScreenSaver : BasicGUIController {
                 //clear queues to prepare for next trigger
                 sessionFrames.Clear();
 
-                if (fixations.Count > 0) {
-                    throw new Exception("remaining fixations");
-                }
-
                 if (Math.Abs(finalExcess) > 3) {
                     if (status != Ignore_Data)
                         Debug.LogError("excess to large");
@@ -507,13 +500,15 @@ public class ScreenSaver : BasicGUIController {
                         Debug.LogError("excess to large so data ignored");
                 }
 
-
-                while (fixations.Count > 0) {
-                    debugMaxMissedOffset = Math.Max(fixations.Count, debugMaxMissedOffset);
-                    //excess frames are taken to be belonging to the next frame, therefore is not last sample in frame
-                    if (ProcessData(fixations.Dequeue(), recorder, false) == SessionTrigger.TrialStartedTrigger) {
-                        trialCounter++;
-                        SessionStatusDisplay.DisplayTrialNumber(trialCounter);
+                if (fixations.Count > 0) {
+                    Debug.LogWarning($"{fixations.Count} fixations assumed to belong to next trigger");
+                    while (fixations.Count > 0) {
+                        debugMaxMissedOffset = Math.Max(fixations.Count, debugMaxMissedOffset);
+                        //excess frames are taken to be belonging to the next frame, therefore is not last sample in frame
+                        if (ProcessData(fixations.Dequeue(), recorder, false) == SessionTrigger.TrialStartedTrigger) {
+                            trialCounter++;
+                            SessionStatusDisplay.DisplayTrialNumber(trialCounter);
+                        }
                     }
                 }
             }
@@ -717,7 +712,6 @@ public class ScreenSaver : BasicGUIController {
         Ray r = viewport.ScreenPointToRay(sample.RightGaze);
 
         if (Physics.Raycast(r, out RaycastHit hit)) {
-            lineRenderer?.SetPositions(new Vector3[] { viewport.transform.position, hit.point });
             Transform objhit = hit.transform;
 
             objName = hit.transform.name;
@@ -733,9 +727,6 @@ public class ScreenSaver : BasicGUIController {
             relativePos = Vector2.zero;
             gazePoint = Vector3.zero;
             objHitPos = Vector3.zero;
-
-            //clear the line renderer
-            lineRenderer?.SetPositions(new Vector3[0]);
 
             return false;
         }
@@ -786,9 +777,6 @@ public class ScreenSaver : BasicGUIController {
             relativePos = Vector2.zero;
             gazePoint = Vector3.zero;
             objHitPos = Vector3.zero;
-
-            //clear the line renderer
-            lineRenderer?.SetPositions(new Vector3[0]);
 
             return false;
         }
@@ -885,7 +873,7 @@ public class ScreenSaver : BasicGUIController {
     /// <param name="trigger">The trigger where the loading stops</param>
     /// <returns>Total time taken from one current trigger to the next</returns>
     private decimal LoadToNextTriggerSession(ISessionDataReader reader, Queue<SessionData> frames, out SessionData data) {
-        decimal totalTime = 0;
+        decimal totalTime = reader.CurrentData.timeDeltaMs;
 
         data = null;
         bool isNextEventFound = false;
@@ -895,7 +883,7 @@ public class ScreenSaver : BasicGUIController {
         while (!isNextEventFound && reader.Next()) {
             data = reader.CurrentData;
             frames.Enqueue(data);
-            totalTime += data.timeDelta;
+            totalTime += data.timeDeltaMs;
 
             isNextEventFound = data.trigger != SessionTrigger.NoTrigger;
         }
@@ -920,6 +908,7 @@ public class ScreenSaver : BasicGUIController {
             fixations.Enqueue(data);
 
             if (type == DataTypes.MESSAGEEVENT) {
+                isNextEventFound = true;
                 MessageEvent ev = (MessageEvent)data;
                 latest = ev;
                 edfTrigger = ev.trigger;

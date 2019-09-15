@@ -38,6 +38,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     public Text frameNumStatus;
     public Text trialNumStatus;
     public Text isPlayingStatus;
+    public Text dataIgnoredStatus;
 
     public bool IsPlaying {
         get => _isPlaying;
@@ -83,25 +84,6 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
     private void Start() {
         dataViewerGUI.SetVisibility(false);
-
-        Image i = pool.AddGazePoint(gazeRect, subjectView, Vector2.zero);
-        i.color = Color.cyan;
-
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(0, 1080));
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(1920, 0));
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(1920, 1080));
-
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(0, 100));
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(0, 200));
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(0, 300));
-
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(50, 0));
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(100, 0));
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(150, 0));
-
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(900, 1000));
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(800, 1000)).color = Color.yellow;
-        pool.AddGazePoint(gazeRect, subjectView, new Vector2(900, 900)).color = Color.red;
 
         processBtn.onClick.AddListener(OnProcessBtnClicked);
 
@@ -295,7 +277,11 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
         CueController.ProcessTrigger(trial.GetLatestTriggerAtFrame(frameNum), cueController, this);
 
-        RobotMovement.MoveRobotTo(robot, frame.Config);
+        if (frame.Config != null) {
+            RobotMovement.MoveRobotTo(robot, frame.Config);
+        }
+
+        dataIgnoredStatus.gameObject.SetActive(frame.Config == null);
 
         Image i = null;
 

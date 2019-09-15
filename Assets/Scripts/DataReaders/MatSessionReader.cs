@@ -17,8 +17,6 @@ public class MatSessionReader : ISessionDataReader {
     public MatSessionReader(UnityMazeMatFile file) {
         this.file = file;
         trialIndex = new int[file.unityTriggersIndex.GetLength(1)];
-        Debug.Log(trialIndex.Length);
-        Debug.Log(file.unityTriggersIndex.GetLength(1));
         for (int i = 0; i < trialIndex.Length - 1; i++) {
             //store the index of all starttrial triggers
             trialIndex[i] = (int)file.unityTriggersIndex[0, i];

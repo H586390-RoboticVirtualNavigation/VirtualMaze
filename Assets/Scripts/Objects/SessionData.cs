@@ -11,8 +11,6 @@ public class SessionData {
 
     public SessionTrigger trigger { get; private set; }
 
-    public string rawData { get; private set; }
-
     public decimal timeDeltaMs { get { return timeDelta * 1000m; } }
 
     public SessionData(int flag, decimal timeDelta, double posX, double posZ, double rotY) {
@@ -22,5 +20,9 @@ public class SessionData {
         config = new RobotConfiguration(posX, posZ, rotY);
 
         trigger = (SessionTrigger)((flag / 10) * 10);
+    }
+
+    public override string ToString() {
+        return $"{flag}, {trigger}, {timeDelta}";
     }
 }

@@ -26,7 +26,6 @@ public class GazePointPool : MonoBehaviour {
     /// <param name="gazePoint">X and Y position of the gaze sample</param>
     /// <returns>Image for extra processing</returns>
     public Image AddGazePoint(RectTransform canvasRect, Camera camera, Vector2 gazePoint) {
-        Debug.Log(gazePoint);
         Image i = GetPooledGazePoint();
         i.color = defaultColor;
         //calculate and posiiton the gaze point on the intended canvas
