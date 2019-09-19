@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -39,6 +40,29 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     public Text trialNumStatus;
     public Text isPlayingStatus;
     public Text dataIgnoredStatus;
+
+    private void Awake() {
+        Debug.LogError("dll ready?");
+        String currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+        Debug.LogError(currentPath);
+        StringBuilder dllPathB = new StringBuilder(Environment.CurrentDirectory);
+        dllPathB.Append(Path.DirectorySeparatorChar);
+        dllPathB.Append("Assets");
+        dllPathB.Append(Path.DirectorySeparatorChar);
+        dllPathB.Append("Plugins");
+        dllPathB.Append(Path.DirectorySeparatorChar);
+        dllPathB.Append("SharpHDF");
+        dllPathB.Append(Path.DirectorySeparatorChar);
+        dllPathB.Append("bin64");
+        dllPathB.Append(Path.DirectorySeparatorChar);
+
+
+        String dllPath = dllPathB.ToString();
+        Debug.LogError(dllPath);
+        if (currentPath.Contains(dllPath) == false) {
+            Environment.SetEnvironmentVariable("PATH", currentPath + Path.PathSeparator + dllPath, EnvironmentVariableTarget.Process);
+        }
+    }
 
     public bool IsPlaying {
         get => _isPlaying;
