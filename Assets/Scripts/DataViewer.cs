@@ -53,7 +53,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         dllPathB.Append(Path.DirectorySeparatorChar);
         dllPathB.Append("SharpHDF");
         dllPathB.Append(Path.DirectorySeparatorChar);
-        dllPathB.Append("bin64");
+        dllPathB.Append("macAndLinux");
         dllPathB.Append(Path.DirectorySeparatorChar);
 
 
