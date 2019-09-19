@@ -29,6 +29,7 @@ public class Trial {
         if (playBackData is PlaybackEvent ev) {
             //0 based indexing
             triggerMap.Add(frames.Count - 1, ev.trigger);
+            currentFrame.AddData(ev);
         }
         else {
             currentFrame.AddData(playBackData);

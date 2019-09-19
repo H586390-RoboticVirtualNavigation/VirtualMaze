@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using System.IO;
+using System;
 
 /// <summary>
 /// Notifies the listeners when Filebrower hides itself
@@ -130,5 +131,9 @@ public class FileBrowser : MonoBehaviour {
                 filePath.text = item.fileInfo.FullName;
             }
         }
+    }
+
+    internal static bool IsValidFolder(string customPath) {
+        return !string.IsNullOrEmpty(customPath) && Directory.Exists(customPath);
     }
 }

@@ -5,6 +5,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using RockVR.Video;
 
 
 public class DataViewer : BasicGUIController, CueController.ITriggerActions {
@@ -12,10 +13,12 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     private const int Sub_Screen = 1;
     private List<Trial> trials = new List<Trial>();
     private RewardArea[] rewards = null;
+    private bool isRecording = false;
 
     public AudioSource audioSource;
 
     //Drag and drop
+    public VideoCaptureCtrl videoCaptureCtrl;
     public CanvasGroup gui;
     public CanvasGroup dataViewerGUI;
     public CanvasGroup selfMenu;
@@ -40,14 +43,22 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     public Text isPlayingStatus;
     public Text dataIgnoredStatus;
 
+    [SerializeField]
+    private string customPath;
+
+    [SerializeField]
+    private Button recordTrialButton;
+
     public bool IsPlaying {
         get => _isPlaying;
         private set {
             _isPlaying = value;
             if (_isPlaying) {
+                videoCaptureCtrl.StartCapture();
                 isPlayingStatus.text = "Playing";
             }
             else {
+                videoCaptureCtrl.StopCapture();
                 isPlayingStatus.text = "Stopped";
             }
         }
@@ -90,6 +101,18 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         trialSelect.onValueChanged.AddListener(OnTrialSelected);
 
         scrubber.onValueChanged.AddListener(OnScrubber);
+        recordTrialButton.onClick.AddListener(StartRecording);
+    }
+
+    private void StartRecording() {
+        if (isRecording) {
+
+        }
+        else {
+            if(FileBrowser.IsValidFolder(customPath)) {
+
+            }
+        }
     }
 
     private void OnTrialSelected(int value) {
@@ -181,7 +204,6 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         IsPlaying = false;
         int toFrame = Convert.ToInt32(value);
         FrameIndex = toFrame;
-        //ShowFrame(trials[TrialIndex], toFrame);
     }
 
     // Update is called once per frame 
@@ -272,22 +294,23 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
         Frame frame = trial.GetFrameAt(frameNum);
 
-
         audioSource.PlayOneShot(frame.GetAudioClip());
-
-        CueController.ProcessTrigger(trial.GetLatestTriggerAtFrame(frameNum), cueController, this);
 
         if (frame.Config != null) {
             RobotMovement.MoveRobotTo(robot, frame.Config);
         }
 
         dataIgnoredStatus.gameObject.SetActive(frame.Config == null);
-
+        print("AMi ahsdasd");
         Image i = null;
 
         foreach (PlaybackData data in frame) {
             if (data is PlaybackSample sample) {
                 i = pool.AddGazePoint(gazeRect, subjectView, sample.gaze);
+            }
+            else if (data is PlaybackEvent evnt){
+                print(evnt.trigger);
+                CueController.ProcessTrigger(evnt.trigger, cueController, this);
             }
         }
         if (i != null) {
@@ -368,6 +391,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     }
 
     public void TrialStartedTriggerAction() {
+        PlayerAudio.instance.PlayStartClip();
         sessionStatus.text = "Cue Shown";
         fadeController.Alpha = 0;
     }
@@ -383,6 +407,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     }
 
     public void TimeoutTriggerAction() {
+        PlayerAudio.instance.PlayStartClip();
         sessionStatus.text = "Trial Timeout";
         SimulateFade();
     }

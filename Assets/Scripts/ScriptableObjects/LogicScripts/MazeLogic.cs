@@ -9,7 +9,7 @@ public abstract class MazeLogic : ScriptableObject, IMazeLogicProvider {
         Destroy(this);
     }
 
-    public void ProcessReward(RewardArea rewardArea) {
+    public virtual void ProcessReward(RewardArea rewardArea) {
         Console.Write(rewardArea.target.name); // log reward name
     }
 }

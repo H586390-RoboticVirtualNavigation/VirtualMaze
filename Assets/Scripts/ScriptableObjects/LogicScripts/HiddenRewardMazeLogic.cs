@@ -31,4 +31,9 @@ public class HiddenRewardMazeLogic : StandardMazeLogic {
         LevelController.OnEnteredTriggerZone -= TriggerZoneEnter;
         LevelController.OnExitedTriggerZone -= TriggerZoneExit;
     }
+
+    public override void ProcessReward(RewardArea rewardArea) {
+        base.ProcessReward(rewardArea);
+        SetRewardTargetVisible(rewardArea, false);
+    }
 }

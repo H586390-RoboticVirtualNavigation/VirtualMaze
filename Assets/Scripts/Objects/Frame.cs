@@ -19,8 +19,8 @@ public class Frame : IEnumerable<PlaybackData> {
     private static float[] tone = null;
     private static float[] negTone = null;
 
-
-    public Frame() {
+    
+    static Frame() {
         if (tone == null) {
             tone = new float[Samples_Per_Millis];
             negTone = new float[Samples_Per_Millis];
@@ -62,5 +62,9 @@ public class Frame : IEnumerable<PlaybackData> {
 
     IEnumerator IEnumerable.GetEnumerator() {
         return ((IEnumerable<PlaybackData>)fixations).GetEnumerator();
+    }
+
+    public override string ToString() {
+        return base.ToString();
     }
 }
