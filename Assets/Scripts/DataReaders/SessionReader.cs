@@ -18,7 +18,10 @@ public class SessionReader : ISessionDataReader {
 
     public bool HasNext => reader.Peek() > -1;
 
+    public float ReadProgress => lineNumber / (float)numFrames;
+
     private readonly string filePath;
+    private readonly int numFrames;
 
     public SessionReader(string filePath) {
         if (!File.Exists(filePath)) {
@@ -29,6 +32,16 @@ public class SessionReader : ISessionDataReader {
 
         reader = new StreamReader(filePath);
         ParseHeader(reader);
+
+        int count = 0;
+
+        using(StreamReader lineCounter = new StreamReader(filePath)) {
+            while (lineCounter.ReadLine() != null) {
+                count++;
+            }
+        }
+
+        numFrames = count;
     }
 
     public bool Next() {
@@ -85,14 +98,7 @@ public class SessionReader : ISessionDataReader {
     public static void ExtractInfo(string filePath, out SessionContext context, out int numFrames) {
         using (SessionReader r = new SessionReader(filePath)) {
             context = r.context;
-
-            //get number of lines
-            int lineCount = 0;
-            while (r.reader.ReadLine() != null) {
-                lineCount++;
-            }
-
-            numFrames = lineCount;
+            numFrames = r.numFrames;
         }
     }
 

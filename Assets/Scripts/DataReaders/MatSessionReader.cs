@@ -12,10 +12,16 @@ public class MatSessionReader : ISessionDataReader {
     // index smaller than row length
     public bool HasNext => index < file.unityData.GetLength(1);
 
+    public float ReadProgress => (float)index / numTrial;
+
+
     private readonly int[] trialIndex;
+    public readonly int numTrial;
 
     public MatSessionReader(UnityMazeMatFile file) {
         this.file = file;
+        numTrial = file.unityData.Length;
+
         trialIndex = new int[file.unityTriggersIndex.GetLength(1)];
         for (int i = 0; i < trialIndex.Length - 1; i++) {
             //store the index of all starttrial triggers

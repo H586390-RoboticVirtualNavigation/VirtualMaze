@@ -265,14 +265,7 @@ public class ScreenSaver : BasicGUIController {
         //process data
         if (isMultipleSession) {
             foreach (string path in GetSessionFilesFromDirectory(sessionPath)) {
-                if (!isMatFile(path)) {
-                    SessionReader.ExtractInfo(path, out SessionContext context, out int numframes);
-                    progressBar.maxValue = numframes;
-                    PrepareScene(context.trialName);
-                }
-                else {
-                    PrepareScene("Double Tee");
-                }
+                PrepareScene("Double Tee");
 
                 yield return IsSceneLoaded;
                 isloaded = false;
@@ -287,14 +280,8 @@ public class ScreenSaver : BasicGUIController {
             }
         }
         else {
-            if (!isMatFile(sessionPath)) {
-                SessionReader.ExtractInfo(sessionPath, out SessionContext context, out int numframes);
-                progressBar.maxValue = numframes;
-                PrepareScene(context.trialName);
-            }
-            else {
-                PrepareScene("Double Tee");
-            }
+            PrepareScene("Double Tee");
+
             string filename = $"{Path.GetFileNameWithoutExtension(sessionPath)}_{Path.GetFileNameWithoutExtension(edfPath)}.csv";
 
             yield return IsSceneLoaded;
@@ -478,7 +465,7 @@ public class ScreenSaver : BasicGUIController {
                     frameCounter++;
                     frameCounter %= Frame_Per_Batch;
                     if (frameCounter == 0) {
-                        progressBar.value += Frame_Per_Batch;
+                        progressBar.value = sessionReader.ReadProgress;
                         yield return null;
                     }
                     gazePointPool?.ClearScreen();

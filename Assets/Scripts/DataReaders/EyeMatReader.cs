@@ -42,46 +42,51 @@ public class EyeMatReader : EyeDataReader {
     }
 
     public override AllFloatData GetNextData() {
-        currentTime++;
-
         if (currentData == null) {
             //do not need to decrement because the decrement is done in the constuctor
-            currentData = new MessageEvent(file.timestamps[0, currentTime], parseTrialCode(GetStateCode(stateIndex)), DataTypes.MESSAGEEVENT);
-        }
-        else if (currentTime >= stateTime) {
-            stateIndex++;
-
-            if (stateIndex < file.trial_index.GetLength(1) * 3 - 1) {
-                stateTime = GetStateTime(stateIndex + 1);
-            }
-            else {
-                stateTime = float.MaxValue;
-            }
-
             currentData = new MessageEvent(file.timestamps[0, currentTime], parseTrialCode(GetStateCode(stateIndex)), DataTypes.MESSAGEEVENT);
 
             //undo the increment of index to simulate a message event within the data
             currentTime--;
         }
         else {
-            if (currentTime >= lastTriggerTime) {
-                currentData = new FEvent(1, DataTypes.NO_PENDING_ITEMS);
+
+            currentTime++;
+
+            if (currentTime >= stateTime) {
+                stateIndex++;
+
+                if (stateIndex < file.trial_index.GetLength(1) * 3 - 1) {
+                    stateTime = GetStateTime(stateIndex + 1);
+                }
+                else {
+                    stateTime = float.MaxValue;
+                }
+
+                currentData = new MessageEvent(file.timestamps[0, currentTime], parseTrialCode(GetStateCode(stateIndex)), DataTypes.MESSAGEEVENT);
+
+                //undo the increment of index to simulate a message event within the data
+                currentTime--;
             }
             else {
-                float gx = file.eyePos[0, currentTime];
-                float gy = file.eyePos[1, currentTime];
-                if (float.IsNaN(gx)) {
-                    gx = 100_000_000f;
+                if (currentTime >= lastTriggerTime) {
+                    currentData = new FEvent(1, DataTypes.NO_PENDING_ITEMS);
                 }
+                else {
+                    float gx = file.eyePos[0, currentTime];
+                    float gy = file.eyePos[1, currentTime];
+                    if (float.IsNaN(gx)) {
+                        gx = 100_000_000f;
+                    }
 
-                if (float.IsNaN(gy)) {
-                    gy = 100_000_000f;
+                    if (float.IsNaN(gy)) {
+                        gy = 100_000_000f;
+                    }
+
+                    currentData = new Fsample(file.timestamps[0, currentTime], gx, gy, DataTypes.SAMPLE_TYPE);
                 }
-
-                currentData = new Fsample(file.timestamps[0, currentTime], gx, gy, DataTypes.SAMPLE_TYPE);
             }
         }
-
         return currentData;
     }
 
@@ -92,7 +97,6 @@ public class EyeMatReader : EyeDataReader {
     }
 
     private int GetStateCode(int stateIndex) {
-        // -1 since matlab is 1 based array
         return file.trial_codes[stateIndex % 3, stateIndex / 3];
     }
 
@@ -111,7 +115,7 @@ public class EyeMatReader : EyeDataReader {
             case SessionTrigger.ExperimentVersionTrigger:
                 return $"Trigger Version {(int)trigger + GameController.versionNum}";
             default:
-                throw new NotSupportedException();
+                throw new NotSupportedException($"EyeMatReader::Unknown code {code}");
         }
     }
 }
