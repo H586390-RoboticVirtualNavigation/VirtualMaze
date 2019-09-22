@@ -23,4 +23,4 @@ Once data is loaded, additional options will be shown.
 The dropdown allows you to jump to any trials available in the loaded file.
 
 #### Recording a Session
-To record a trial, Click the *Record Current Trial* button. VirtualMAze will then playback to current trial for recording. Allow the playback to complete and a .mp4 file will be saved to the location stated in the *Video Save Location*.
+To record a trial, Click the *Record Current Trial* button. VirtualMaze will then playback the current trial for recording. Allow the playback to complete and a .mp4 file will be saved to the location stated in the *Video Save Location*.
