@@ -61,7 +61,7 @@ public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
 
     private static RobotConfiguration GetRobotConfig(IList<string> dataArr) {
         if (dataArr != null) {
-            if (dataArr[2].Contains("ignored")) {
+            if (dataArr[RayCastRecorder.ObjName_Message].Contains("ignored")) {
                 return null;
             }
 
@@ -108,14 +108,15 @@ public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
         switch (type) {
             case DataTypes.SAMPLE_TYPE:
                 string msg = data[RayCastRecorder.ObjName_Message];
-                if (msg.Contains("ignored")) {
-                    return new PlaybackSample(default, default, default, timestamp);
-                }
-
-                Vector2 gaze = new Vector2(float.Parse(data[RayCastRecorder.Gx]), float.Parse(data[RayCastRecorder.Gy]));
                 Vector3 pos = new Vector3(float.Parse(data[RayCastRecorder.PosX]), float.Parse(data[RayCastRecorder.PosY]), float.Parse(data[RayCastRecorder.PosZ]));
                 float rotY = float.Parse(data[RayCastRecorder.RotY]);
 
+                if (msg.Contains("Ignored")) {
+                    return new PlaybackSample(default, pos, rotY, timestamp);
+                }
+
+                Vector2 gaze = new Vector2(float.Parse(data[RayCastRecorder.Gx]), float.Parse(data[RayCastRecorder.Gy]));
+                
                 return new PlaybackSample(gaze, pos, rotY, timestamp);
 
             case DataTypes.MESSAGEEVENT:

@@ -526,7 +526,7 @@ public class ScreenSaver : BasicGUIController {
                 }
                 else {
                     //ignore if gaze is out of bounds
-                    recorder.IgnoreEvent(fs.dataType, fs.time, fs.rawRightGaze, isLastSampleInFrame);
+                    recorder.IgnoreSample(data.dataType, data.time, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
                 }
                 return SessionTrigger.NoTrigger;
             case DataTypes.MESSAGEEVENT:
@@ -552,7 +552,7 @@ public class ScreenSaver : BasicGUIController {
             case DataTypes.SAMPLE_TYPE:
                 Fsample fs = (Fsample)data;
                 //record the raw gaze data
-                recorder.IgnoreEvent(fs.dataType, fs.time, fs.rawRightGaze, isLastSampleInFrame);
+                recorder.IgnoreSample(data.dataType, data.time, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
 
                 break;
             case DataTypes.MESSAGEEVENT:

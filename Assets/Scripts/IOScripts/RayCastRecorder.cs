@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System;
+﻿using System;
 using System.IO;
 using UnityEngine;
 
-public class RayCastRecorder : IDisposable{
+public class RayCastRecorder : IDisposable {
     //index reference
     public const int Type = 0;
     public const int Time = 1;
@@ -122,5 +120,25 @@ public class RayCastRecorder : IDisposable{
         s.Flush();
         s.Dispose();
         s.Close();
+    }
+
+    internal void IgnoreSample(DataTypes type, uint time, Vector2 rawGaze, Vector3 subjectLoc, float subjectRotation, bool isLastSampleInFrame) {
+        s.Write($"{type}{delimiter}");
+        s.Write($"{time}{delimiter}");
+        s.Write($"Sample Ignored{delimiter}");
+        s.Write(Vector2ToString(rawGaze)); //1 delimiter
+        s.Write(delimiter);
+        s.Write(Vector3ToString(subjectLoc)); //2 delimiters
+        s.Write(delimiter);
+        s.Write(subjectRotation);
+        for (int i = 0; i < 9; i++) {
+            s.Write(delimiter);
+        }
+
+        if (isLastSampleInFrame) {
+            s.Write(EndOfFrameFlag);
+        }
+        s.WriteLine(); //total 17 delimiters
+        s.Flush();
     }
 }

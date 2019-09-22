@@ -79,7 +79,7 @@ If a row is detected to be a FEVENT Type, the gx and gy column will be ignored a
 ## Output
 A CSV (Comma Separated Value) file will be generated in the destination folder.
 
-![data-generation-outputScreenshot](/docs/images/data-generation-output.PNG)
+![data-generation-output Screenshot](/docs/images/data-generation-output.PNG)
 
 
 #### Description of Columns

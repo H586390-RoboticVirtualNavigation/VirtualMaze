@@ -9,5 +9,6 @@ recorded when navigating through a real maze.
 
 - [Developer Guide](/docs/DeveloperGuide.md)
 - [Raycasting Guide](/docs/RaycastingGuide.md)
+- [Data Viewer Guide](/docs/PlaybackGuide.md)
 - [User Guide](/docs/UserGuide.md)
 - [Code Documentation](/docs/CodeDocumentation.md)
