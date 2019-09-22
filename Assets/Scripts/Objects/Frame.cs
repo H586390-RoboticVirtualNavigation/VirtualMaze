@@ -20,7 +20,7 @@ public class Frame : IEnumerable<PlaybackData> {
     private static float[] negTone = null;
 
     
-    static Frame() {
+    public Frame() {
         if (tone == null) {
             tone = new float[Samples_Per_Millis];
             negTone = new float[Samples_Per_Millis];

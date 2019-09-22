@@ -42,24 +42,6 @@ namespace RockVR.Video
         }
 
         /// <summary>
-        /// Set the storagePath of the<c>VideoCapture</c> components.
-        /// </summary>
-        /// <value>The <c>AudioCapture</c> component.</value>
-        public string capturePath {
-            set {
-                if (status == StatusType.STARTED) {
-                    Debug.LogWarning("[VideoCaptureCtrl::VideoCapture.capturePath] Cannot " +
-                                     " set path during capture session!");
-                    return;
-                }
-                foreach(VideoCaptureBase vC in videoCaptures) {
-                    vC.customPathFolder = value;
-                    vC.customPath = true;
-                }
-            }
-        }
-
-        /// <summary>
         /// How many capture session is complete currently.
         /// </summary>
         private int videoCaptureFinishCount;

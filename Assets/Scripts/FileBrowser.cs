@@ -52,8 +52,18 @@ public class FileBrowser : MonoBehaviour {
         }
     }
 
-    public void OnFileDirectoryChanged(string newDir) {
+    public static string AddPathSeperator(string path) {
+        print(path);
+        string dir = path;
+        if (!string.IsNullOrEmpty(path) && !(path.EndsWith($"{Path.DirectorySeparatorChar}") || path.EndsWith($"{Path.AltDirectorySeparatorChar}"))) {
+            dir = $"{dir}{Path.DirectorySeparatorChar}";
+        }
+        print(dir);
+        return dir;
+    }
 
+    public void OnFileDirectoryChanged(string newDir) {
+        
         TryShow(newDir, filePath.text);
 
     }
@@ -98,11 +108,11 @@ public class FileBrowser : MonoBehaviour {
 
     public void GoToDirectory(string path) {
         directoryContents.PopulateContents(path);
-        filePath.text = directoryContents.currentDirectory.FullName;
+        filePath.text = AddPathSeperator(directoryContents.currentDirectory.FullName);
     }
 
     public void GoUpADirectory() {
-        GoToDirectory(directoryContents.currentDirectory.Parent.FullName);
+        GoToDirectory(AddPathSeperator(directoryContents.currentDirectory.Parent.FullName));
     }
 
     private void OnFileClicked(FileItem item, bool wasDoubleClick) {
@@ -112,7 +122,6 @@ public class FileBrowser : MonoBehaviour {
             //folder
             if (item.IsFolder) {
                 GoToDirectory(item.directoryInfo.FullName);
-                filePath.text = item.directoryInfo.FullName;
             }
             //file
             else {
@@ -124,7 +133,7 @@ public class FileBrowser : MonoBehaviour {
         else {
             //folder
             if (item.IsFolder) {
-                filePath.text = item.directoryInfo.FullName;
+                filePath.text = AddPathSeperator(item.directoryInfo.FullName);
             }
             //file
             else {

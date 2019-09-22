@@ -34,6 +34,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     public InputField spikeTrainFileField;
 
     public Button processBtn;
+    public CanvasGroup subMenu; // only appears when trials are loaded
     public Dropdown trialSelect;
     public FadeCanvas fadeController;
 
@@ -44,21 +45,18 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     public Text dataIgnoredStatus;
 
     [SerializeField]
-    private string customPath;
+    private InputField savePath;
 
-    [SerializeField]
-    private Button recordTrialButton;
+    public Button recordTrialButton;
 
     public bool IsPlaying {
         get => _isPlaying;
         private set {
             _isPlaying = value;
             if (_isPlaying) {
-                videoCaptureCtrl.StartCapture();
                 isPlayingStatus.text = "Playing";
             }
             else {
-                videoCaptureCtrl.StopCapture();
                 isPlayingStatus.text = "Stopped";
             }
         }
@@ -102,17 +100,43 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
         scrubber.onValueChanged.AddListener(OnScrubber);
         recordTrialButton.onClick.AddListener(StartRecording);
+        subMenu.SetVisibility(false);
+        savePath.text = PathConfig.SaveFolder;
     }
 
     private void StartRecording() {
         if (isRecording) {
-
+            return;
         }
         else {
-            if(FileBrowser.IsValidFolder(customPath)) {
-
+            if(!string.IsNullOrEmpty(savePath.text) && FileBrowser.IsValidFolder(savePath.text)) {
+                SetInputFieldValid(savePath);
+                PathConfig.saveFolder = savePath.text;
+                StartCoroutine(Record());
             }
+            else {
+                SetInputFieldInvalid(savePath);
+            }
+            
         }
+    }
+
+    private IEnumerator Record() {
+        // move to start of the trial
+        FrameIndex = 0;
+        videoCaptureCtrl.StartCapture();
+        isRecording = true;
+        //return command to 
+        yield return null;
+
+        //play frame 1 again to record the audio
+        FrameIndex = 0;
+        IsPlaying = true;
+        while (IsPlaying) {
+            yield return null;
+        }
+        videoCaptureCtrl.StopCapture();
+        isRecording = false;
     }
 
     private void OnTrialSelected(int value) {
@@ -140,6 +164,10 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     }
 
     private void OnProcessBtnClicked() {
+        if (isRecording) {
+            return;
+        }
+
         string path = dataFileField.text;
 
         if (!string.IsNullOrEmpty(path)) {
@@ -157,7 +185,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
                 SelectTrial(0);
 
-                trialSelect.gameObject.SetActive(true);
+                subMenu.SetVisibility(true);
 
                 StartCoroutine(PrepareScene());
             }
@@ -197,6 +225,9 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     }
 
     private void OnScrubber(float value) {
+        if (isRecording)
+            return;
+
         if (value == _frameindex) {
             return;
         }
@@ -208,7 +239,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
     // Update is called once per frame 
     void Update() {
-        if (IsVisible()) {
+        if (IsVisible() && !isRecording) {
             ProcessKeyDown();
             ProcessKeyPress();
         }
@@ -301,7 +332,6 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         }
 
         dataIgnoredStatus.gameObject.SetActive(frame.Config == null);
-        print("AMi ahsdasd");
         Image i = null;
 
         foreach (PlaybackData data in frame) {
@@ -309,13 +339,13 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
                 i = pool.AddGazePoint(gazeRect, subjectView, sample.gaze);
             }
             else if (data is PlaybackEvent evnt){
-                print(evnt.trigger);
                 CueController.ProcessTrigger(evnt.trigger, cueController, this);
             }
         }
         if (i != null) {
             i.color = Color.red;
         }
+        SimulateFade();
     }
 
     private bool Clamp(int value, int min, int max, out int clamped) {
@@ -403,13 +433,11 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
     public void TrialEndedTriggerAction() {
         sessionStatus.text = "Trial Success";
-        SimulateFade();
     }
 
     public void TimeoutTriggerAction() {
         PlayerAudio.instance.PlayStartClip();
         sessionStatus.text = "Trial Timeout";
-        SimulateFade();
     }
 
     public void ExperimentVersionTriggerAction() {
