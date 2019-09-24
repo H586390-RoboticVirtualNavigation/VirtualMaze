@@ -38,9 +38,12 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     public Dropdown trialSelect;
     public FadeCanvas fadeController;
 
-    public Text sessionStatus;
-    public Text frameNumStatus;
-    public Text trialNumStatus;
+    [SerializeField]
+    private RecordCanvas recordCanvas = null;
+
+    //public Text sessionStatus;
+    //public Text frameNumStatus;
+    //public Text trialNumStatus;
     public Text isPlayingStatus;
     public Text dataIgnoredStatus;
 
@@ -73,7 +76,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
                 ShowFrame(trials[TrialIndex], _frameindex);
             }
 
-            frameNumStatus.text = $"Frame: {_frameindex + 1}";
+            recordCanvas.FrameNum = $"Frame: {_frameindex + 1}";
         }
     }
 
@@ -83,7 +86,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
             _trialIndex = value;
             SelectTrial(_trialIndex);
 
-            trialNumStatus.text = $"Trial: {_trialIndex + 1}";
+            recordCanvas.TrialNum = $"Trial: {_trialIndex + 1}";
         }
     }
 
@@ -93,6 +96,8 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
     private void Start() {
         dataViewerGUI.SetVisibility(false);
+
+        recordCanvas.Hide();
 
         processBtn.onClick.AddListener(OnProcessBtnClicked);
 
@@ -136,6 +141,9 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
             yield return null;
         }
         videoCaptureCtrl.StopCapture();
+
+        subjectView.targetTexture = null;
+
         isRecording = false;
     }
 
@@ -192,6 +200,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
                 SelectTrial(0);
 
                 subMenu.SetVisibility(true);
+                recordCanvas.Show();
 
                 StartCoroutine(PrepareScene());
             }
@@ -428,22 +437,22 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
     public void TrialStartedTriggerAction() {
         PlayerAudio.instance.PlayStartClip();
-        sessionStatus.text = "Cue Shown";
+        recordCanvas.TrialStatus = "Cue Shown";
         fadeController.Alpha = 0;
     }
 
     public void CueOffsetTriggerAction() {
-        sessionStatus.text = "TrialRunning";
+        recordCanvas.TrialStatus = "TrialRunning";
         fadeController.Alpha = 0;
     }
 
     public void TrialEndedTriggerAction() {
-        sessionStatus.text = "Trial Success";
+        recordCanvas.TrialStatus = "Trial Success";
     }
 
     public void TimeoutTriggerAction() {
         PlayerAudio.instance.PlayStartClip();
-        sessionStatus.text = "Trial Timeout";
+        recordCanvas.TrialStatus = "Trial Timeout";
     }
 
     public void ExperimentVersionTriggerAction() {
@@ -455,7 +464,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     }
 
     public void DefaultAction() {
-        sessionStatus.text = "Impossible to happen";
+        recordCanvas.TrialStatus = "Impossible to happen";
     }
 
     public void SimulateFade() {
