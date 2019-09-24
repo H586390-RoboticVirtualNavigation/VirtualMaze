@@ -1,11 +1,11 @@
-﻿using System;
+﻿using RockVR.Video;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using RockVR.Video;
 
 
 public class DataViewer : BasicGUIController, CueController.ITriggerActions {
@@ -109,7 +109,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
             return;
         }
         else {
-            if(!string.IsNullOrEmpty(savePath.text) && FileBrowser.IsValidFolder(savePath.text)) {
+            if (!string.IsNullOrEmpty(savePath.text) && FileBrowser.IsValidFolder(savePath.text)) {
                 SetInputFieldValid(savePath);
                 PathConfig.saveFolder = savePath.text;
                 StartCoroutine(Record());
@@ -117,7 +117,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
             else {
                 SetInputFieldInvalid(savePath);
             }
-            
+
         }
     }
 
@@ -154,12 +154,18 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     public class SpikeTimeParser : ICsvLineParser<decimal> {
         public decimal Parse(string[] data) {
             //convert to milliseconds
-            return decimal.Parse(data[0]) * 1000m;
+            try {
+                return decimal.Parse(data[0], System.Globalization.NumberStyles.Float);
+            }
+            catch (FormatException) {
+                print(data[0]);
+                throw;
+            }
         }
 
         public void ParseHeader(StreamReader reader) {
             //throw away header;
-            reader.ReadLine();
+            //reader.ReadLine();
         }
     }
 
@@ -338,7 +344,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
             if (data is PlaybackSample sample) {
                 i = pool.AddGazePoint(gazeRect, subjectView, sample.gaze);
             }
-            else if (data is PlaybackEvent evnt){
+            else if (data is PlaybackEvent evnt) {
                 CueController.ProcessTrigger(evnt.trigger, cueController, this);
             }
         }
