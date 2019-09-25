@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
 public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
 
-    public static List<Trial> Load(string path, List<Trial> trials, CsvReader<decimal> spikeTrainReader = null) {
+    public static void Load(string path, List<Trial> trials, CsvReader<decimal> spikeTrainReader = null) {
         RaycastDataLoader loader = new RaycastDataLoader();
         using (CsvReader<PlaybackData> reader = new CsvReader<PlaybackData>(path, loader)) {
 
@@ -55,8 +56,6 @@ public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
                 t.AddData(data);
             }
         }
-
-        return trials;
     }
 
     private static RobotConfiguration GetRobotConfig(IList<string> dataArr) {
@@ -107,18 +106,23 @@ public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
 
         switch (type) {
             case DataTypes.SAMPLE_TYPE:
-                string msg = data[RayCastRecorder.ObjName_Message];
-                Vector3 pos = new Vector3(float.Parse(data[RayCastRecorder.PosX]), float.Parse(data[RayCastRecorder.PosY]), float.Parse(data[RayCastRecorder.PosZ]));
-                float rotY = float.Parse(data[RayCastRecorder.RotY]);
+                try {
+                    string msg = data[RayCastRecorder.ObjName_Message];
+                    Vector3 pos = new Vector3(float.Parse(data[RayCastRecorder.PosX]), float.Parse(data[RayCastRecorder.PosY]), float.Parse(data[RayCastRecorder.PosZ]));
+                    float rotY = float.Parse(data[RayCastRecorder.RotY]);
 
-                if (msg.Contains("Ignored")) {
-                    return new PlaybackSample(default, pos, rotY, timestamp);
+                    if (msg.Contains("Ignored")) {
+                        return new PlaybackSample(default, pos, rotY, timestamp);
+                    }
+
+                    Vector2 gaze = new Vector2(float.Parse(data[RayCastRecorder.Gx]), float.Parse(data[RayCastRecorder.Gy]));
+
+                    return new PlaybackSample(gaze, pos, rotY, timestamp);
                 }
-
-                Vector2 gaze = new Vector2(float.Parse(data[RayCastRecorder.Gx]), float.Parse(data[RayCastRecorder.Gy]));
-                
-                return new PlaybackSample(gaze, pos, rotY, timestamp);
-
+                catch (Exception) {
+                    Debug.LogError(data[RayCastRecorder.Time]);
+                    throw;
+                }
             case DataTypes.MESSAGEEVENT:
                 string message = data[RayCastRecorder.ObjName_Message].Trim();
                 SessionTrigger trigger = (SessionTrigger)((message[message.Length - 2] - '0') * 10);

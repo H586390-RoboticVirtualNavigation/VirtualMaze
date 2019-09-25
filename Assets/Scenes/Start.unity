@@ -4164,7 +4164,7 @@ PrefabInstance:
     - target: {fileID: 648140302010064164, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.000018208544
+      value: 0.000009660319
       objectReference: {fileID: 0}
     - target: {fileID: 648140302010064164, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
         type: 3}
@@ -7514,21 +7514,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Color.b
       value: 0.6901961
-      objectReference: {fileID: 0}
-    - target: {fileID: 4610498858869156345, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
-        type: 3}
-      propertyPath: customPath
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4610498858869156345, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
-        type: 3}
-      propertyPath: customPathFolder
-      value: D:\Desktop\NUS\FYP\rawdata\20180810
-      objectReference: {fileID: 0}
-    - target: {fileID: 4610498858869156345, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
-        type: 3}
-      propertyPath: isDedicated
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 22468706, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0, type: 3}
       propertyPath: m_AnchoredPosition.y

@@ -85,8 +85,6 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         set {
             _trialIndex = value;
             SelectTrial(_trialIndex);
-
-            recordCanvas.TrialNum = $"Trial: {_trialIndex + 1}";
         }
     }
 
@@ -127,6 +125,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     }
 
     private IEnumerator Record() {
+        Console.Write($"Recording Trial {TrialIndex + 1}");
         // move to start of the trial
         FrameIndex = 0;
         videoCaptureCtrl.StartCapture();
@@ -145,13 +144,19 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         subjectView.targetTexture = null;
 
         isRecording = false;
+        Console.Write($"Recording Trial {TrialIndex + 1} Completed @ {PathConfig.saveFolder}");
     }
 
     private void OnTrialSelected(int value) {
-        TrialIndex = value;
+        if (isRecording) {
+            trialSelect.value = TrialIndex;
+        }
+        else {
+            TrialIndex = value;
+        }
     }
 
-    private void GetTrialNameList(List<Dropdown.OptionData> options) {
+    private void FillTrialOptions(List<Dropdown.OptionData> options) {
         int counter = 1;
         foreach (Trial t in trials) {
             options.Add(new Dropdown.OptionData($"{counter:000}: {t.TrialName}"));
@@ -182,6 +187,10 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
             return;
         }
 
+        StartCoroutine(LoadData());
+    }
+
+    private IEnumerator LoadData() {
         string path = dataFileField.text;
 
         if (!string.IsNullOrEmpty(path)) {
@@ -190,17 +199,22 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
                 CsvReader<decimal> spikeReader = TryCreateSpikeTrainFile(spikeTrainFileField.text);
 
                 trials.Clear();
+                Console.Write("Loading Trials......");
+                yield return null;
+
                 RaycastDataLoader.Load(path, trials, spikeReader);
 
                 trialSelect.ClearOptions();
                 TrialIndex = 0;
 
-                GetTrialNameList(trialSelect.options);
+                FillTrialOptions(trialSelect.options);
 
-                SelectTrial(0);
+                TrialIndex = 0;
+                trialSelect.value = -1;
 
                 subMenu.SetVisibility(true);
                 recordCanvas.Show();
+                Console.Write($"{path} loaded");
 
                 StartCoroutine(PrepareScene());
             }
@@ -293,11 +307,12 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     }
 
     private void SelectTrial(int trialNum) {
-
         pool.ClearScreen();
         Trial t = trials[trialNum];
         scrubber.maxValue = t.GetFrameCount() - 1;
         FrameIndex = 0;
+
+        recordCanvas.TrialNum = $"Trial: {_trialIndex + 1}";
 
         if (rewards != null) {
             print($"{t.RewardIndex}, {rewards.Length}");
