@@ -169,17 +169,17 @@ namespace RockVR.Video
                 {
                     continue;
                 }
-                if (videoCapture.status != StatusType.STARTED && status != StatusType.PAUSED)
-                {
-                    if (IsCaptureAudio())
-                    {
-                        audioCapture.eventDelegate.OnComplete -= OnAudioCaptureComplete;
-                        audioCapture.StopCapture();
-                    }
-                    videoCapture.eventDelegate.OnComplete -= OnVideoCaptureComplete;
-                    status = StatusType.NOT_START;
-                    return;
-                }
+                //if (videoCapture.status != StatusType.STARTED && status != StatusType.PAUSED)
+                //{
+                //    if (IsCaptureAudio())
+                //    {
+                //        audioCapture.StopCapture();
+                //        //audioCapture.eventDelegate.OnComplete -= OnAudioCaptureComplete;
+                //    }
+                //    //videoCapture.eventDelegate.OnComplete -= OnVideoCaptureComplete;
+                //    status = StatusType.NOT_START;
+                //    return;
+                //}
                 videoCapture.StopCapture();
                 PathConfig.lastVideoFile = videoCapture.filePath;
             }
