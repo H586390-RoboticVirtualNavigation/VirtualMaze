@@ -18,6 +18,8 @@ public class GazePointPool : MonoBehaviour {
     private readonly int initalPool = 25;
     private int activeNow = 0;
 
+    private Queue<Image> activeQueue = new Queue<Image>();
+
     /// <summary>
     /// Positions a gaze point on the intended canvas.
     /// </summary>
@@ -34,6 +36,7 @@ public class GazePointPool : MonoBehaviour {
             activeNow++;
 
             i.rectTransform.localPosition = localpoint;
+            activeQueue.Enqueue(i);
         }
         return i;
     }
@@ -74,10 +77,9 @@ public class GazePointPool : MonoBehaviour {
     /// Clears screen of all active images.
     /// </summary>
     public void ClearScreen() {
-        foreach (Image i in pool) {
-            if (i.gameObject.activeInHierarchy) {
-                i.gameObject.SetActive(false);
-            }
+        while (activeQueue.Count > 0) {
+            Image i = activeQueue.Dequeue();
+            i.gameObject.SetActive(false);
         }
         activeNow = 0;
     }

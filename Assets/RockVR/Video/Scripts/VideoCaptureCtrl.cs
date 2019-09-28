@@ -143,10 +143,10 @@ namespace RockVR.Video
             // Reset record session count.
             videoCaptureFinishCount = 0;
             // Start garbage collect thread.
-            garbageCollectionThread = new Thread(GarbageCollectionThreadFunction);
-            garbageCollectionThread.Priority = System.Threading.ThreadPriority.Lowest;
-            garbageCollectionThread.IsBackground = true;
-            garbageCollectionThread.Start();
+            //garbageCollectionThread = new Thread(GarbageCollectionThreadFunction);
+            //garbageCollectionThread.Priority = System.Threading.ThreadPriority.Lowest;
+            //garbageCollectionThread.IsBackground = true;
+            //garbageCollectionThread.Start();
             // Update current status.
             status = StatusType.STARTED;
         }
@@ -187,6 +187,10 @@ namespace RockVR.Video
             {
                 audioCapture.StopCapture();
             }
+
+            //GC.Collect when everything is done
+            System.GC.Collect();
+
             status = StatusType.STOPPED;
         }
         /// <summary>
