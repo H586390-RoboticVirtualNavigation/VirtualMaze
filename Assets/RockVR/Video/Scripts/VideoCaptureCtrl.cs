@@ -236,8 +236,8 @@ namespace RockVR.Video {
                         eventDelegate.OnError((int)ErrorCodeType.VIDEO_AUDIO_MERGE_TIMEOUT);
                 }
                 PathConfig.lastVideoFile = muxing.filePath;
-
-                MuxComplete();
+                if (MuxComplete != null)
+                    MuxComplete.Invoke();
             }
             status = StatusType.FINISH;
             if (eventDelegate.OnComplete != null)
