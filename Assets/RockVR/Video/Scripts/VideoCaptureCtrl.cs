@@ -1,18 +1,17 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using System.Collections.Generic;
-using RockVR.Common;
+using UnityEngine;
 
-namespace RockVR.Video
-{
+namespace RockVR.Video {
     /// <summary>
     /// <c>VideoCaptureCtrl</c> component, manage and record gameplay from specific camera.
     /// Work with <c>VideoCapture</c> and <c>AudioCapture</c> component to generate gameplay
     /// videos.
     /// </summary>
-    public class VideoCaptureCtrl : VideoCaptureCtrlBase
-    {
+    public class VideoCaptureCtrl : VideoCaptureCtrlBase {
+        public delegate void MuxCompleteDelegate();
+        public MuxCompleteDelegate MuxComplete;
         /// <summary>
         /// Reference to the <c>AudioCapture</c> component for writing audio files.
         /// This needs to be set when you are recording a video with audio.
@@ -23,16 +22,12 @@ namespace RockVR.Video
         /// Get or set the <c>AudioCapture</c> component.
         /// </summary>
         /// <value>The <c>AudioCapture</c> component.</value>
-        public AudioCapture audioCapture
-        {
-            get
-            {
+        public AudioCapture audioCapture {
+            get {
                 return _audioCapture;
             }
-            set
-            {
-                if (status == StatusType.STARTED)
-                {
+            set {
+                if (status == StatusType.STARTED) {
                     Debug.LogWarning("[VideoCaptureCtrl::AudioCapture] Cannot " +
                                      " set aduio during capture session!");
                     return;
@@ -68,23 +63,18 @@ namespace RockVR.Video
         /// <summary>
         /// Initialize the attributes of the capture session and start capture.
         /// </summary>
-        public override void StartCapture()
-        {
+        public override void StartCapture() {
             if (status != StatusType.NOT_START &&
-                status != StatusType.FINISH)
-            {
+                status != StatusType.FINISH) {
                 Debug.LogWarning("[VideoCaptureCtrl::StartCapture] Previous " +
                                  " capture not finish yet!");
                 return;
             }
             // Filter out disabled capture component.
             List<VideoCapture> validCaptures = new List<VideoCapture>();
-            if (videoCaptures != null && videoCaptures.Length > 0)
-            {
-                foreach (VideoCapture videoCapture in videoCaptures)
-                {
-                    if (videoCapture != null && videoCapture.gameObject.activeSelf)
-                    {
+            if (videoCaptures != null && videoCaptures.Length > 0) {
+                foreach (VideoCapture videoCapture in videoCaptures) {
+                    if (videoCapture != null && videoCapture.gameObject.activeSelf) {
                         validCaptures.Add(videoCapture);
                     }
                 }
@@ -95,16 +85,14 @@ namespace RockVR.Video
             if (audioCapture != null && audioCapture.gameObject.activeSelf)
                 isCaptureAudio = true;
             // Check if can start a capture session.
-            if (!isCaptureAudio && videoCaptures.Length == 0)
-            {
+            if (!isCaptureAudio && videoCaptures.Length == 0) {
                 Debug.LogError(
                     "[VideoCaptureCtrl::StartCapture] StartCapture called " +
                     "but no attached VideoRecorder or AudioRecorder were found!"
                 );
                 return;
             }
-            if (!File.Exists(PathConfig.ffmpegPath))
-            {
+            if (!File.Exists(PathConfig.ffmpegPath)) {
                 Debug.LogError(
                     "[VideoCaptureCtrl::StartCapture] FFmpeg not found, please add " +
                     "ffmpeg executable before start capture!"
@@ -114,29 +102,24 @@ namespace RockVR.Video
             // Loop through each of the video capture component, initialize 
             // and start recording session.
             videoCaptureRequiredCount = 0;
-            for (int i = 0; i < videoCaptures.Length; i++)
-            {
+            for (int i = 0; i < videoCaptures.Length; i++) {
                 VideoCapture videoCapture = (VideoCapture)videoCaptures[i];
-                if (videoCapture == null || !videoCapture.gameObject.activeSelf)
-                {
+                if (videoCapture == null || !videoCapture.gameObject.activeSelf) {
                     continue;
                 }
                 videoCaptureRequiredCount++;
                 if (videoCapture.status != StatusType.NOT_START &&
-                videoCapture.status != StatusType.FINISH)
-                {
+                videoCapture.status != StatusType.FINISH) {
                     return;
                 }
-                if (videoCapture.offlineRender)
-                {
+                if (videoCapture.offlineRender) {
                     isOfflineRender = true;
                 }
                 videoCapture.StartCapture();
                 videoCapture.eventDelegate.OnComplete += OnVideoCaptureComplete;
             }
             // Check if record audio.
-            if (IsCaptureAudio())
-            {
+            if (IsCaptureAudio()) {
                 audioCapture.StartCapture();
                 audioCapture.eventDelegate.OnComplete += OnAudioCaptureComplete;
             }
@@ -155,18 +138,14 @@ namespace RockVR.Video
         /// may not be completely written when this method returns. In order to know
         /// when the video file is complete, register <c>OnComplete</c> delegate.
         /// </summary>
-        public override void StopCapture()
-        {
-            if (status != StatusType.STARTED && status != StatusType.PAUSED)
-            {
+        public override void StopCapture() {
+            if (status != StatusType.STARTED && status != StatusType.PAUSED) {
                 Debug.LogWarning("[VideoCaptureCtrl::StopCapture] capture session " +
                                  "not start yet!");
                 return;
             }
-            foreach (VideoCapture videoCapture in videoCaptures)
-            {
-                if (!videoCapture.gameObject.activeSelf)
-                {
+            foreach (VideoCapture videoCapture in videoCaptures) {
+                if (!videoCapture.gameObject.activeSelf) {
                     continue;
                 }
                 //if (videoCapture.status != StatusType.STARTED && status != StatusType.PAUSED)
@@ -183,8 +162,7 @@ namespace RockVR.Video
                 videoCapture.StopCapture();
                 PathConfig.lastVideoFile = videoCapture.filePath;
             }
-            if (IsCaptureAudio())
-            {
+            if (IsCaptureAudio()) {
                 audioCapture.StopCapture();
             }
 
@@ -196,31 +174,25 @@ namespace RockVR.Video
         /// <summary>
         /// Pause video capture process.
         /// </summary>
-        public override void ToggleCapture()
-        {
+        public override void ToggleCapture() {
             base.ToggleCapture();
-            foreach (VideoCapture videoCapture in videoCaptures)
-            {
+            foreach (VideoCapture videoCapture in videoCaptures) {
                 videoCapture.ToggleCapture();
             }
-            if (IsCaptureAudio())
-            {
+            if (IsCaptureAudio()) {
                 audioCapture.PauseCapture();
             }
-            if (status != StatusType.PAUSED)
-            {
+            if (status != StatusType.PAUSED) {
                 status = StatusType.PAUSED;
             }
-            else
-            {
+            else {
                 status = StatusType.STARTED;
             }
         }
         /// <summary>
         /// Handle callbacks for the <c>VideoCapture</c> complete.
         /// </summary>
-        private void OnVideoCaptureComplete()
-        {
+        private void OnVideoCaptureComplete() {
             videoCaptureFinishCount++;
             if (videoCaptureFinishCount == videoCaptureRequiredCount && // Finish all video capture.
                 !isCaptureAudio)// No audio capture required.
@@ -233,11 +205,9 @@ namespace RockVR.Video
         /// <summary>
         /// Handles callbacks for the <c>AudioCapture</c> complete.
         /// </summary>
-        private void OnAudioCaptureComplete()
-        {
+        private void OnAudioCaptureComplete() {
             // Start merging thread when we have videos captured.
-            if (IsCaptureAudio())
-            {
+            if (IsCaptureAudio()) {
                 videoMergeThread = new Thread(VideoMergeThreadFunction);
                 videoMergeThread.Priority = System.Threading.ThreadPriority.Lowest;
                 videoMergeThread.IsBackground = true;
@@ -247,43 +217,39 @@ namespace RockVR.Video
         /// <summary>
         /// Media merge the thread function.
         /// </summary>
-        private void VideoMergeThreadFunction()
-        {
+        private void VideoMergeThreadFunction() {
             // Wait for all video record finish.
-            while (videoCaptureFinishCount < videoCaptureRequiredCount)
-            {
+            while (videoCaptureFinishCount < videoCaptureRequiredCount) {
                 Thread.Sleep(1000);
             }
-            foreach (VideoCapture videoCapture in videoCaptures)
-            {
+            foreach (VideoCapture videoCapture in videoCaptures) {
                 // TODO, make audio live streaming work
                 if (
                     videoCapture.mode == VideoCapture.ModeType.LIVE_STREAMING ||
                     // Dont merge audio when capture equirectangular, its not sync.
-                    videoCapture.format == VideoCapture.FormatType.PANORAMA)
-                {
+                    videoCapture.format == VideoCapture.FormatType.PANORAMA) {
                     continue;
                 }
                 VideoMuxing muxing = new VideoMuxing(videoCapture, audioCapture);
-                if (!muxing.Muxing())
-                {
+                if (!muxing.Muxing()) {
                     if (eventDelegate.OnError != null)
                         eventDelegate.OnError((int)ErrorCodeType.VIDEO_AUDIO_MERGE_TIMEOUT);
                 }
                 PathConfig.lastVideoFile = muxing.filePath;
+
+                MuxComplete();
             }
             status = StatusType.FINISH;
             if (eventDelegate.OnComplete != null)
                 eventDelegate.OnComplete();
+
             Cleanup();
         }
         /// <summary>
         /// Garbage collection thread function.
         /// </summary>
-        void GarbageCollectionThreadFunction()
-        {
-            while (status == StatusType.STARTED)
-            {
+        void GarbageCollectionThreadFunction() {
+            while (status == StatusType.STARTED) {
                 // TODO, adjust gc interval dynamic.
                 Thread.Sleep(1000);
                 System.GC.Collect();
@@ -292,20 +258,16 @@ namespace RockVR.Video
         /// <summary>
         /// Cleanup this instance.
         /// </summary>
-        private void Cleanup()
-        {
-            foreach (VideoCapture videoCapture in videoCaptures)
-            {
+        private void Cleanup() {
+            foreach (VideoCapture videoCapture in videoCaptures) {
                 // Dont clean panorama video, its not include in merge thread.
-                if (videoCapture.format == VideoCapture.FormatType.PANORAMA)
-                {
+                if (videoCapture.format == VideoCapture.FormatType.PANORAMA) {
                     continue;
                 }
                 videoCapture.eventDelegate.OnComplete -= OnVideoCaptureComplete;
                 videoCapture.Cleanup();
             }
-            if (isCaptureAudio)
-            {
+            if (isCaptureAudio) {
                 audioCapture.eventDelegate.OnComplete -= OnAudioCaptureComplete;
                 audioCapture.Cleanup();
             }
@@ -314,22 +276,19 @@ namespace RockVR.Video
         /// Whether recording audio
         /// </summary>
         /// <returns>Whether recording audio</returns>
-        private bool IsCaptureAudio()
-        {
+        private bool IsCaptureAudio() {
             return isCaptureAudio && !isOfflineRender;
         }
         /// <summary>
         /// Initial instance and init variable.
         /// </summary>
-        protected override void Awake()
-        {
+        protected override void Awake() {
             base.Awake();
             // For easy access the CameraCaptures var.
             if (videoCaptures == null)
                 videoCaptures = new VideoCapture[0];
             // Create default root folder if not created.
-            if (!Directory.Exists(PathConfig.SaveFolder))
-            {
+            if (!Directory.Exists(PathConfig.SaveFolder)) {
                 Directory.CreateDirectory(PathConfig.SaveFolder);
             }
             status = StatusType.NOT_START;
@@ -337,12 +296,10 @@ namespace RockVR.Video
         /// <summary>
         /// Check if still processing on application quit.
         /// </summary>
-        protected override void OnApplicationQuit()
-        {
+        protected override void OnApplicationQuit() {
             base.OnApplicationQuit();
             // Issue an interrupt if still capturing.
-            if (status == StatusType.STARTED)
-            {
+            if (status == StatusType.STARTED) {
                 StopCapture();
             }
         }

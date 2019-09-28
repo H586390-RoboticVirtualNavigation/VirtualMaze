@@ -127,6 +127,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     private IEnumerator Record() {
         bool isRecordingValid = false;
         int retries = 0, maxRetries = 5;
+
         while (!isRecordingValid && retries < maxRetries) {
             if (retries > 0) {
                 Console.Write($"Recording Trial {TrialIndex + 1}, Retrying {retries}/{maxRetries}");
@@ -149,18 +150,34 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
             }
             videoCaptureCtrl.StopCapture();
 
+            //in windows, this code only checks the size of the screen captures
+            // but is is also a good indicator as size of the failed capture is roughly 262kB only
+
             isRecordingValid = IsRecordingValid(PathConfig.lastVideoFile);
+
+            if (!isRecordingValid) {
+                retries++;
+            }
+            yield return null;
 
         }
         subjectView.targetTexture = null;
 
-        isRecording = false;
+        //isRecording = false;
         if (!isRecordingValid) {
             Console.Write($"Recording Trial {TrialIndex + 1} Failed! Please try again.");
         }
         else {
+            videoCaptureCtrl.MuxComplete += OnMuxComplete;
+            Console.Write($"Processing");
+            yield return new WaitUntil(() => !isRecording);
             Console.Write($"Recording Trial {TrialIndex + 1} Completed @ {PathConfig.lastVideoFile}");
         }
+    }
+
+    private void OnMuxComplete() {
+        videoCaptureCtrl.MuxComplete -= OnMuxComplete;
+        isRecording = false;
     }
 
     private bool IsRecordingValid(string filePath) {
