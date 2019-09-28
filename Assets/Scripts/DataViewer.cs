@@ -125,26 +125,48 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     }
 
     private IEnumerator Record() {
-        Console.Write($"Recording Trial {TrialIndex + 1}");
-        // move to start of the trial
-        FrameIndex = 0;
-        videoCaptureCtrl.StartCapture();
-        isRecording = true;
-        //return command to 
-        yield return null;
-
-        //play frame 1 again to record the audio
-        FrameIndex = 0;
-        IsPlaying = true;
-        while (IsPlaying) {
+        bool isRecordingValid = false;
+        int retries = 0, maxRetries = 5;
+        while (!isRecordingValid && retries < maxRetries) {
+            if (retries > 0) {
+                Console.Write($"Recording Trial {TrialIndex + 1}, Retrying {retries}/{maxRetries}");
+            }
+            else {
+                Console.Write($"Recording Trial {TrialIndex + 1}");
+            }
+            // move to start of the trial
+            FrameIndex = 0;
+            videoCaptureCtrl.StartCapture();
+            isRecording = true;
+            //return command to 
             yield return null;
-        }
-        videoCaptureCtrl.StopCapture();
 
+            //play frame 1 again to record the audio
+            FrameIndex = 0;
+            IsPlaying = true;
+            while (IsPlaying) {
+                yield return null;
+            }
+            videoCaptureCtrl.StopCapture();
+
+            isRecordingValid = IsRecordingValid(PathConfig.lastVideoFile);
+
+        }
         subjectView.targetTexture = null;
 
         isRecording = false;
-        Console.Write($"Recording Trial {TrialIndex + 1} Completed @ {PathConfig.saveFolder}");
+        if (!isRecordingValid) {
+            Console.Write($"Recording Trial {TrialIndex + 1} Failed! Please try again.");
+        }
+        else {
+            Console.Write($"Recording Trial {TrialIndex + 1} Completed @ {PathConfig.lastVideoFile}");
+        }
+    }
+
+    private bool IsRecordingValid(string filePath) {
+        FileInfo info = new FileInfo(filePath);
+        int thresholdMB = 1 * 1024 * 1024;
+        return info.Length > thresholdMB;
     }
 
     private void OnTrialSelected(int value) {
