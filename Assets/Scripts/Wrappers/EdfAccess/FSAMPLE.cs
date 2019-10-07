@@ -76,7 +76,7 @@ namespace Eyelink.Structs {
 
         /// <summary>
         /// Unity uses the bottom left as origin (0,0) but eyelink uses top right as origin.
-        /// This property returns converted gaze data.
+        /// This property returns the right gaze with the origin at bottom left (Unity).
         /// </summary>
         public Vector2 RightGaze { get => rawRightGaze.ConvertToUnityOriginCoordinate(); }
 

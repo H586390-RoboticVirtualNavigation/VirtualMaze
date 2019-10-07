@@ -82,4 +82,10 @@ public class Trial {
             return SessionTrigger.NoTrigger;
         }
     }
+
+    public uint GetDurationOf(int frameIndex) {
+        Frame f = frames[frameIndex];
+
+        return f.endTime - frames[0].startTime;
+    }
 }

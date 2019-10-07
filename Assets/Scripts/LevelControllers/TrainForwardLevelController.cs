@@ -2,13 +2,21 @@
 using System.Collections;
 using UnityEngine.UI;
 
+/// <summary>
+/// Unused Class
+/// 
+/// Kept for reference
+/// 
+/// YY: seem to use older trigger values, have parallelport trigger codes.
+/// 
+/// </summary>
 public class TrainForwardLevelController : MonoBehaviour {
 
 	private GameController gameController;
 	private GameObject robot;
 	private RobotMovement robotMovement;
 	private FadeCanvas fade;
-	private int numTrials;
+	private int numTrials = 0;
 	private int trialCounter;
 	private bool trigger;
 	private int triggerValue;
@@ -53,7 +61,7 @@ public class TrainForwardLevelController : MonoBehaviour {
 		completionTime = (float)GuiController.completionWindowTime / 1000.0f;
 		
 		//set numTrials
-		numTrials = gameController.numTrials;
+		//numTrials = gameController.numTrials;
 		trialCounter = 1;	//start with first trial
 		trigger = false;
 		
@@ -66,33 +74,32 @@ public class TrainForwardLevelController : MonoBehaviour {
 		elapsedTime += Time.deltaTime;
 		
 		//save position data
-		if (gameController.fs != null) {
+		//if (gameController.fs != null) {
 
 			if(trigger){
                 // send parallel port
-                parallelPortcontroller.WriteTrigger(triggerValue);
-                parallelPortcontroller.WriteTrigger(0);
+                parallelPortcontroller.TryWriteTrigger((SessionTrigger)(triggerValue*10), 0);
 
                 //original code
                 //if(GameController.instance.parallelPortAddr != -1) {
                 //	ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, triggerValue);	
                 //	ParallelPort.TryOut32 (GameController.instance.parallelPortAddr, 0);	
                 //}
-                gameController.fs.WriteLine("{0} {1:F8} {2:F2} {3:F2} {4:F2}", 
-				                            triggerValue, 
-				                            Time.deltaTime, 
-				                            robot.transform.position.x, 
-				                            robot.transform.position.z,
-				                            robot.transform.eulerAngles.y);
+                //gameController.fs.WriteLine("{0} {1:F8} {2:F2} {3:F2} {4:F2}", 
+				            //                triggerValue, 
+				            //                Time.deltaTime, 
+				            //                robot.transform.position.x, 
+				            //                robot.transform.position.z,
+				            //                robot.transform.eulerAngles.y);
 				trigger = false;
 			}else{
-				gameController.fs.WriteLine("     {0:F8} {1:F2} {2:F2} {3:F2}", 
-				                            Time.deltaTime, 
-				                            robot.transform.position.x, 
-				                            robot.transform.position.z,
-				                            robot.transform.eulerAngles.y);
+				//gameController.fs.WriteLine("     {0:F8} {1:F2} {2:F2} {3:F2}", 
+				//                            Time.deltaTime, 
+				//                            robot.transform.position.x, 
+				//                            robot.transform.position.z,
+				//                            robot.transform.eulerAngles.y);
 			}
-		}
+		//}
 	}
 	
 	void EnteredReward(){
@@ -174,7 +181,7 @@ public class TrainForwardLevelController : MonoBehaviour {
 		PlayerAudio.instance.PlayStartClip ();
 		
 		//update experiment status
-		GuiController.experimentStatus = string.Format ("session {0} trial {1}", gameController.sessionCounter, trialCounter);
+		//GuiController.experimentStatus = string.Format ("session {0} trial {1}", gameController.sessionCounter, trialCounter);
 		
 		//reset elapsed time
 		elapsedTime = 0;
@@ -239,7 +246,7 @@ public class TrainForwardLevelController : MonoBehaviour {
 		PlayerAudio.instance.PlayStartClip ();
 		
 		//update experiment status
-		GuiController.experimentStatus = string.Format ("session {0} trial {1}", gameController.sessionCounter, trialCounter);
+		//GuiController.experimentStatus = string.Format ("session {0} trial {1}", gameController.sessionCounter, trialCounter);
 		
 		inTrial = true;
 	}
@@ -275,9 +282,9 @@ public class TrainForwardLevelController : MonoBehaviour {
 				PlayerAudio.instance.PlayStartClip ();
 				
 				//update experiment status, considered the same trial
-				GuiController.experimentStatus = string.Format ("session {0} trial {1}", 
-				                                                gameController.sessionCounter, 
-				                                                trialCounter);
+				//GuiController.experimentStatus = string.Format ("session {0} trial {1}", 
+				//                                                gameController.sessionCounter, 
+				//                                                trialCounter);
 				
 				//trigger - start trial
 				trigger = true;
@@ -293,10 +300,10 @@ public class TrainForwardLevelController : MonoBehaviour {
 				
 			} else if (inTrial) {
 				//update experiment status, considered the same trial
-				GuiController.experimentStatus = string.Format ("session {0} trial {1}\ntimeout in {2:F2}", 
-				                                                gameController.sessionCounter, 
-				                                                trialCounter, 
-				                                                completionTime - elapsedTime);
+				//GuiController.experimentStatus = string.Format ("session {0} trial {1}\ntimeout in {2:F2}", 
+				//                                                gameController.sessionCounter, 
+				//                                                trialCounter, 
+				//                                                completionTime - elapsedTime);
 			}
 			
 			yield return new WaitForSeconds (0.1f);

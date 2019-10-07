@@ -52,6 +52,9 @@ public class LevelController : MonoBehaviour {
     [SerializeField]
     private CueController cueController = null;
 
+    [SerializeField]
+    private ParallelPort parallelPort = null;
+
     // cache waitForUnpause for efficiency
     private WaitUntil waitIfPaused;
 
@@ -70,6 +73,7 @@ public class LevelController : MonoBehaviour {
         //Prepare Eyelink
         EyeLink.Initialize();
         onSessionTrigger.AddListener(EyeLink.OnSessionTrigger);
+        onSessionTrigger.AddListener(parallelPort.TryWriteTrigger);
         DontDestroyOnLoad(this);
     }
 
@@ -118,7 +122,7 @@ public class LevelController : MonoBehaviour {
 
     IEnumerator MainLoop() {
         int trialCounter = 0;
-        targetIndex = 0;//reset targetindex
+        targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
         bool firstTrial = true;
 
         yield return waitIfPaused;

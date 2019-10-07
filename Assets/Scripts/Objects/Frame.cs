@@ -9,7 +9,7 @@ public class Frame : IEnumerable<PlaybackData> {
     public int DataCount { get => fixations.Count; }
 
     public uint startTime { get; private set; }
-    private uint endTime;
+    public uint endTime { get; private set; }
 
     private AudioClip spikeTrain = null;
 

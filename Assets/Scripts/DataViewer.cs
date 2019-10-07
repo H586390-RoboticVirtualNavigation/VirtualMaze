@@ -48,7 +48,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     public Text dataIgnoredStatus;
 
     [SerializeField]
-    private InputField savePath;
+    private InputField savePath = null;
 
     public Button recordTrialButton;
 
@@ -407,14 +407,14 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
             if (data is PlaybackSample sample) {
                 i = pool.AddGazePoint(gazeRect, subjectView, sample.gaze);
             }
-            else if (data is PlaybackEvent evnt) {
-                CueController.ProcessTrigger(evnt.trigger, cueController, this);
-            }
         }
         if (i != null) {
             i.color = Color.red;
         }
+
         SimulateFade();
+        CueController.ProcessTrigger(trial.GetLatestTriggerAtFrame(frameNum), cueController, this);
+        recordCanvas.TimeStatus = trial.GetDurationOf(_frameindex);
     }
 
     private bool Clamp(int value, int min, int max, out int clamped) {
@@ -490,7 +490,10 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     }
 
     public void TrialStartedTriggerAction() {
-        PlayerAudio.instance.PlayStartClip();
+        if (FrameIndex == 0) {
+            PlayerAudio.instance.PlayStartClip();
+        }
+
         recordCanvas.TrialStatus = "Cue Shown";
         fadeController.Alpha = 0;
     }

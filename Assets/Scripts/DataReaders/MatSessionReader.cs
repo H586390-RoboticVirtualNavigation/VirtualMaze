@@ -10,7 +10,7 @@ public class MatSessionReader : ISessionDataReader {
     public int CurrentIndex => index;
 
     // index smaller than row length
-    public bool HasNext => index < file.unityData.GetLength(1);
+    public bool HasNext => index < numTrial;
 
     public float ReadProgress => (float)index / numTrial;
 
@@ -20,7 +20,7 @@ public class MatSessionReader : ISessionDataReader {
 
     public MatSessionReader(UnityMazeMatFile file) {
         this.file = file;
-        numTrial = file.unityData.Length;
+        numTrial = file.unityData.GetLength(1);
 
         trialIndex = new int[file.unityTriggersIndex.GetLength(1)];
         for (int i = 0; i < trialIndex.Length - 1; i++) {

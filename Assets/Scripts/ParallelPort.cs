@@ -26,9 +26,9 @@ public class ParallelPort : ConfigurableComponent {
         }
     }
 
-    public void WriteTrigger(int value) {
+    public void TryWriteTrigger(SessionTrigger trigger, int rewardIndex) {
         if (portHexAddress == -1) {
-            Out32(portHexAddress, value);
+            Out32(portHexAddress, (int)trigger + rewardIndex);
             Out32(portHexAddress, 0);
         }
     }
@@ -60,28 +60,5 @@ public class ParallelPort : ConfigurableComponent {
         Settings s = (Settings)loadedSettings;
 
         portHexAddress = s.portHexAddress;
-    }
-
-    public void OnSessionTrigger(SessionTrigger trigger, int triggerValue) {
-        WriteTrigger(triggerValue);
-
-        //for reference for now. to be removed
-        //switch (trigger) {
-        //    case SessionTrigger.CueShownTrigger:
-                
-        //        break;
-        //    case SessionTrigger.TrialStartedTrigger:
-        //        TryEyemsg_Printf("Start Trial " + triggerValue);
-        //        break;
-        //    case SessionTrigger.TrialEndedTrigger:
-        //        TryEyemsg_Printf("End Trial " + triggerValue);
-        //        break;
-        //    case SessionTrigger.TimeoutTrigger:
-        //        TryEyemsg_Printf("Timeout " + triggerValue);
-        //        break;
-        //    case SessionTrigger.ExperimentVersionTrigger:
-        //        TryEyemsg_Printf("Trigger Version " + GameController.versionNum);
-        //        break;
-        //}
     }
 }

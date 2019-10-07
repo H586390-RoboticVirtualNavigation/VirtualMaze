@@ -1,6 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
+/// <summary>
+/// Unused class jept in project as reference.
+/// 
+/// YY: Most likely a 2 reward trial which needs the subject to reach reward1 then reward2
+/// </summary>
+
+[Obsolete]
 public class FourWayLevelController : MonoBehaviour {
 	
 	private GameController gameController;
@@ -8,7 +16,7 @@ public class FourWayLevelController : MonoBehaviour {
 	private RobotMovement robotMovement;
 	private FadeCanvas fade;
 	private bool gotReward001;
-	private int numTrials;
+	private int numTrials = 0;
 	private int trialCounter;
 	
 	public Transform startWaypoint;
@@ -33,7 +41,7 @@ public class FourWayLevelController : MonoBehaviour {
 	void Start(){
 		
 		//set numTrials
-		numTrials = gameController.numTrials;
+		//numTrials = gameController.numTrials;
 		trialCounter = 1;	//start with first trial
 		
 		StartCoroutine (FadeInDelayStart ());
@@ -41,10 +49,10 @@ public class FourWayLevelController : MonoBehaviour {
 	
 	void Update(){
 		
-		//save position data
-		if (gameController.fs != null) {
-			gameController.fs.WriteLine("{0:F3} {1:F2} {2:F2}", Time.fixedDeltaTime, robot.transform.position.x, robot.transform.position.z);
-		}
+		////save position data
+		//if (gameController.fs != null) {
+		//	gameController.fs.WriteLine("{0:F3} {1:F2} {2:F2}", Time.fixedDeltaTime, robot.transform.position.x, robot.transform.position.z);
+		//}
 	}
 	
 	void WentIntoRewardArea001(){
@@ -108,7 +116,7 @@ public class FourWayLevelController : MonoBehaviour {
 		//go to start
 		SetPositionToStart ();
 		
-		GuiController.experimentStatus = string.Format ("session {0} trial {1}", gameController.sessionCounter, trialCounter);
+		//GuiController.experimentStatus = string.Format ("session {0} trial {1}", gameController.sessionCounter, trialCounter);
 		
 		//fade in
 		fade.FadeIn ();
@@ -146,7 +154,7 @@ public class FourWayLevelController : MonoBehaviour {
 		//delay for intertrial time
 		yield return new WaitForSeconds ((float)GuiController.interTrialTime / 1000.0f);
 		
-		GuiController.experimentStatus = string.Format ("session {0} trial {1}", gameController.sessionCounter, trialCounter);
+		//GuiController.experimentStatus = string.Format ("session {0} trial {1}", gameController.sessionCounter, trialCounter);
 		
 		//fade in
 		fade.FadeIn ();

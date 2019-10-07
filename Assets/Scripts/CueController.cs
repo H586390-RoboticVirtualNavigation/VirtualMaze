@@ -1,14 +1,55 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class CueController : MonoBehaviour {
     private Sprite hint;
 
     //Drag in Unity Editor
-    public Image cueImage;
-    public Image hintImage;
+    [SerializeField]
+    private Image cueImage = null;
+    private BoxCollider cueBoxCollider = null;
+
+    [SerializeField]
+    private Image hintImage = null;
+    private BoxCollider hintBoxCollider = null;
+
+    [SerializeField]
+    private CharacterController controller = null;
+
+    [SerializeField]
+    private Transform robot = null;
+
+    //offset with respect to the robot position.
+    private Vector3 forwardOffset = new Vector3(0, 0, 0.5f);
+    private Vector3 heightOffset = new Vector3(0, 1.35f, 0);
+
+    //follows only the X rotation of the player camera
+    private Quaternion rotationOffset = Quaternion.Euler(12.5f, 0, 0);
+
+    public enum Mode {
+        Recording,
+        Experiment
+    }
+
+    private Mode mode = Mode.Experiment;
+
+    public void SetMode(Mode mode) {
+        switch (mode) {
+            case Mode.Recording:
+                cueBoxCollider.enabled = true;
+                hintBoxCollider.enabled = true;
+                controller.enabled = false;
+                break;
+            case Mode.Experiment:
+                cueBoxCollider.enabled = false;
+                hintBoxCollider.enabled = false;
+                controller.enabled = true;
+                break;
+            default:
+                break;
+        }
+        this.mode = mode;
+    }
 
     private void Awake() {
         ShowImage(cueImage, false);
@@ -23,6 +64,23 @@ public class CueController : MonoBehaviour {
         hintImage.rectTransform.GetWorldCorners(corners);
 
         print($"{hintImage.name}|{corners[0]}{corners[1]}{corners[2]}{corners[3]}");
+
+        cueBoxCollider = cueImage.GetComponent<BoxCollider>();
+        hintBoxCollider = hintImage.GetComponent<BoxCollider>();
+
+        SetMode(Mode.Experiment);
+    }
+
+    private void LateUpdate() {
+        UpdatePosition();
+    }
+
+    public void UpdatePosition() {
+        Vector3 a = rotationOffset * forwardOffset; // apply robot's current rotation to position
+        a = robot.rotation * a;
+        transform.position = robot.position + a + heightOffset; //set canvas location
+
+        transform.rotation = robot.rotation * rotationOffset; //apply camera X rotation to canvas rotation
     }
 
     public Sprite GetHint() {

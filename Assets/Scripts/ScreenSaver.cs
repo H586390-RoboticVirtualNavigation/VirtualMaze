@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -242,17 +241,28 @@ public class ScreenSaver : BasicGUIController {
         if (IsEdfFile(edfPath)) {
             eyeReader = new EDFReader(edfPath, out int errVal);
             if (errVal != 0) { //check if file can be parsed by library
-                String error = $"Unable to open .edf file";
+                string error = $"Unable to open .edf file";
                 Debug.LogError(error);
                 Console.WriteError(error);
                 yield break;
             }
         }
         else if (isMatFile(edfPath)) {
-            eyeReader = new EyeMatReader(edfPath);
+            try {
+                eyeReader = new EyeMatReader(edfPath);
+            }
+            catch (Exception e) {
+                Debug.LogException(e);
+                Console.WriteError("Unable to open eye data mat file.");
+                eyeReader = null;
+            }
         }
         else {
             eyeReader = new EyeCsvReader(edfPath);
+        }
+
+        if (eyeReader == null) {
+            yield break;
         }
 
         bool isMultipleSession = Directory.Exists(sessionPath);
@@ -261,6 +271,8 @@ public class ScreenSaver : BasicGUIController {
 
         progressBar.value = 0;
         progressBar.gameObject.SetActive(true);
+
+        cueController.SetMode(CueController.Mode.Recording);
 
         //process data
         if (isMultipleSession) {
@@ -297,6 +309,7 @@ public class ScreenSaver : BasicGUIController {
         //SceneManager.LoadScene("Start");
         fadeController.gameObject.SetActive(true);
         progressBar.gameObject.SetActive(false);
+        cueController.SetMode(CueController.Mode.Experiment);
         //SessionStatusDisplay.ResetStatus();
     }
 
@@ -356,13 +369,20 @@ public class ScreenSaver : BasicGUIController {
     }
 
     private ISessionDataReader CreateSessionReader(string filePath) {
-        switch (Path.GetExtension(filePath).ToLower()) {
-            case ".txt":
-                return new SessionReader(filePath);
-            case ".mat":
-                return new MatSessionReader(filePath);
-            default:
-                throw new NotSupportedException($"File extension not supported{filePath}");
+        try {
+            switch (Path.GetExtension(filePath).ToLower()) {
+                case ".txt":
+                    return new SessionReader(filePath);
+                case ".mat":
+                    return new MatSessionReader(filePath);
+                default:
+                    Debug.LogWarning($"File extension not supported{filePath}");
+                    return null;
+            }
+        }
+        catch (Exception e) {
+            Debug.LogException(e);
+            return null;
         }
     }
 
@@ -371,6 +391,9 @@ public class ScreenSaver : BasicGUIController {
         int trialCounter = 1;
 
         using (ISessionDataReader sessionReader = CreateSessionReader(sessionPath)) {
+            if (sessionReader == null) {
+                yield break;
+            }
 
             //Move to first Trial Trigger
             AllFloatData data = PrepareFiles(sessionReader, eyeReader, SessionTrigger.TrialStartedTrigger);
@@ -457,7 +480,7 @@ public class ScreenSaver : BasicGUIController {
                         }
 
                         //update UI objects
-                        if(currData is MessageEvent) {
+                        if (currData is MessageEvent) {
                             yield return new WaitForEndOfFrame();
                         }
                     }
@@ -519,7 +542,7 @@ public class ScreenSaver : BasicGUIController {
             case DataTypes.SAMPLE_TYPE:
                 Fsample fs = (Fsample)data;
                 if (InScreenBounds(fs.rawRightGaze)) {
-                    RaycastGazeData(fs, cueCaster, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
+                    RaycastToScene(fs.RightGaze, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
                     recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
 
                     gazePointPool?.AddGazePoint(GazeCanvas, viewport, fs.RightGaze);
@@ -657,107 +680,31 @@ public class ScreenSaver : BasicGUIController {
     }
 
     /// <summary>
-    /// Fires a raycast into the UI or Scene based on the sample data to determine what object the sample data is fixating upon.
-    /// </summary>
-    /// <param name="sample">Data sameple from edf file</param>
-    /// <param name="gRaycaster">GraphicRaycaster of UI seen by the subject</param>
-    /// <param name="objName">Name of object the gazed object</param>
-    /// <param name="relativePos">Local 2D offset of from the center of the object gazed</param>
-    /// <param name="objHitPos">World position of the object in the scene</param>
-    /// <param name="gazePoint">World position of the point where the gaze fixates the object</param>
-    /// <returns>True if an object was in the path of the gaze</returns>
-    private bool RaycastGazeData(Fsample sample,
-                                 GraphicRaycaster gRaycaster,
-                                 out string objName,
-                                 out Vector2 relativePos,
-                                 out Vector3 objHitPos,
-                                 out Vector3 gazePoint) {
-        //check for UI raycasts first
-        if (RaycastToUI(sample, gRaycaster, out objName, out relativePos, out objHitPos, out gazePoint)) {
-            return true;
-        }
-        else {
-            //check for scene raycast
-            return RaycastToScene(sample, out objName, out relativePos, out objHitPos, out gazePoint);
-        }
-    }
-
-    /// <summary>
     /// Fires a raycast into the Scene based on the sample data to determine what object the sample data is fixating upon.
     /// </summary>
-    /// <param name="sample">Data sameple from edf file</param>
+    /// <param name="gazeData">Data sameple from edf file</param>
     /// <param name="objName">Name of object the gazed object</param>
     /// <param name="relativePos">Local 2D offset of from the center of the object gazed</param>
     /// <param name="objHitPos">World position of the object in the scene</param>
     /// <param name="gazePoint">World position of the point where the gaze fixates the object</param>
     /// <returns>True if an object was in the path of the gaze</returns>
-    private bool RaycastToScene(Fsample sample,
+    private bool RaycastToScene(Vector3 gazeData,
                                  out string objName,
                                  out Vector2 relativePos,
                                  out Vector3 objHitPos,
                                  out Vector3 gazePoint) {
-        Ray r = viewport.ScreenPointToRay(sample.RightGaze);
+        Ray r = viewport.ScreenPointToRay(gazeData);
 
-        if (Physics.Raycast(r, out RaycastHit hit)) {
+        if (Physics.Raycast(r, out RaycastHit hit, 200)) {
             Transform objhit = hit.transform;
 
             objName = hit.transform.name;
-            relativePos = computeLocalPostion(objhit, hit); ;
+            relativePos = ComputeLocalPostion(objhit, hit); ;
             objHitPos = objhit.position;
             gazePoint = hit.point;
 
             return false;
 
-        }
-        else {
-            objName = null;
-            relativePos = Vector2.zero;
-            gazePoint = Vector3.zero;
-            objHitPos = Vector3.zero;
-
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Checks if there are any objects hit in th UI Canvas by the eye sample data
-    /// </summary>
-    /// <param name="sample">Fsample from eyelink</param>
-    /// <param name="gRaycaster">GraphicRaycaster of UI seen by the subject</param>
-    /// <param name="objName">Name of object the gazed object</param>
-    /// <param name="relativePos">Local 2D offset of from the center of the object gazed</param>
-    /// <param name="objHitPos">World position of the object in the scene</param>
-    /// <param name="gazePoint">World position of the point where the gaze fixates the object</param>
-    /// <returns>True if an object was in the path of the gaze</returns>
-    private bool RaycastToUI(Fsample sample,
-                             GraphicRaycaster gRaycaster,
-                             out string objName,
-                             out Vector2 relativePos,
-                             out Vector3 objHitPos,
-                             out Vector3 gazePoint) {
-        List<RaycastResult> results = new List<RaycastResult>(0);
-
-        PointerEventData data = new PointerEventData(EventSystem.current) {
-            position = sample.RightGaze
-        };
-        gRaycaster?.Raycast(data, results);
-
-        if (results.Count > 0) {
-            if (results.Count > 1) {
-                Debug.LogWarning($"There are overlapping graphics at time = {sample.time}");
-            }
-
-            Vector2 objPosition = RectTransformUtility.WorldToScreenPoint(viewport, results[0].gameObject.transform.position);
-
-            // checking only the first element since the canvas is assumed to have no overlapping image objects.
-            objName = results[0].gameObject.name;
-            RectTransform t = results[0].gameObject.GetComponent<RectTransform>();
-            RectTransformUtility.ScreenPointToWorldPointInRectangle(t, sample.RightGaze, viewport, out gazePoint);
-            Vector3 imgWorldPos = t.TransformPoint(t.rect.center);
-            relativePos = gazePoint - imgWorldPos;
-            objHitPos = results[0].gameObject.transform.position;
-
-            return true;
         }
         else {
             objName = null;
@@ -778,7 +725,7 @@ public class ScreenSaver : BasicGUIController {
     /// <param name="objHit">Transsform of the object hit by the raycast</param>
     /// <param name="hit"></param>
     /// <returns>2D location of the point fixated by that gaze relative to the center of the image</returns>
-    private Vector2 computeLocalPostion(Transform objHit, RaycastHit hit) {
+    private Vector2 ComputeLocalPostion(Transform objHit, RaycastHit hit) {
         Vector3 normal = hit.normal;
         Vector3 dist = hit.point - objHit.position;
 
@@ -789,12 +736,16 @@ public class ScreenSaver : BasicGUIController {
             result.x = dist.z * normal.x;
         }
         else if (normal.y != 0) {
-            result.y = dist.z;
-            result.x = dist.x * normal.y;
+            /*
+             * z is rotated to form result.y because in the scene, the ceiling is rotated around the X
+             * axis.
+             */
+            result.y = dist.z * normal.y;
+            result.x = dist.x;
         }
         else if (normal.z != 0) {
-            result.y = dist.z;
-            result.x = dist.x * normal.z;
+            result.y = dist.y;
+            result.x = dist.x * -normal.z;
         }
 
         return result;
@@ -937,6 +888,7 @@ public class ScreenSaver : BasicGUIController {
     /// <param name="reader">Session data of the Object</param>
     private void MoveRobotTo(Transform robot, SessionData reader) {
         RobotMovement.MoveRobotTo(robot, reader.config);
+        cueController.UpdatePosition();
     }
 
     private void SaveScreen(Camera cam, string filename) {
