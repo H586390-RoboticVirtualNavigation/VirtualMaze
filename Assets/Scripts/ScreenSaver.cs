@@ -716,36 +716,58 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
+    private readonly Vector3[] axes = { Vector3.up, Vector3.down, Vector3.left, Vector3.right, Vector3.forward, Vector3.back };
+
+    private Vector3 ModelNormal(Vector3 normal) {
+        Vector3 result = Vector3.up;
+        float min = float.MaxValue;
+        foreach (Vector3 axis in axes) {
+            float sqDist = (axis - normal).sqrMagnitude;
+            if (sqDist < min) {
+                min = sqDist;
+                result = axis;
+            }
+            else if (sqDist < min) {
+                Debug.LogWarning($"Normal is exactly between 2 axes. Expect unknown behaviour");
+            }
+        }
+
+        return result;
+    }
+
     /// <summary>
-    /// Gets the local position with reference to the center of the object
-    /// 
-    /// Note: Naive implementation of computation becasue this code only considers the case that the
-    /// normal is pointing in solely one of the x, y or z axes.
     /// </summary>
-    /// <param name="objHit">Transsform of the object hit by the raycast</param>
+    /// <param name="objHit">Transform of the object hit by the raycast</param>
     /// <param name="hit"></param>
     /// <returns>2D location of the point fixated by that gaze relative to the center of the image</returns>
     private Vector2 ComputeLocalPostion(Transform objHit, RaycastHit hit) {
-        Vector3 normal = hit.normal;
+        Vector3 hitNormal = ModelNormal(hit.normal);
+
+        Vector3 normal;
+
         Vector3 dist = hit.point - objHit.position;
 
-        Vector2 result = Vector2.zero;
+        if (objHit.name.ToLower().Contains("image")) {
+            normal = hitNormal;
+            dist = Quaternion.FromToRotation(hit.normal, normal) * dist;
+        }
+        else if (objHit.name.ToLower().Contains("poster")) {
+            normal = ModelNormal(objHit.forward); //blue axis used as normal
+        }
+        else if (Mathf.Abs(hitNormal.y) == 1) { //either hit the floor or ceiling
+            normal = ModelNormal(objHit.up); //green axis used as normal
+        }
+        else { //any other object
+            normal = ModelNormal(objHit.right); //green axis used as normal
+        }
 
-        if (normal.x != 0) {
-            result.y = dist.y;
-            result.x = dist.z * normal.x;
-        }
-        else if (normal.y != 0) {
-            /*
-             * z is rotated to form result.y because in the scene, the ceiling is rotated around the X
-             * axis.
-             */
-            result.y = dist.z * normal.y;
-            result.x = dist.x;
-        }
-        else if (normal.z != 0) {
-            result.y = dist.y;
-            result.x = dist.x * -normal.z;
+        dist = Quaternion.FromToRotation(normal, Vector3.back) * dist;  //orientate for stabilization
+        dist = Quaternion.FromToRotation(Vector3.back, Vector3.up) * dist; //orientate to top down veiw
+
+        Vector2 result = new Vector2(dist.x, dist.z);
+
+        if (normal == Vector3.forward) {
+            result *= -1; //rotate 180 degrees
         }
 
         return result;
@@ -811,7 +833,7 @@ public class ScreenSaver : BasicGUIController {
     /// <param name="trigger">The trigger where the loading stops</param>
     /// <returns>Total time taken from one current trigger to the next</returns>
     private decimal LoadToNextTriggerSession(ISessionDataReader reader, Queue<SessionData> frames, out SessionData data) {
-        decimal totalTime = reader.CurrentData.timeDeltaMs;
+        decimal totalTime = 0; // reader.CurrentData.timeDeltaMs;
 
         data = null;
         bool isNextEventFound = false;
