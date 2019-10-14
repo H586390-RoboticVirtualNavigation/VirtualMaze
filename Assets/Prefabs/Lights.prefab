@@ -1793,7 +1793,7 @@ GameObject:
   - component: {fileID: 7597202544007190209}
   - component: {fileID: 2652168877453524822}
   m_Layer: 0
-  m_Name: Plane
+  m_Name: ceil_lamp15
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
