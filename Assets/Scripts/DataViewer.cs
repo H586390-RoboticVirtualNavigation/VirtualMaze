@@ -163,9 +163,9 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         }
         subjectView.targetTexture = null;
 
-        //isRecording = false;
         if (!isRecordingValid) {
             Console.Write($"Recording Trial {TrialIndex + 1} Failed! Please try again.");
+            isRecording = false;
         }
         else {
             videoCaptureCtrl.MuxComplete += OnMuxComplete;
@@ -482,6 +482,9 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         if (Input.GetKeyDown(KeyCode.Space)) {
             print($"PlayPause {IsPlaying}");
             IsPlaying = !IsPlaying;
+            if(IsPlaying && FrameIndex == trials[TrialIndex].GetFrameCount() - 1) {
+                FrameIndex = 0;
+            }
         }
         if (Input.GetKeyDown(KeyCode.Tab)) {
             print($"ShowHideSubject {IsShowingSubjectScreen}");
