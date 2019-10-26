@@ -233,7 +233,7 @@ public class ScreenSaver : BasicGUIController {
         SceneManager.LoadScene(sceneName);
     }
 
-    private IEnumerator ProcessSessionDataTask(string sessionPath, string edfPath, string toFolderPath) {
+    public IEnumerator ProcessSessionDataTask(string sessionPath, string edfPath, string toFolderPath) {
         //Setup
         fadeController.gameObject.SetActive(false);
         EyeDataReader eyeReader = null;
