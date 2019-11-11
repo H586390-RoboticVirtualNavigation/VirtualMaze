@@ -44,7 +44,7 @@ public class SessionStatusDisplay : MonoBehaviour {
         Instance.TrialNumberText.text = trialNum.ToString();
     }
 
-    public static void DisplaySessionStatus(String status) {
+    public static void DisplaySessionStatus(string status) {
         Instance.SessionStatusText.text = status;
     }
 

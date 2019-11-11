@@ -24,7 +24,7 @@ public class CueController : MonoBehaviour {
     private Vector3 heightOffset = new Vector3(0, 1.35f, 0);
 
     //follows only the X rotation of the player camera
-    private Quaternion rotationOffset = Quaternion.Euler(12.5f, 0, 0);
+    private Quaternion rotationOffset = Quaternion.Euler(12f, 0, 0);
 
     public enum Mode {
         Recording,

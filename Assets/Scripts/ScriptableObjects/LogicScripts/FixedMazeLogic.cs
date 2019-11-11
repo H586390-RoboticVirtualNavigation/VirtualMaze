@@ -1,4 +1,7 @@
-﻿public class FixedMazeLogic : MazeLogic {
+﻿using UnityEngine;
+
+[CreateAssetMenu(menuName = "MazeLogic/FixedRewardMazeLogic")]
+public class FixedMazeLogic : MazeLogic {
     private int rewardIndex;
     private int numRewards;
 
@@ -13,7 +16,7 @@
 
         rewardIndex = nextTarget;
 
-        return nextTarget;
+        return Mathf.Min(nextTarget, numRewards - 1);
     }
 
     public override bool IsTrialCompleteAfterReward(bool currentTaskSuccess) {

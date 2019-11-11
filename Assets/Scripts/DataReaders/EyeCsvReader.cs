@@ -5,15 +5,15 @@ public class EyeCsvReader : EyeDataReader {
     StreamReader r;
     AllFloatData current = null;
 
-    public EyeCsvReader(string filePath) : base(filePath) {
+    public EyeCsvReader(string filePath) {
         r = new StreamReader(filePath);
     }
 
-    public override AllFloatData GetCurrentData(DataTypes dataType) {
+    public AllFloatData GetCurrentData(DataTypes dataType) {
         return current;
     }
 
-    public override AllFloatData GetNextData() {
+    public AllFloatData GetNextData() {
         string data = r.ReadLine();
         if (string.IsNullOrEmpty(data)) {
             current = null;    
@@ -44,9 +44,8 @@ public class EyeCsvReader : EyeDataReader {
         return current;
     }
 
-    public override void Close() {
+    public void Dispose() {
         r.Close();
         r.Dispose();
-        base.Close();
     }
 }

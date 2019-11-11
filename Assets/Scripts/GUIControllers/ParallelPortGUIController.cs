@@ -83,7 +83,7 @@ public class ParallelPortGUIController : DataGUIController {
         numSyncs = 2000;
     }
 
-    void FixedUpdate() {
+    void Update() {
         if (startSync && numSyncs > 0) {
             accTime += Time.unscaledDeltaTime;
             if (accTime >= timeBetweenSyncs) {

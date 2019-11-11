@@ -242,8 +242,7 @@ public class GuiController : MonoBehaviour {
         SceneManager.LoadScene("Replay");
     }
 
-    void FixedUpdate() {
-
+    void Update() {
         //listen for ESC
         if (Input.GetKeyDown(KeyCode.Escape)) {
             guiEnable = !guiEnable;

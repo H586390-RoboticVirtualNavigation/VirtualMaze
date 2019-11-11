@@ -71,7 +71,7 @@ public class GameController : MonoBehaviour {
         Application.targetFrameRate = 30;
 
         //if display is 60hz, Unity will run at 30hz
-        QualitySettings.vSyncCount = 2;
+        //QualitySettings.vSyncCount = 2;
         SetPaths();
 
         if (Application.isBatchMode) {
@@ -158,7 +158,7 @@ public class GameController : MonoBehaviour {
         try {
             yield return saver.ProcessSessionDataTask(sessionPath, edfPath, toFolderPath);
         }
-        finally { //so that the batchmode app will quit or moove on the the next session
+        finally { //so that the batchmode app will quit or move on the the next session
             generationComplete = true;
         }
     }
@@ -166,25 +166,25 @@ public class GameController : MonoBehaviour {
 
 
     private void SetPaths() {
-        Debug.LogError("dll ready?");
-        string currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
-        Debug.LogError(currentPath);
-        StringBuilder dllPathB = new StringBuilder(Environment.CurrentDirectory);
-        dllPathB.Append(Path.DirectorySeparatorChar);
-        dllPathB.Append("Assets");
-        dllPathB.Append(Path.DirectorySeparatorChar);
-        dllPathB.Append("Plugins");
-        dllPathB.Append(Path.DirectorySeparatorChar);
-        dllPathB.Append("SharpHDF");
-        dllPathB.Append(Path.DirectorySeparatorChar);
-        dllPathB.Append("bin64");
-        dllPathB.Append(Path.DirectorySeparatorChar);
+        //Debug.LogError("dll ready?");
+        //string currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+        //Debug.LogError(currentPath);
+        //StringBuilder dllPathB = new StringBuilder(Environment.CurrentDirectory);
+        //dllPathB.Append(Path.DirectorySeparatorChar);
+        //dllPathB.Append("Assets");
+        //dllPathB.Append(Path.DirectorySeparatorChar);
+        //dllPathB.Append("Plugins");
+        //dllPathB.Append(Path.DirectorySeparatorChar);
+        //dllPathB.Append("SharpHDF");
+        //dllPathB.Append(Path.DirectorySeparatorChar);
+        //dllPathB.Append("bin64");
+        //dllPathB.Append(Path.DirectorySeparatorChar);
 
 
-        String dllPath = dllPathB.ToString();
-        Debug.LogError(dllPath);
-        if (currentPath.Contains(dllPath) == false) {
-            Environment.SetEnvironmentVariable("PATH", currentPath + Path.PathSeparator + dllPath, EnvironmentVariableTarget.Process);
-        }
+        //String dllPath = dllPathB.ToString();
+        //Debug.LogError(dllPath);
+        //if (currentPath.Contains(dllPath) == false) {
+        //    Environment.SetEnvironmentVariable("PATH", currentPath + Path.PathSeparator + dllPath, EnvironmentVariableTarget.Process);
+        //}
     }
 }

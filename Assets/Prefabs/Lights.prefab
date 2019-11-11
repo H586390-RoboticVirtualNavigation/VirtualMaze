@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7184221415942960774}
   - component: {fileID: 6138114421122844206}
   - component: {fileID: 1015114748224166056}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer08
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -103,7 +103,7 @@ GameObject:
   - component: {fileID: 5514894957283435913}
   - component: {fileID: 6902492879962203753}
   - component: {fileID: 8071378000581734711}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer10
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -191,7 +191,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8901387514130253462}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: CeilingLampBuffer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -239,7 +239,7 @@ GameObject:
   - component: {fileID: 9119239837324006802}
   - component: {fileID: 1557660950428077573}
   - component: {fileID: 347146484163141953}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer13
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -330,7 +330,7 @@ GameObject:
   - component: {fileID: 7570657545763738821}
   - component: {fileID: 7452968988120540442}
   - component: {fileID: 9206660044970837962}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -485,7 +485,7 @@ GameObject:
   - component: {fileID: 5205764614689321482}
   - component: {fileID: 5276540588229257274}
   - component: {fileID: 3521690589612438952}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer04
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -576,7 +576,7 @@ GameObject:
   - component: {fileID: 4449618567175421839}
   - component: {fileID: 4449618567175421838}
   - component: {fileID: 4449618567175421833}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp13
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -668,7 +668,7 @@ GameObject:
   - component: {fileID: 4449618567379403870}
   - component: {fileID: 4449618567379403865}
   - component: {fileID: 4449618567379403864}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp10
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -760,7 +760,7 @@ GameObject:
   - component: {fileID: 4449618567535701235}
   - component: {fileID: 4449618567535701234}
   - component: {fileID: 4449618567535701245}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp15
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -852,7 +852,7 @@ GameObject:
   - component: {fileID: 4449618567806706614}
   - component: {fileID: 4449618567806706609}
   - component: {fileID: 4449618567806706608}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp14
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -944,7 +944,7 @@ GameObject:
   - component: {fileID: 4449618568141913023}
   - component: {fileID: 4449618568141913022}
   - component: {fileID: 4449618568141913017}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp06
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1036,7 +1036,7 @@ GameObject:
   - component: {fileID: 4449618568284270968}
   - component: {fileID: 4449618568284270970}
   - component: {fileID: 5959304160609551131}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1125,7 +1125,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4449618568442316963}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: CeilingLamps
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1173,7 +1173,7 @@ GameObject:
   - component: {fileID: 4449618568461258166}
   - component: {fileID: 4449618568461258161}
   - component: {fileID: 4449618568461258160}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp05
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1265,7 +1265,7 @@ GameObject:
   - component: {fileID: 4449618568477691001}
   - component: {fileID: 4449618568477691000}
   - component: {fileID: 4449618568477691003}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp08
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1357,7 +1357,7 @@ GameObject:
   - component: {fileID: 4449618568669721198}
   - component: {fileID: 4449618568669721193}
   - component: {fileID: 4449618568669721192}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp12
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1449,7 +1449,7 @@ GameObject:
   - component: {fileID: 4449618568729530599}
   - component: {fileID: 4449618568729530598}
   - component: {fileID: 4449618568729530593}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp04
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1541,7 +1541,7 @@ GameObject:
   - component: {fileID: 4449618568734654082}
   - component: {fileID: 4449618568734654093}
   - component: {fileID: 4449618568734654092}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp07
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1633,7 +1633,7 @@ GameObject:
   - component: {fileID: 4449618568860615108}
   - component: {fileID: 4449618568860615111}
   - component: {fileID: 4449618568860615110}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp09
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1759,7 +1759,7 @@ GameObject:
   - component: {fileID: 4449618568872815558}
   - component: {fileID: 4449618568872815553}
   - component: {fileID: 4449618568872815552}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1851,7 +1851,7 @@ GameObject:
   - component: {fileID: 4449618569072366863}
   - component: {fileID: 4449618569072366862}
   - component: {fileID: 4449618569072366857}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1943,7 +1943,7 @@ GameObject:
   - component: {fileID: 4449618569118427421}
   - component: {fileID: 4449618569118427420}
   - component: {fileID: 4449618569118427423}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lamp11
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2292,7 +2292,7 @@ GameObject:
   - component: {fileID: 1881156712673864087}
   - component: {fileID: 762750394833787746}
   - component: {fileID: 8748337189324685982}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2383,7 +2383,7 @@ GameObject:
   - component: {fileID: 4664812111693685041}
   - component: {fileID: 2199775649702080004}
   - component: {fileID: 6946923564478420422}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer07
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2474,7 +2474,7 @@ GameObject:
   - component: {fileID: 158818232926912975}
   - component: {fileID: 4156760485758505440}
   - component: {fileID: 593641428035190561}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer06
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2565,7 +2565,7 @@ GameObject:
   - component: {fileID: 7420250764700758826}
   - component: {fileID: 2479803702854789456}
   - component: {fileID: 5121298875662093365}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer14
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2656,7 +2656,7 @@ GameObject:
   - component: {fileID: 243963042075328299}
   - component: {fileID: 6524413959081030640}
   - component: {fileID: 2184993005207803629}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer15
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2747,7 +2747,7 @@ GameObject:
   - component: {fileID: 6845844693505167836}
   - component: {fileID: 4119359984412593756}
   - component: {fileID: 235832991996308363}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer11
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2838,7 +2838,7 @@ GameObject:
   - component: {fileID: 3129523517678810355}
   - component: {fileID: 66228016606996613}
   - component: {fileID: 1704013048664404942}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer03
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2929,7 +2929,7 @@ GameObject:
   - component: {fileID: 5114109200257687881}
   - component: {fileID: 6959028751768844917}
   - component: {fileID: 4068102002381412615}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer12
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3020,7 +3020,7 @@ GameObject:
   - component: {fileID: 7682963458961600848}
   - component: {fileID: 7758635859472213729}
   - component: {fileID: 1518638106459473614}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer09
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3111,7 +3111,7 @@ GameObject:
   - component: {fileID: 3761024555952513636}
   - component: {fileID: 7631594795396350291}
   - component: {fileID: 271728103638259504}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: ceil_lampBuffer05
   m_TagString: Untagged
   m_Icon: {fileID: 0}

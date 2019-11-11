@@ -1,14 +1,7 @@
 ﻿using Eyelink.Structs;
+using System;
 
-public abstract class EyeDataReader {
-    public readonly string filePath;
-
-    public EyeDataReader(string filePath) {
-        this.filePath = filePath;
-    }
-
-    public abstract AllFloatData GetNextData();
-    public abstract AllFloatData GetCurrentData(DataTypes dataType);
-
-    public virtual void Close() { }
+public interface EyeDataReader : IDisposable{
+      AllFloatData GetNextData();
+      AllFloatData GetCurrentData(DataTypes dataType);
 }

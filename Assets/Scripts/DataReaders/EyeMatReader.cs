@@ -25,7 +25,7 @@ public class EyeMatReader : EyeDataReader {
     //SessionTrigger state = SessionTrigger.TrialStartedTrigger;
     double stateTime;
 
-    public EyeMatReader(string filePath) : base(filePath) {
+    public EyeMatReader(string filePath) {
         file = new EyelinkMatFile(filePath);
         // -1 since matlab is 1 based array, -1 again to act as a null value
 
@@ -37,11 +37,11 @@ public class EyeMatReader : EyeDataReader {
     }
 
     //datatype is unused for .mat file as they do not contain thee information
-    public override AllFloatData GetCurrentData(DataTypes dataType) {
+    public AllFloatData GetCurrentData(DataTypes dataType) {
         return currentData;
     }
 
-    public override AllFloatData GetNextData() {
+    public AllFloatData GetNextData() {
         if (currentData == null) {
             //do not need to decrement because the decrement is done in the constuctor
             currentData = new MessageEvent(file.timestamps[0, currentTime], parseTrialCode(GetStateCode(stateIndex)), DataTypes.MESSAGEEVENT);
@@ -117,5 +117,9 @@ public class EyeMatReader : EyeDataReader {
             default:
                 throw new NotSupportedException($"EyeMatReader::Unknown code {code}");
         }
+    }
+
+    public void Dispose() {
+        file.Dispose();
     }
 }
