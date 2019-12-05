@@ -203,24 +203,6 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         }
     }
 
-    public class SpikeTimeParser : ICsvLineParser<decimal> {
-        public decimal Parse(string[] data) {
-            //convert to milliseconds
-            try {
-                return decimal.Parse(data[0], System.Globalization.NumberStyles.Float);
-            }
-            catch (FormatException) {
-                print(data[0]);
-                throw;
-            }
-        }
-
-        public void ParseHeader(StreamReader reader) {
-            //throw away header;
-            //reader.ReadLine();
-        }
-    }
-
     private void OnProcessBtnClicked() {
         if (isRecording) {
             return;
@@ -235,7 +217,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         if (!string.IsNullOrEmpty(path)) {
             if (File.Exists(path)) {
                 SetInputFieldValid(dataFileField);
-                CsvReader<decimal> spikeReader = TryCreateSpikeTrainFile(spikeTrainFileField.text);
+                SpikeTimeParser spikeReader = TryCreateSpikeTrainFile(spikeTrainFileField.text);
 
                 trials.Clear();
                 Console.Write("Loading Trials......");
@@ -263,11 +245,11 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         }
     }
 
-    private CsvReader<decimal> TryCreateSpikeTrainFile(string path) {
+    private SpikeTimeParser TryCreateSpikeTrainFile(string path) {
         if (!string.IsNullOrEmpty(path)) {
             if (File.Exists(path)) {
                 SetInputFieldValid(spikeTrainFileField);
-                return new CsvReader<decimal>(path, new SpikeTimeParser());
+                return new SpikeTimeParser(path);
             }
             else {
                 SetInputFieldInvalid(spikeTrainFileField);
@@ -482,7 +464,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         if (Input.GetKeyDown(KeyCode.Space)) {
             print($"PlayPause {IsPlaying}");
             IsPlaying = !IsPlaying;
-            if(IsPlaying && FrameIndex == trials[TrialIndex].GetFrameCount() - 1) {
+            if (IsPlaying && FrameIndex == trials[TrialIndex].GetFrameCount() - 1) {
                 FrameIndex = 0;
             }
         }

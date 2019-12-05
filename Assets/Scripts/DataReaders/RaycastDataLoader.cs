@@ -6,13 +6,13 @@ using UnityEngine;
 
 public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
 
-    public static void Load(string path, List<Trial> trials, CsvReader<decimal> spikeTrainReader = null) {
+    public static void Load(string path, List<Trial> trials, SpikeTimeParser spikeTrainReader = null) {
         RaycastDataLoader loader = new RaycastDataLoader();
         using (CsvReader<PlaybackData> reader = new CsvReader<PlaybackData>(path, loader)) {
 
             Trial t = null;
             //initilize spiketrain reader
-            spikeTrainReader?.GetNextData();
+            int spikeIndexer = 0;
 
             IList<string> rawData = null, prevRawData;
 
@@ -28,8 +28,8 @@ public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
                     t = new Trial(ev.message);
                     trials.Add(t);
                 }
-                else if (spikeTrainReader != null && data is PlaybackSample sam) {
-                    decimal spikeTime = spikeTrainReader.GetCurrentData() + initTime;
+                else if (spikeTrainReader != null && spikeIndexer < spikeTrainReader.Length && data is PlaybackSample sam) {
+                    decimal spikeTime = spikeTrainReader[spikeIndexer] + initTime;
 
                     if (t.GetFrameCount() < 5) {
                         Debug.Log($"{spikeTime}|{sam.timestamp}");
@@ -37,7 +37,7 @@ public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
 
                     if (spikeTime != default && spikeTime <= sam.timestamp) {
                         sam.HasSpike = true;
-                        spikeTrainReader.GetNextData();
+                        spikeIndexer++;
                     }
                 }
 
