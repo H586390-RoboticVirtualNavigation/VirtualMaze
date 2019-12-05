@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -72,39 +71,65 @@ public class GameController : MonoBehaviour {
 
         //if display is 60hz, Unity will run at 30hz
         //QualitySettings.vSyncCount = 2;
-        SetPaths();
 
         if (Application.isBatchMode) {
             BatchModeLogger logger = new BatchModeLogger(PresentWorkingDirectory);
-            Queue<string> sessionQ = new Queue<string>();
 
-            DirectoryInfo pwd = new DirectoryInfo(PresentWorkingDirectory);
+            string[] args = Environment.GetCommandLineArgs();
 
-            if (IsDayDir(pwd)) {
-                IEnumerable<string> subDirs = Directory.EnumerateDirectories(pwd.FullName, "*", SearchOption.TopDirectoryOnly);
-                foreach (string subDir in subDirs) {
-                    if (IsSessionDir(new DirectoryInfo(subDir))) {
-                        logger.Print($"Queuing {subDir}");
-                        sessionQ.Enqueue(subDir);
-                    }
+            for (int i = 0; i < args.Length; i++) {
+                Debug.LogError($"ARG {i}: {args[i]}");
+                if (args[i].Equals("-sessionList")) {
+                    Debug.LogError($"{args[i + 1]}");
+                    SessionListMode(logger, args[i + 1]);
                 }
             }
-            else if (IsSessionDir(pwd)) {
-                logger.Print($"Queuing {pwd}");
-                sessionQ.Enqueue(pwd.FullName);
-            }
 
-            if (sessionQ.Count > 0) {
-                logger.Print($"{sessionQ.Count} sessions to be processed");
-                ProcessSession(sessionQ, logger);
-            }
-            else {
-                logger.Print("No Session directories found! Exiting");
-                logger.Dispose();
-                Application.Quit();
-            }
+            PwdMode(logger);
         }
 
+    }
+
+    private void SessionListMode(BatchModeLogger logger, string listPath) {
+        using (StreamReader reader = new StreamReader(listPath)) {
+            while (reader.Peek() > 0) {
+                DirectoryInfo dir = new DirectoryInfo(reader.ReadLine());
+                ProcessExperimentDir(dir, logger);
+            }
+        }
+    }
+
+    private void PwdMode(BatchModeLogger logger) {
+        DirectoryInfo pwd = new DirectoryInfo(PresentWorkingDirectory);
+        ProcessExperimentDir(pwd, logger);
+    }
+
+    private void ProcessExperimentDir(DirectoryInfo dir, BatchModeLogger logger) {
+        Queue<string> sessionQ = new Queue<string>();
+
+        if (IsDayDir(dir)) {
+            IEnumerable<string> subDirs = Directory.EnumerateDirectories(dir.FullName, "*", SearchOption.TopDirectoryOnly);
+            foreach (string subDir in subDirs) {
+                if (IsSessionDir(new DirectoryInfo(subDir))) {
+                    logger.Print($"Queuing {subDir}");
+                    sessionQ.Enqueue(subDir);
+                }
+            }
+        }
+        else if (IsSessionDir(dir)) {
+            logger.Print($"Queuing {dir}");
+            sessionQ.Enqueue(dir.FullName);
+        }
+
+        if (sessionQ.Count > 0) {
+            logger.Print($"{sessionQ.Count} sessions to be processed");
+            ProcessSession(sessionQ, logger);
+        }
+        else {
+            logger.Print("No Session directories found! Exiting");
+            logger.Dispose();
+            Application.Quit();
+        }
     }
 
     private async void ProcessSession(Queue<string> sessions, BatchModeLogger logger) {
@@ -161,30 +186,5 @@ public class GameController : MonoBehaviour {
         finally { //so that the batchmode app will quit or move on the the next session
             generationComplete = true;
         }
-    }
-
-
-
-    private void SetPaths() {
-        //Debug.LogError("dll ready?");
-        //string currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
-        //Debug.LogError(currentPath);
-        //StringBuilder dllPathB = new StringBuilder(Environment.CurrentDirectory);
-        //dllPathB.Append(Path.DirectorySeparatorChar);
-        //dllPathB.Append("Assets");
-        //dllPathB.Append(Path.DirectorySeparatorChar);
-        //dllPathB.Append("Plugins");
-        //dllPathB.Append(Path.DirectorySeparatorChar);
-        //dllPathB.Append("SharpHDF");
-        //dllPathB.Append(Path.DirectorySeparatorChar);
-        //dllPathB.Append("bin64");
-        //dllPathB.Append(Path.DirectorySeparatorChar);
-
-
-        //String dllPath = dllPathB.ToString();
-        //Debug.LogError(dllPath);
-        //if (currentPath.Contains(dllPath) == false) {
-        //    Environment.SetEnvironmentVariable("PATH", currentPath + Path.PathSeparator + dllPath, EnvironmentVariableTarget.Process);
-        //}
     }
 }
