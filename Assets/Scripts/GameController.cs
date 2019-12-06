@@ -6,6 +6,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
 
+using HDF.PInvoke;
+
 /// <summary>
 /// MonoBehaviour that affects VirtualMaze globally.
 /// </summary>
@@ -76,49 +78,63 @@ public class GameController : MonoBehaviour {
             BatchModeLogger logger = new BatchModeLogger(PresentWorkingDirectory);
 
             string[] args = Environment.GetCommandLineArgs();
-
+            bool isSessionList = false;
             for (int i = 0; i < args.Length; i++) {
                 Debug.LogError($"ARG {i}: {args[i]}");
-                if (args[i].Equals("-sessionList")) {
+                if (args[i].ToLower().Equals("-sessionlist")) {
+                    isSessionList = true;
+                    logger.Print($"Session List detected!");
                     Debug.LogError($"{args[i + 1]}");
                     SessionListMode(logger, args[i + 1]);
                 }
             }
-
-            PwdMode(logger);
+            if (!isSessionList) {
+                PwdMode(logger);
+            }
         }
+
+        long file = H5F.open(@"D:\Desktop\NUS\FYP\rawdata\20180824\unityfile.mat", H5F.ACC_RDWR);
+        print(file);
 
     }
 
     private void SessionListMode(BatchModeLogger logger, string listPath) {
         using (StreamReader reader = new StreamReader(listPath)) {
+            Queue<DirectoryInfo> dirQ = new Queue<DirectoryInfo>();
             while (reader.Peek() > 0) {
                 DirectoryInfo dir = new DirectoryInfo(reader.ReadLine());
-                ProcessExperimentDir(dir, logger);
+                dirQ.Enqueue(dir);
             }
+
+            ProcessExperimentQueue(dirQ, logger);
         }
     }
 
     private void PwdMode(BatchModeLogger logger) {
         DirectoryInfo pwd = new DirectoryInfo(PresentWorkingDirectory);
-        ProcessExperimentDir(pwd, logger);
+        Queue<DirectoryInfo> q = new Queue<DirectoryInfo>();
+        q.Enqueue(pwd);
+        ProcessExperimentQueue(q, logger);
     }
 
-    private void ProcessExperimentDir(DirectoryInfo dir, BatchModeLogger logger) {
+    private void ProcessExperimentQueue(Queue<DirectoryInfo> dirQ, BatchModeLogger logger) {
         Queue<string> sessionQ = new Queue<string>();
 
-        if (IsDayDir(dir)) {
-            IEnumerable<string> subDirs = Directory.EnumerateDirectories(dir.FullName, "*", SearchOption.TopDirectoryOnly);
-            foreach (string subDir in subDirs) {
-                if (IsSessionDir(new DirectoryInfo(subDir))) {
-                    logger.Print($"Queuing {subDir}");
-                    sessionQ.Enqueue(subDir);
+        while (dirQ.Count > 0) {
+            DirectoryInfo dir = dirQ.Dequeue();
+            if (IsDayDir(dir)) {
+                IEnumerable<string> subDirs = Directory.EnumerateDirectories(dir.FullName, "*", SearchOption.TopDirectoryOnly);
+                foreach (string subDir in subDirs) {
+                    if (IsSessionDir(new DirectoryInfo(subDir))) {
+                        logger.Print($"Queuing {subDir}");
+                        sessionQ.Enqueue(subDir);
+                    }
                 }
             }
-        }
-        else if (IsSessionDir(dir)) {
-            logger.Print($"Queuing {dir}");
-            sessionQ.Enqueue(dir.FullName);
+            else if (IsSessionDir(dir)) {
+                logger.Print($"Queuing {dir}");
+                sessionQ.Enqueue(dir.FullName);
+            }
         }
 
         if (sessionQ.Count > 0) {
