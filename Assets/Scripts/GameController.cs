@@ -97,11 +97,12 @@ public class GameController : MonoBehaviour {
 
         try {
             print(H5.open());
-            string path = @"D:\Desktop\NUS\FYP\rawdata\20180824\unityfile.mat";
-            UnityMazeMatFile f = new UnityMazeMatFile(path);
-            file = H5F.open(path, H5F.ACC_RDWR);
-            g_id = H5G.open(file, "/um/data");
-
+            string path = @"/Volumes/Users/simyanyu/Desktop/unityfile.mat";
+            //UnityMazeMatFile f = new UnityMazeMatFile(path);
+            file = H5F.open(path, H5F.ACC_RDONLY);
+            print(file);
+            g_id = H5G.open(file, "/uf/data");
+            print(g_id);
             H5G.info_t t = new H5G.info_t();
 
             byte[] buffer = new byte[255];
@@ -119,11 +120,12 @@ public class GameController : MonoBehaviour {
             h1.Free();
 
 
-            dset_id = H5D.open(file, "/um/data/unityData");
+            dset_id = H5D.open(file, "/uf/data/unityData");
 
             long space = H5D.get_space(dset_id);
-
+            print($"space {space}");
             int a = H5S.get_simple_extent_ndims(space);
+            print($"ndims{a}");
             ulong[] dimms = new ulong[a];
 
             print($"isSimple: {H5S.is_simple(space)}");
@@ -134,37 +136,63 @@ public class GameController : MonoBehaviour {
 
             H5G.get_info(g_id, ref t);
             long type = H5D.get_type(dset_id);
-
+            print("hello");
             H5T.class_t clas = H5T.get_class(type);
-
-            H5T.close(type);
+            print("bye");
+            
 
             double[,] vs = new double[dimms[0], dimms[1]];
             print(vs.Length);
 
             GCHandle h2 = GCHandle.Alloc(vs, GCHandleType.Pinned);
 
-            try {
-
-                H5D.read(dset_id, H5T.NATIVE_DOUBLE, H5S.ALL, H5S.ALL, H5P.DEFAULT, h2.AddrOfPinnedObject());
+            try
+            {
+                int read = H5D.read(dset_id, type, H5S.ALL, H5S.ALL, H5P.DEFAULT, h2.AddrOfPinnedObject());
+                if (-1 == read)
+                {
+                    print($"readFailed {read}");
+                }
+                else
+                {
+                    print($"$read ok {read}");
+                }
             }
             catch (Exception e) {
                 Debug.LogError("ERROR");
                 Debug.LogException(e);
             }
             finally {
+                H5T.close(type);
                 h2.Free();
             }
+            counter = 0;
+            foreach(float ff in vs)
+            {
+                counter++;
+                if (ff != 0f)
+                {
+                    print(ff);
+                    print($"counter{counter}");
+                    break;
+                }
+            }
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 7; i++) {
+
+                print(vs[0, i]);
+                //print(f.unityData[i, 0]);
+            }
+
+            for(int i = 0; i < 7; i++) {
 
                 print(vs[i, 0]);
-                print(f.unityData[i, 0]);
+                //print(f.unityData[i, 0]);
             }
 
 
 
-            print($"{file}, {g_id}, {dset_id}, {space} {a} {clas} {dimms[0]} {dimms[1]}");
+            print($"{file}, {g_id}, {dset_id}, {space} {a} {dimms[0]} {dimms[1]}");
         }
         finally {
             H5G.close(dset_id);
