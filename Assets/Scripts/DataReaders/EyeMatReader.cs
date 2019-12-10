@@ -1,19 +1,8 @@
 ﻿using Eyelink.Structs;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 public class EyeMatReader : EyeDataReader {
-    /// <summary>
-    /// Importing hdf5.dll here so that unity will include it in the build
-    /// This function does not exist do not use this
-    /// </summary>
-    [DllImport("hdf5")]
-    private static extern void test();
-
-    [DllImport("hdf5_hl")]
-    private static extern void test2();
-
     private AllFloatData currentData = null;
 
     private EyelinkMatFile file;

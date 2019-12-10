@@ -1,9 +1,7 @@
-﻿using HDF.PInvoke;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -93,119 +91,12 @@ public class GameController : MonoBehaviour {
             }
         }
 
-        long file = 0, g_id = 0, dset_id = 0;
-
-        try {
-            print(H5.open());
-            string path = @"/Volumes/Users/simyanyu/Desktop/unityfile.mat";
-            //UnityMazeMatFile f = new UnityMazeMatFile(path);
-            file = H5F.open(path, H5F.ACC_RDONLY);
-            print(file);
-            g_id = H5G.open(file, "/uf/data");
-            print(g_id);
-            H5G.info_t t = new H5G.info_t();
-
-            byte[] buffer = new byte[255];
-
-            int counter = 0;
-
-            GCHandle h1 = GCHandle.Alloc(buffer);
+        string path = @"D:\Desktop\NUS\FYP\LatestData\unityfile.mat";
 
 
-            while (0 < H5O.visit(g_id, H5.index_t.NAME, H5.iter_order_t.INC, asd, (IntPtr)h1) && counter < 100) {
-                counter++;
-                print($"looper {counter}");
-            }
+        using (UnityMazeMatFile file = new UnityMazeMatFile(path)) {
 
-            h1.Free();
-
-
-            dset_id = H5D.open(file, "/uf/data/unityData");
-
-            long space = H5D.get_space(dset_id);
-            print($"space {space}");
-            int a = H5S.get_simple_extent_ndims(space);
-            print($"ndims{a}");
-            ulong[] dimms = new ulong[a];
-
-            print($"isSimple: {H5S.is_simple(space)}");
-
-            H5S.get_simple_extent_dims(space, dimms, null);
-
-            H5S.close(space);
-
-            H5G.get_info(g_id, ref t);
-            long type = H5D.get_type(dset_id);
-            print("hello");
-            H5T.class_t clas = H5T.get_class(type);
-            print("bye");
-            
-
-            double[,] vs = new double[dimms[0], dimms[1]];
-            print(vs.Length);
-
-            GCHandle h2 = GCHandle.Alloc(vs, GCHandleType.Pinned);
-
-            try
-            {
-                int read = H5D.read(dset_id, type, H5S.ALL, H5S.ALL, H5P.DEFAULT, h2.AddrOfPinnedObject());
-                if (-1 == read)
-                {
-                    print($"readFailed {read}");
-                }
-                else
-                {
-                    print($"$read ok {read}");
-                }
-            }
-            catch (Exception e) {
-                Debug.LogError("ERROR");
-                Debug.LogException(e);
-            }
-            finally {
-                H5T.close(type);
-                h2.Free();
-            }
-            counter = 0;
-            foreach(float ff in vs)
-            {
-                counter++;
-                if (ff != 0f)
-                {
-                    print(ff);
-                    print($"counter{counter}");
-                    break;
-                }
-            }
-
-            for (int i = 0; i < 7; i++) {
-
-                print(vs[0, i]);
-                //print(f.unityData[i, 0]);
-            }
-
-            for(int i = 0; i < 7; i++) {
-
-                print(vs[i, 0]);
-                //print(f.unityData[i, 0]);
-            }
-
-
-
-            print($"{file}, {g_id}, {dset_id}, {space} {a} {dimms[0]} {dimms[1]}");
         }
-        finally {
-            H5G.close(dset_id);
-            H5G.close(g_id);
-            H5F.close(file);
-        }
-    }
-
-    H5O.iterate_t iterate = new H5O.iterate_t(asd);
-
-    static int asd(long grp, IntPtr name, ref H5O.info_t info, IntPtr op_Data) {
-        print($"whahahaha: {Marshal.PtrToStringAnsi(name)}");
-        return 0;
     }
 
     private void SessionListMode(BatchModeLogger logger, string listPath) {
