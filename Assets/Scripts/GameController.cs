@@ -90,13 +90,6 @@ public class GameController : MonoBehaviour {
                 PwdMode(logger);
             }
         }
-
-        string path = @"D:\Desktop\NUS\FYP\LatestData\unityfile.mat";
-
-
-        using (UnityMazeMatFile file = new UnityMazeMatFile(path)) {
-
-        }
     }
 
     private void SessionListMode(BatchModeLogger logger, string listPath) {
