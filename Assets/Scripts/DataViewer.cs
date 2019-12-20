@@ -92,6 +92,9 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     private int _trialIndex = 0;
     private bool _isPlaying;
 
+    [SerializeField]
+    private Camera miniplayer;
+
     private void Start() {
         dataViewerGUI.SetVisibility(false);
 
@@ -304,9 +307,11 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
             dataViewerGUI.SetVisibility(!IsShowingSubjectScreen);
             if (IsShowingSubjectScreen) {
                 subjectView.targetDisplay = 1;
+                miniplayer.enabled = true;
             }
             else {
                 subjectView.targetDisplay = 0;
+                miniplayer.enabled = false;
             }
             IsShowingSubjectScreen = !IsShowingSubjectScreen;
         }

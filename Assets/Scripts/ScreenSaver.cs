@@ -455,7 +455,7 @@ public class ScreenSaver : BasicGUIController {
                             expected = ProcessTrigger(sessionData.trigger, expected, cueController);
                             //if trigger is approximated, the apporximated trigger will always be the end of a frame because VirtualMaze logs
                             // once every update() which represents a frame
-                            //recorder.WriteEvent(DataTypes.MESSAGEEVENT, gazeTime, $"Approximated Trigger {sessionData.flag}", true);
+                            recorder.FlagEvent($"Approximated Trigger {sessionData.flag}");
                         }
                     }
 
@@ -556,7 +556,7 @@ public class ScreenSaver : BasicGUIController {
                 MessageEvent fe = (MessageEvent)data;
                 expected = ProcessTrigger(fe.trigger, expected, cueController);
 
-               // recorder.WriteEvent(fe.dataType, fe.time, fe.message, isLastSampleInFrame);
+                recorder.FlagEvent(fe.message);
 
                 return fe.trigger;
             default:
@@ -581,7 +581,7 @@ public class ScreenSaver : BasicGUIController {
             case DataTypes.MESSAGEEVENT:
                 MessageEvent fe = (MessageEvent)data;
                 expected = ProcessTrigger(fe.trigger, expected, cueController);
-                //recorder.WriteEvent(fe.dataType, fe.time, $"Data ignored: {ignoreReason} | {fe.message}", isLastSampleInFrame);
+                recorder.FlagEvent(fe.message);
 
                 break;
             default:

@@ -28,6 +28,8 @@ public class RayCastRecorder : IDisposable {
     public const char delimiter = ',';
     private StreamWriter s;
 
+    private string eventFlag;
+
     public RayCastRecorder(string saveLocation) : this(saveLocation, "defaultTest.csv") {
     }
 
@@ -64,55 +66,20 @@ public class RayCastRecorder : IDisposable {
         if (isLastSampleInFrame) {
             s.Write(EndOfFrameFlag);
         }
+        if (!string.IsNullOrEmpty(eventFlag))
+        {
+            s.Write(eventFlag);
+            eventFlag = null;
+        }
         s.WriteLine(); //total 17 delimiters
         s.Flush();
     }
 
-    public void IgnoreEvent(DataTypes type, uint time, Vector2 gazePos, bool isLastSampleInFrame) {
-        if (gazePos != null) {
-            IgnoreEvent(type, time, $"(x:{gazePos.x} y:{gazePos.y})", isLastSampleInFrame);
-        }
-        else {
-            IgnoreEvent(type, time, "Null", isLastSampleInFrame);
-        }
-    }
-
-    public void IgnoreEvent(DataTypes type, uint time, string message, bool isLastSampleInFrame) {
-        WriteEvent(type, time, $"Data ignored {message}", isLastSampleInFrame);
-    }
-
-    public void WriteEvent(DataTypes type, uint time, string message, bool isLastSampleInFrame) {
-        if (message.Contains(delimiter.ToString())) {
-            throw new InvalidDataException("Message contains delimiter");
-        }
-
-        s.Write($"{type}{delimiter}");
-        s.Write($"{time}{delimiter}");
-        s.Write($"{message}{delimiter}");
-        //for CSV to be parsed properly, empty columns are needed.
-        for (int i = 0; i < 17 - 3; i++) {
-            s.Write($"{delimiter}");
-        }
-
-        if (isLastSampleInFrame) {
-            s.Write(EndOfFrameFlag);
-        }
-
-        s.WriteLine();
-        s.Flush();
-    }
-
     public string Vector3ToString(Vector3 v) {
-        if (v == null) {
-            return $"{delimiter}{delimiter}";
-        }
         return $"{v.x}{delimiter}{v.y}{delimiter}{v.z}";
     }
 
     public string Vector2ToString(Vector2 v) {
-        if (v == null) {
-            return $"{delimiter}";
-        }
         return $"{v.x}{delimiter}{v.y}";
     }
 
@@ -138,7 +105,24 @@ public class RayCastRecorder : IDisposable {
         if (isLastSampleInFrame) {
             s.Write(EndOfFrameFlag);
         }
+        if(!string.IsNullOrEmpty( eventFlag))
+        {
+            s.Write(eventFlag);
+            eventFlag = null;
+        }
         s.WriteLine(); //total 17 delimiters
         s.Flush();
+    }
+
+    internal void FlagEvent(string message)
+    {        
+        if (message.Contains("Approx"))
+        {
+            eventFlag = $"A{message.Substring(message.Length - 2)}";
+        }
+        else
+        {
+            eventFlag = message.Substring(message.Length - 2);
+        }
     }
 }

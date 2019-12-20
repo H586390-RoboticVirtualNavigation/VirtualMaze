@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -44,7 +45,7 @@ public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
                 prevRawData = rawData;
                 rawData = reader.GetCurrentRawData();
 
-                if (rawData[RayCastRecorder.EndOfFrame].Equals(RayCastRecorder.EndOfFrameFlag)) {
+                if (rawData[RayCastRecorder.EndOfFrame].Contains(RayCastRecorder.EndOfFrameFlag)) {
                     if (data is PlaybackSample sam) {
                         t.NextFrame(GetRobotConfig(rawData));
                     }
@@ -101,35 +102,36 @@ public class RaycastDataLoader : ICsvLineParser<PlaybackData> {
     }
 
     public PlaybackData Parse(string[] data) {
-        DataTypes type = StringToType(data[RayCastRecorder.Type]);
+        string flags = data[RayCastRecorder.EndOfFrame];
         uint timestamp = uint.Parse(data[RayCastRecorder.Time]);
 
-        switch (type) {
-            case DataTypes.SAMPLE_TYPE:
-                try {
-                    string msg = data[RayCastRecorder.ObjName_Message];
-                    Vector3 pos = new Vector3(float.Parse(data[RayCastRecorder.PosX]), float.Parse(data[RayCastRecorder.PosY]), float.Parse(data[RayCastRecorder.PosZ]));
-                    float rotY = float.Parse(data[RayCastRecorder.RotY]);
+        if (!string.IsNullOrEmpty(flags) && flags.ContainsNumbers())
+        {
 
-                    if (msg.Contains("Ignored")) {
-                        return new PlaybackSample(default, pos, rotY, timestamp);
-                    }
+            string message = flags;
+            SessionTrigger trigger = (SessionTrigger)((flags[flags.Length - 2] - '0') * 10);
 
-                    Vector2 gaze = new Vector2(float.Parse(data[RayCastRecorder.Gx]), float.Parse(data[RayCastRecorder.Gy]));
-
-                    return new PlaybackSample(gaze, pos, rotY, timestamp);
-                }
-                catch (Exception) {
-                    Debug.LogError(data[RayCastRecorder.Time]);
-                    throw;
-                }
-            case DataTypes.MESSAGEEVENT:
-                string message = data[RayCastRecorder.ObjName_Message].Trim();
-                SessionTrigger trigger = (SessionTrigger)((message[message.Length - 2] - '0') * 10);
-
-                return new PlaybackEvent(message, trigger, timestamp);
+            return new PlaybackEvent(message, trigger, timestamp);
         }
+        try
+        {
+            string msg = data[RayCastRecorder.ObjName_Message];
+            Vector3 pos = new Vector3(float.Parse(data[RayCastRecorder.PosX]), float.Parse(data[RayCastRecorder.PosY]), float.Parse(data[RayCastRecorder.PosZ]));
+            float rotY = float.Parse(data[RayCastRecorder.RotY]);
 
-        return null;
+            if (msg.Contains("Ignored"))
+            {
+                return new PlaybackSample(default, pos, rotY, timestamp);
+            }
+
+            Vector2 gaze = new Vector2(float.Parse(data[RayCastRecorder.Gx]), float.Parse(data[RayCastRecorder.Gy]));
+
+            return new PlaybackSample(gaze, pos, rotY, timestamp);
+        }
+        catch (Exception)
+        {
+            Debug.LogError(data[RayCastRecorder.Time]);
+            throw;
+        }
     }
 }

@@ -59,4 +59,20 @@ public static class Extensions {
     public static Vector2 ConvertToUnityOriginCoordinate(this Vector2 gazeVector) {
         return new Vector2(gazeVector.x, 1080 - gazeVector.y);
     }
+
+    public static bool ContainsNumbers(this string str)
+    {
+        if (string.IsNullOrEmpty(str))
+        {
+            return false;
+        }
+        foreach(char c in str)
+        {
+            if (char.IsDigit(c))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }
