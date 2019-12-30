@@ -3,6 +3,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -386,6 +388,8 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
+    private WaitForEndOfFrame waitForEndOfFrame = new WaitForEndOfFrame();
+
     private IEnumerator ProcessSession(string sessionPath, EyeDataReader eyeReader, RayCastRecorder recorder) {
         int frameCounter = 0;
         int trialCounter = 1;
@@ -408,6 +412,8 @@ public class ScreenSaver : BasicGUIController {
             fixations.Enqueue(data);
 
             int debugMaxMissedOffset = 0;
+
+            List<Fsample> sampleCache = new List<Fsample>();
 
             while (sessionReader.HasNext) {
                 //add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
@@ -443,7 +449,7 @@ public class ScreenSaver : BasicGUIController {
                         period = (sessionFrames.Peek().timeDeltaMs) - timeOffset;
                     }
                     else {
-                        //use current data's timedelta to approximate
+                        //use current data's timedelta to approximate since peeking at the next data's timedelta is not supported
                         period = (sessionData.timeDeltaMs) - timeOffset;
                     }
 
@@ -474,14 +480,14 @@ public class ScreenSaver : BasicGUIController {
                         if (status == Ignore_Data) {
                             IgnoreData(currData, recorder, reason, isLastSampleInFrame);
                         }
-                        else if (ProcessData(currData, recorder, isLastSampleInFrame) == SessionTrigger.TrialStartedTrigger) {
+                        else if (ProcessData(currData, recorder, isLastSampleInFrame, sampleCache) == SessionTrigger.TrialStartedTrigger) {
                             trialCounter++;
                             SessionStatusDisplay.DisplayTrialNumber(trialCounter);
                         }
 
                         //update UI objects
                         if (currData is MessageEvent) {
-                            yield return new WaitForEndOfFrame();
+                            yield return waitForEndOfFrame;
                         }
                     }
 
@@ -514,7 +520,7 @@ public class ScreenSaver : BasicGUIController {
                     Debug.LogWarning($"{fixations.Count} fixations assumed to belong to next trigger");
                     while (fixations.Count > 0) {
                         debugMaxMissedOffset = Math.Max(fixations.Count, debugMaxMissedOffset);
-                        //excess frames are taken to be belonging to the next frame, therefore is not last sample in frame
+
                         if (ProcessData(fixations.Dequeue(), recorder, false) == SessionTrigger.TrialStartedTrigger) {
                             trialCounter++;
                             SessionStatusDisplay.DisplayTrialNumber(trialCounter);
@@ -528,6 +534,14 @@ public class ScreenSaver : BasicGUIController {
     }
 
     private void LoadMissingTriggers(string v, Queue<MessageEvent> missingevents) {
+        /* Since Missing triggers are fixed before data is fed into VirtualMaze, this function is unused.
+         * Development of proper readers for missingevent is also not done. All is hardcoded during this period.
+         * 
+         * Method still exist here in case of future need
+         * 
+         * Written 30 Dec 2019.
+         */
+
         //missingevents.Enqueue(new MessageEvent(1822017, "Cue Offset 25", DataTypes.MESSAGEEVENT));
         //missingevents.Enqueue(new MessageEvent(2015432, "End Trial 34", DataTypes.MESSAGEEVENT));
         //missingevents.Enqueue(new MessageEvent(2078579, "Start Trial 11", DataTypes.MESSAGEEVENT));
@@ -537,15 +551,24 @@ public class ScreenSaver : BasicGUIController {
         //missingevents.Enqueue(new MessageEvent(2210318, "Cue Offset 21", DataTypes.MESSAGEEVENT));
     }
 
-    private SessionTrigger ProcessData(AllFloatData data, RayCastRecorder recorder, bool isLastSampleInFrame) {
+    private SessionTrigger ProcessData(AllFloatData data, RayCastRecorder recorder, bool isLastSampleInFrame, List<Fsample> sampleCache = null) {
+
         switch (data.dataType) {
             case DataTypes.SAMPLE_TYPE:
                 Fsample fs = (Fsample)data;
                 if (InScreenBounds(fs.rawRightGaze)) {
-                    RaycastToScene(fs.RightGaze, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
-                    recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
-
                     gazePointPool?.AddGazePoint(GazeCanvas, viewport, fs.RightGaze);
+                    if (sampleCache == null) {
+                        //RaycastToScene(fs.RightGaze, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
+                        //recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
+
+                    }
+                    else {
+                        sampleCache.Add(fs);
+                        if (isLastSampleInFrame) {
+                            BulkCastAndRecord(sampleCache, recorder, true);
+                        }
+                    }
                 }
                 else {
                     //ignore if gaze is out of bounds
@@ -553,6 +576,11 @@ public class ScreenSaver : BasicGUIController {
                 }
                 return SessionTrigger.NoTrigger;
             case DataTypes.MESSAGEEVENT:
+                //Raycast all samples in sampleCache, log and clear it afterwards.
+                if (sampleCache != null) {
+                    BulkCastAndRecord(sampleCache, recorder, isLastSampleInFrame);
+                }
+
                 MessageEvent fe = (MessageEvent)data;
                 expected = ProcessTrigger(fe.trigger, expected, cueController);
 
@@ -564,6 +592,46 @@ public class ScreenSaver : BasicGUIController {
                 //Debug.LogWarning($"Unsupported EDF DataType Found! ({type})");
                 return SessionTrigger.NoTrigger;
         }
+    }
+
+    private void BulkCastAndRecord(List<Fsample> sampleCache, RayCastRecorder recorder, bool markLastSampleAsEndOfFrame) {
+        int numCache = sampleCache.Count;
+        if (numCache == 0) {
+            return;
+        }
+
+        NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(numCache, Allocator.TempJob);
+        NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(numCache, Allocator.TempJob);
+
+        Vector3 position = transform.position;
+
+        for (int i = 0; i < numCache; i++) {
+            Fsample s = sampleCache[i];
+            Ray r = viewport.ScreenPointToRay(s.RightGaze);
+            commands[i] = new RaycastCommand(r.origin, r.direction);
+        }
+
+        using (results)
+        using (commands) {
+            JobHandle h = RaycastCommand.ScheduleBatch(commands, results, 1, default);
+
+            h.Complete();
+
+            for (int i = 0; i < numCache; i++) {
+                bool isLastSampleInFrame = markLastSampleAsEndOfFrame && i == numCache - 1;
+                Fsample data = sampleCache[i];
+
+                Transform objhit = results[i].transform;
+
+                string objName = objhit.name;
+                Vector2 relativePos = ComputeLocalPostion(objhit, results[i]);
+                Vector3 objHitPos = objhit.position;
+                Vector3 gazePoint = results[i].point;
+
+                recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, data.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
+            }
+        }
+        sampleCache.Clear();
     }
 
     private bool InScreenBounds(Vector2 gazeXY) {
@@ -699,7 +767,7 @@ public class ScreenSaver : BasicGUIController {
             Transform objhit = hit.transform;
 
             objName = hit.transform.name;
-            relativePos = ComputeLocalPostion(objhit, hit); ;
+            relativePos = ComputeLocalPostion(objhit, hit);
             objHitPos = objhit.position;
             gazePoint = hit.point;
 
@@ -726,9 +794,6 @@ public class ScreenSaver : BasicGUIController {
             if (sqDist < min) {
                 min = sqDist;
                 result = axis;
-            }
-            else if (sqDist < min) {
-                Debug.LogWarning($"Normal is exactly between 2 axes. Expect unknown behaviour");
             }
         }
 
