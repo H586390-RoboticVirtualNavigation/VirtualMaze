@@ -60,19 +60,19 @@ public static class Extensions {
         return new Vector2(gazeVector.x, 1080 - gazeVector.y);
     }
 
-    public static bool ContainsNumbers(this string str)
-    {
-        if (string.IsNullOrEmpty(str))
-        {
+    public static bool ContainsNumbers(this string str) {
+        if (string.IsNullOrEmpty(str)) {
             return false;
         }
-        foreach(char c in str)
-        {
-            if (char.IsDigit(c))
-            {
+        foreach (char c in str) {
+            if (char.IsDigit(c)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public static bool isNaN(this Vector2 vec) {
+        return float.IsNaN(vec.x) || float.IsNaN(vec.y);
     }
 }

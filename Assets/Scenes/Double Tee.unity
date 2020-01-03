@@ -54,7 +54,7 @@ LightmapSettings:
     m_EnableBakedLightmaps: 1
     m_EnableRealtimeLightmaps: 0
   m_LightmapEditorSettings:
-    serializedVersion: 10
+    serializedVersion: 12
     m_Resolution: 2
     m_BakeResolution: 40
     m_AtlasSize: 1024
@@ -62,6 +62,7 @@ LightmapSettings:
     m_AOMaxDistance: 1
     m_CompAOExponent: 1
     m_CompAOExponentDirect: 0
+    m_ExtractAmbientOcclusion: 0
     m_Padding: 2
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 1
@@ -76,10 +77,16 @@ LightmapSettings:
     m_PVRDirectSampleCount: 32
     m_PVRSampleCount: 500
     m_PVRBounces: 2
+    m_PVREnvironmentSampleCount: 500
+    m_PVREnvironmentReferencePointCount: 2048
+    m_PVRFilteringMode: 2
+    m_PVRDenoiserTypeDirect: 0
+    m_PVRDenoiserTypeIndirect: 0
+    m_PVRDenoiserTypeAO: 0
     m_PVRFilterTypeDirect: 0
     m_PVRFilterTypeIndirect: 0
     m_PVRFilterTypeAO: 0
-    m_PVRFilteringMode: 1
+    m_PVREnvironmentMIS: 0
     m_PVRCulling: 1
     m_PVRFilteringGaussRadiusDirect: 1
     m_PVRFilteringGaussRadiusIndirect: 5
@@ -87,7 +94,8 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaDirect: 0.5
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
-    m_ShowResolutionOverlay: 1
+    m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
   m_LightingDataAsset: {fileID: 112000000, guid: b1e0e2917386b0e4a8d3db1cff643b1a,
     type: 2}
   m_UseShadowmask: 0
@@ -171,6 +179,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -262,6 +271,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -353,6 +363,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -393,11 +404,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1835292984}
     m_Modifications:
-    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 8fc8ec353d42bd744a9a97166ee99ce7, type: 2}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_Name
-      value: RabbitRewardSet
+      value: RabitPoster
       objectReference: {fileID: 0}
+    - target: {fileID: 2472647010858284900, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: _attachedTo
+      value: 
+      objectReference: {fileID: 568611712}
     - target: {fileID: 2708100266483357146, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -453,16 +474,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: RabitPoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 8fc8ec353d42bd744a9a97166ee99ce7, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -473,6 +484,11 @@ PrefabInstance:
         type: 3}
       propertyPath: rewardOrder
       value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: RabbitRewardSet
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
@@ -539,6 +555,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -648,6 +665,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -740,6 +758,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -831,6 +850,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -922,6 +942,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1012,6 +1033,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1090,6 +1112,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1130,11 +1153,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1835292984}
     m_Modifications:
-    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 7afebd764e37f574a8dc8c55984e01b7, type: 2}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_Name
-      value: CrocodileRewardSet
+      value: CrocodilePoster
       objectReference: {fileID: 0}
+    - target: {fileID: 2472647010858284900, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: _attachedTo
+      value: 
+      objectReference: {fileID: 853049382}
     - target: {fileID: 2708100266483357146, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1190,16 +1223,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: CrocodilePoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 7afebd764e37f574a8dc8c55984e01b7, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -1210,6 +1233,11 @@ PrefabInstance:
         type: 3}
       propertyPath: rewardOrder
       value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: CrocodileRewardSet
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
@@ -1226,10 +1254,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2618775191987380134, guid: eac68ceb644ebce4a9d4ee85c4631f92,
+    - target: {fileID: 837815545312115969, guid: eac68ceb644ebce4a9d4ee85c4631f92,
         type: 3}
-      propertyPath: m_Name
-      value: WallsCeilingGround
+      propertyPath: m_RootOrder
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2618775191987380133, guid: eac68ceb644ebce4a9d4ee85c4631f92,
         type: 3}
@@ -1286,10 +1314,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 837815545312115969, guid: eac68ceb644ebce4a9d4ee85c4631f92,
+    - target: {fileID: 2618775191987380134, guid: eac68ceb644ebce4a9d4ee85c4631f92,
         type: 3}
-      propertyPath: m_RootOrder
-      value: 4
+      propertyPath: m_Name
+      value: WallsCeilingGround
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: eac68ceb644ebce4a9d4ee85c4631f92, type: 3}
@@ -1357,6 +1385,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1448,6 +1477,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1612,6 +1642,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1702,6 +1733,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1780,6 +1812,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1871,6 +1904,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1961,6 +1995,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1988,11 +2023,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1835292984}
     m_Modifications:
-    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 5e3395afa19931c48bf6d7620f486c4d, type: 2}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_Name
-      value: DonkeyRewardSet
+      value: DonkeyPoster
       objectReference: {fileID: 0}
+    - target: {fileID: 2472647010858284900, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: _attachedTo
+      value: 
+      objectReference: {fileID: 223194679}
     - target: {fileID: 2708100266483357146, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2048,16 +2093,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: DonkeyPoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 5e3395afa19931c48bf6d7620f486c4d, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -2068,6 +2103,11 @@ PrefabInstance:
         type: 3}
       propertyPath: rewardOrder
       value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: DonkeyRewardSet
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
@@ -2177,6 +2217,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -2254,6 +2295,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -2332,6 +2374,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -2422,6 +2465,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -2500,6 +2544,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -2590,6 +2635,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -2653,6 +2699,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -2694,11 +2741,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1835292984}
     m_Modifications:
-    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 13c0df2bb78e99c4181365616f005cdd, type: 2}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_Name
-      value: CamelRewardSet
+      value: CamelPoster
       objectReference: {fileID: 0}
+    - target: {fileID: 2472647010858284900, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: _attachedTo
+      value: 
+      objectReference: {fileID: 118893583}
     - target: {fileID: 2708100266483357146, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2754,16 +2811,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: CamelPoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 13c0df2bb78e99c4181365616f005cdd, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -2774,6 +2821,11 @@ PrefabInstance:
         type: 3}
       propertyPath: rewardOrder
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: CamelRewardSet
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
@@ -2841,6 +2893,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -2932,6 +2985,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -3008,11 +3062,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1835292984}
     m_Modifications:
-    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 690bfe87dd3ab0049bafe7add203521f, type: 2}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_Name
-      value: PigRewardSet
+      value: PigPoster
       objectReference: {fileID: 0}
+    - target: {fileID: 2472647010858284900, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: _attachedTo
+      value: 
+      objectReference: {fileID: 608666641}
     - target: {fileID: 2708100266483357146, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -3068,16 +3132,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: PigPoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 690bfe87dd3ab0049bafe7add203521f, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -3088,6 +3142,11 @@ PrefabInstance:
         type: 3}
       propertyPath: rewardOrder
       value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: PigRewardSet
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
@@ -3154,6 +3213,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -3181,11 +3241,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1835292984}
     m_Modifications:
-    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 17822ed0faf6a8c45ac7b3654442e066, type: 2}
+    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_Name
-      value: CatRewardSet
+      value: CatPoster
       objectReference: {fileID: 0}
+    - target: {fileID: 2472647010858284900, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: _attachedTo
+      value: 
+      objectReference: {fileID: 558815854}
     - target: {fileID: 2708100266483357146, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -3241,16 +3311,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1936230905976871848, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Name
-      value: CatPoster
-      objectReference: {fileID: 0}
-    - target: {fileID: 1936230905974918096, guid: aa1b4192074926247b9711507173d20f,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 17822ed0faf6a8c45ac7b3654442e066, type: 2}
     - target: {fileID: 4019488325760741237, guid: aa1b4192074926247b9711507173d20f,
         type: 3}
       propertyPath: cueImage
@@ -3261,6 +3321,11 @@ PrefabInstance:
         type: 3}
       propertyPath: rewardOrder
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7270209383901763778, guid: aa1b4192074926247b9711507173d20f,
+        type: 3}
+      propertyPath: m_Name
+      value: CatRewardSet
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
@@ -3327,6 +3392,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -3354,10 +3420,20 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 4449618568864015271, guid: 957909166f187ee40a1e4a5857a5962e,
+    - target: {fileID: 3528849749342755429, guid: 957909166f187ee40a1e4a5857a5962e,
         type: 3}
-      propertyPath: m_Name
-      value: Lights
+      propertyPath: m_LocalPosition.y
+      value: 5.88
+      objectReference: {fileID: 0}
+    - target: {fileID: 3528849749342755429, guid: 957909166f187ee40a1e4a5857a5962e,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -8.26
+      objectReference: {fileID: 0}
+    - target: {fileID: 3528849749342755429, guid: 957909166f187ee40a1e4a5857a5962e,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.05
       objectReference: {fileID: 0}
     - target: {fileID: 4449618568864015268, guid: 957909166f187ee40a1e4a5857a5962e,
         type: 3}
@@ -3414,6 +3490,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4449618568864015271, guid: 957909166f187ee40a1e4a5857a5962e,
+        type: 3}
+      propertyPath: m_Name
+      value: Lights
+      objectReference: {fileID: 0}
     - target: {fileID: 5959304160609551131, guid: 957909166f187ee40a1e4a5857a5962e,
         type: 3}
       propertyPath: m_CookingOptions
@@ -3434,20 +3515,20 @@ PrefabInstance:
       propertyPath: m_LocalPosition.x
       value: 0.1
       objectReference: {fileID: 0}
-    - target: {fileID: 3528849749342755429, guid: 957909166f187ee40a1e4a5857a5962e,
+    - target: {fileID: 7170725252261872031, guid: 957909166f187ee40a1e4a5857a5962e,
         type: 3}
       propertyPath: m_LocalPosition.y
       value: 5.88
       objectReference: {fileID: 0}
-    - target: {fileID: 3528849749342755429, guid: 957909166f187ee40a1e4a5857a5962e,
+    - target: {fileID: 7170725252261872031, guid: 957909166f187ee40a1e4a5857a5962e,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -8.26
+      value: -0.02
       objectReference: {fileID: 0}
-    - target: {fileID: 3528849749342755429, guid: 957909166f187ee40a1e4a5857a5962e,
+    - target: {fileID: 7170725252261872031, guid: 957909166f187ee40a1e4a5857a5962e,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.05
+      value: 9.78
       objectReference: {fileID: 0}
     - target: {fileID: 8683558511642753769, guid: 957909166f187ee40a1e4a5857a5962e,
         type: 3}
@@ -3463,21 +3544,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7170725252261872031, guid: 957909166f187ee40a1e4a5857a5962e,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 5.88
-      objectReference: {fileID: 0}
-    - target: {fileID: 7170725252261872031, guid: 957909166f187ee40a1e4a5857a5962e,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0.02
-      objectReference: {fileID: 0}
-    - target: {fileID: 7170725252261872031, guid: 957909166f187ee40a1e4a5857a5962e,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 9.78
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 957909166f187ee40a1e4a5857a5962e, type: 3}

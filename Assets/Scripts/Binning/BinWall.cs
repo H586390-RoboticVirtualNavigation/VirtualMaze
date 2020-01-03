@@ -22,6 +22,10 @@ public class BinWall : MonoBehaviour {
     public int numWidth { get; private set; }
     public int numHeight { get; private set; }
 
+    private void OnDrawGizmos() {
+        Gizmos.DrawSphere(transform.position, 0.5f);
+    }
+
     private void Start() {
         //3/5
         //CreateWall(3f / 5f, 25 / 40f, 3f, 5);

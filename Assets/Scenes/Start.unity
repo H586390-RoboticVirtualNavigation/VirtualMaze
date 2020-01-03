@@ -381,6 +381,10 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2084128, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 11426390, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0, type: 3}
       propertyPath: saver
       value: 

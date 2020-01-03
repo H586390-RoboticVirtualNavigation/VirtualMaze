@@ -16,6 +16,9 @@ using UnityEngine.UI;
 public class ScreenSaver : BasicGUIController {
     private const int Frame_Per_Batch = 200;
 
+    [SerializeField]
+    private GameObject binWallPrefab = null;
+
     private const int No_Missing = 0x0;
     private const int Ignore_Data = 0x1;
     private const int Approx_From_Session = 0x2;
@@ -394,6 +397,7 @@ public class ScreenSaver : BasicGUIController {
         int frameCounter = 0;
         int trialCounter = 1;
 
+        using (BinRecorder binRecorder = new BinRecorder())
         using (ISessionDataReader sessionReader = CreateSessionReader(sessionPath)) {
             if (sessionReader == null) {
                 yield break;
@@ -414,8 +418,9 @@ public class ScreenSaver : BasicGUIController {
             int debugMaxMissedOffset = 0;
 
             List<Fsample> sampleCache = new List<Fsample>();
-
-            while (sessionReader.HasNext) {
+            int c = 0;
+            while (sessionReader.HasNext && c < 39) {
+                c++;
                 //add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
                 sessionFrames.Enqueue(sessionReader.CurrentData);
 
@@ -471,16 +476,18 @@ public class ScreenSaver : BasicGUIController {
 
                     MoveRobotTo(robot, sessionData);
 
+                    BinWallManager.Reset();
+
                     while (gazeTime <= timepassed && fixations.Count > 0) {
                         AllFloatData currData = fixations.Dequeue();
                         gazeTime = currData.time;
 
-                        bool isLastSampleInFrame = gazeTime > timepassed;
+                        bool isLastSampleInFrame = gazeTime >= timepassed;
 
                         if (status == Ignore_Data) {
-                            IgnoreData(currData, recorder, reason, isLastSampleInFrame);
+                            IgnoreData(currData, recorder, reason, isLastSampleInFrame, binRecorder);
                         }
-                        else if (ProcessData(currData, recorder, isLastSampleInFrame, sampleCache) == SessionTrigger.TrialStartedTrigger) {
+                        else if (ProcessData(currData, recorder, isLastSampleInFrame, binRecorder, sampleCache) == SessionTrigger.TrialStartedTrigger) {
                             trialCounter++;
                             SessionStatusDisplay.DisplayTrialNumber(trialCounter);
                         }
@@ -521,7 +528,7 @@ public class ScreenSaver : BasicGUIController {
                     while (fixations.Count > 0) {
                         debugMaxMissedOffset = Math.Max(fixations.Count, debugMaxMissedOffset);
 
-                        if (ProcessData(fixations.Dequeue(), recorder, false) == SessionTrigger.TrialStartedTrigger) {
+                        if (ProcessData(fixations.Dequeue(), recorder, false, binRecorder) == SessionTrigger.TrialStartedTrigger) {
                             trialCounter++;
                             SessionStatusDisplay.DisplayTrialNumber(trialCounter);
                         }
@@ -551,7 +558,7 @@ public class ScreenSaver : BasicGUIController {
         //missingevents.Enqueue(new MessageEvent(2210318, "Cue Offset 21", DataTypes.MESSAGEEVENT));
     }
 
-    private SessionTrigger ProcessData(AllFloatData data, RayCastRecorder recorder, bool isLastSampleInFrame, List<Fsample> sampleCache = null) {
+    private SessionTrigger ProcessData(AllFloatData data, RayCastRecorder recorder, bool isLastSampleInFrame, BinRecorder binRecorder, List<Fsample> sampleCache = null) {
 
         switch (data.dataType) {
             case DataTypes.SAMPLE_TYPE:
@@ -559,14 +566,18 @@ public class ScreenSaver : BasicGUIController {
                 if (InScreenBounds(fs.rawRightGaze)) {
                     gazePointPool?.AddGazePoint(GazeCanvas, viewport, fs.RightGaze);
                     if (sampleCache == null) {
-                        //RaycastToScene(fs.RightGaze, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
-                        //recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
+                        RaycastToScene(fs.RightGaze, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
+                        recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
 
                     }
                     else {
                         sampleCache.Add(fs);
                         if (isLastSampleInFrame) {
+                            if (binRecorder != null) {
+                                BinGazes(sampleCache, binRecorder);
+                            }
                             BulkCastAndRecord(sampleCache, recorder, true);
+                            sampleCache.Clear();
                         }
                     }
                 }
@@ -578,7 +589,11 @@ public class ScreenSaver : BasicGUIController {
             case DataTypes.MESSAGEEVENT:
                 //Raycast all samples in sampleCache, log and clear it afterwards.
                 if (sampleCache != null) {
+                    if (binRecorder != null) {
+                        BinGazes(sampleCache, binRecorder);
+                    }
                     BulkCastAndRecord(sampleCache, recorder, isLastSampleInFrame);
+                    sampleCache.Clear();
                 }
 
                 MessageEvent fe = (MessageEvent)data;
@@ -591,6 +606,26 @@ public class ScreenSaver : BasicGUIController {
                 //ignore others for now
                 //Debug.LogWarning($"Unsupported EDF DataType Found! ({type})");
                 return SessionTrigger.NoTrigger;
+        }
+    }
+
+    private BinMapper mapper = new DoubleTeeBinMapper();
+
+    private void BinGazes(List<Fsample> sampleCache, BinRecorder recorder) {
+        List<Vector2> gazeCache = new List<Vector2>();
+
+        foreach (Fsample fs in sampleCache) {
+            gazeCache.Add(fs.RightGaze);
+        }
+
+        BinWallManager.IdentifyObjects(gazeCache, viewport, binWallPrefab, mapper);
+
+        HashSet<int> binsHitId = new HashSet<int>();
+
+        foreach (Fsample fs in sampleCache) {
+            BinWallManager.BinGaze(fs.RightGaze, viewport, binWallPrefab, mapper, binsHitId);
+            recorder.RecordMovement(fs.time, fs.rawRightGaze, binsHitId);
+            binsHitId.Clear();
         }
     }
 
@@ -631,17 +666,19 @@ public class ScreenSaver : BasicGUIController {
                 recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, data.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
             }
         }
-        sampleCache.Clear();
     }
 
     private bool InScreenBounds(Vector2 gazeXY) {
         return !((gazeXY.x > maxBound.x) || (gazeXY.y > maxBound.y) || (gazeXY.x < minBound.x) || (gazeXY.y < minBound.y));
     }
 
-    private void IgnoreData(AllFloatData data, RayCastRecorder recorder, string ignoreReason, bool isLastSampleInFrame) {
+    private void IgnoreData(AllFloatData data, RayCastRecorder recorder, string ignoreReason, bool isLastSampleInFrame, BinRecorder binRecorder) {
         switch (data.dataType) {
             case DataTypes.SAMPLE_TYPE:
                 Fsample fs = (Fsample)data;
+
+                binRecorder.RecordMovement(fs.time, fs.rawRightGaze, null);
+
                 //record the raw gaze data
                 recorder.IgnoreSample(data.dataType, data.time, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
 

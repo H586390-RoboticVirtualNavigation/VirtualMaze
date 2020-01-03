@@ -169,7 +169,6 @@ public class DoubleTeeBinMapper : BinMapper {
     public override Location MapObjectToLocation(int group, GameObject sceneObject) {
         Location location;
         if (group == Poster) {
-            Debug.Log(sceneObject.GetComponent<Poster>());
             Transform posterWall = sceneObject.GetComponent<Poster>().AttachedTo.transform;
             location = Location.CopyTransform(posterWall.transform);
         }
@@ -254,7 +253,7 @@ public class DoubleTeeBinMapper : BinMapper {
                 return 2;
 
             default:
-                throw new System.NotSupportedException("Unknown group");
+                throw new System.NotSupportedException("Unknown cache group");
         }
     }
 }

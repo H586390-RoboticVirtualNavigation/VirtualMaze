@@ -86,4 +86,9 @@ public class HDFHelper {
 
         return data;
     }
+
+    public static void RefreshDataSpace(long dataset_id, ref long space_id) {
+        H5S.close(space_id);
+        space_id = H5D.get_space(dataset_id);
+    }
 }

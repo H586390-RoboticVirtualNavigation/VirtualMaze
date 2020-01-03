@@ -17,6 +17,9 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
     public AudioSource audioSource;
 
+    [SerializeField]
+    private GameObject binWallPrefab;
+
     //Drag and drop
     public VideoCaptureCtrl videoCaptureCtrl;
     public CanvasGroup gui;
@@ -350,21 +353,21 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     float timeToClear = 0;
 
     private void ShowNextFrame(bool forceShow) {
-        timepassed += Time.deltaTime * 1000;
-        if (forceShow || timepassed >= timeToClear) {
-            timepassed = 0;
+        //timepassed += Time.deltaTime * 1000;
+        //if (forceShow || timepassed >= timeToClear) {
+        timepassed = 0;
 
-            Trial trial = trials[TrialIndex];
+        Trial trial = trials[TrialIndex];
 
-            timeToClear = trial.GetFrameAt(FrameIndex).DataCount;
+        timeToClear = trial.GetFrameAt(FrameIndex).DataCount;
 
-            if (FrameIndex < trial.GetFrameCount() - 1) {
-                FrameIndex++;
-            }
-            else {
-                IsPlaying = false;
-            }
+        if (FrameIndex < trial.GetFrameCount() - 1) {
+            FrameIndex++;
         }
+        else {
+            IsPlaying = false;
+        }
+        //}
     }
 
     private void ShowPrevFrame() {
@@ -376,7 +379,12 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         }
     }
 
+    List<Vector2> frameGazeCache = new List<Vector2>();
+
+    DoubleTeeBinMapper m = new DoubleTeeBinMapper();
+
     public void ShowFrame(Trial trial, int frameNum) {
+        BinWallManager.Reset();
         pool.ClearScreen();
 
         Frame frame = trial.GetFrameAt(frameNum);
@@ -392,12 +400,18 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
         foreach (PlaybackData data in frame) {
             if (data is PlaybackSample sample) {
-                i = pool.AddGazePoint(gazeRect, subjectView, sample.gaze);
+                frameGazeCache.Add(sample.gaze);
+                Image temp = pool.AddGazePoint(gazeRect, subjectView, sample.gaze);
+                if (temp != null) {
+                    i = temp;
+                }
             }
         }
         if (i != null) {
             i.color = Color.red;
         }
+
+        BinWallManager.DisplayGazes(frameGazeCache, subjectView, binWallPrefab, m);
 
         SimulateFade();
         CueController.ProcessTrigger(trial.GetLatestTriggerAtFrame(frameNum), cueController, this);
