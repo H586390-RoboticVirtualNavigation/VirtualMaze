@@ -141,7 +141,7 @@ public class InterfaceTest : MonoBehaviour, IDisposable {
         }
 
         foreach (Collider c in hitPool) {
-            BinWallManager.BinObject(c.gameObject, binWallPrefab, mapper);
+            BinWallManager.AssignBinwall(c.gameObject, binWallPrefab, mapper);
         }
 
         Debug.LogWarning($"min: {min}, max: {max}");

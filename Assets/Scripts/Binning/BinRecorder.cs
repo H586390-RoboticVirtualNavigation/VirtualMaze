@@ -2,10 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using UnityEngine;
 
 public class BinRecorder : IDisposable {
     const int RANK = 2; // number of dimensions in dataset
+    const int NUM_OF_COLUMNS = 2;
     private readonly string DATASETNAME = "values";
 
     private long dataspace;
@@ -14,9 +14,9 @@ public class BinRecorder : IDisposable {
     private long dataset;
 
     public BinRecorder() {
-        ulong[] dims = { 0, 0 }; // row, col
+        ulong[] dims = { 0, NUM_OF_COLUMNS }; // row, col
         ulong[] maxDims = { H5S.UNLIMITED, H5S.UNLIMITED };
-        ulong[] chunk_dims = { 1, 10 };
+        ulong[] chunk_dims = { 1000, 2 };
 
         /* Create the data space with unlimited dimensions. */
         dataspace = H5S.create_simple(RANK, dims, maxDims);
@@ -53,36 +53,34 @@ public class BinRecorder : IDisposable {
         H5F.close(file);
     }
 
-    public void RecordMovement(uint timestamp, Vector2 gaze, HashSet<int> bin_ids) {
+    public void RecordMovement(uint timestamp, HashSet<int> bin_ids) {
         HDFHelper.RefreshDataSpace(dataset, ref dataspace);
 
         ulong[] currDatasetDim = new ulong[RANK];
         H5S.get_simple_extent_dims(dataspace, currDatasetDim, null);
 
-        ulong dataLen = (ulong)(3 + bin_ids.Count);
-
-        ulong[] newDatasetDim = { currDatasetDim[0] + 1, Math.Max(dataLen, currDatasetDim[1]) };
+        ulong[] newDatasetDim = { currDatasetDim[0] + (ulong)bin_ids.Count, currDatasetDim[1] };
         H5D.set_extent(dataset, newDatasetDim);
 
         HDFHelper.RefreshDataSpace(dataset, ref dataspace);
 
-        /* Prepare the data to be saved */
-        double[,] dataArr = new double[1, dataLen];
+        int datalen = bin_ids.Count;
 
-        dataArr[0, 0] = timestamp;
-        dataArr[0, 1] = gaze.x;
-        dataArr[0, 2] = gaze.y;
+        /* Prepare the data to be saved */
+        double[,] dataArr = new double[datalen, NUM_OF_COLUMNS]; //2 columns, timestamp and bin
 
         int i = 0;
         foreach (int id in bin_ids) {
-            dataArr[0, 3 + i] = id;
+            dataArr[i, 0] = timestamp;
+            dataArr[i, 1] = id;
             i++;
         }
 
-        ulong[] dataDim = { 1, dataLen };
-
+        ulong[] dataDim = { (ulong)datalen, NUM_OF_COLUMNS };
         ulong[] offset = new ulong[RANK] { currDatasetDim[0], 0 };
+
         status = H5S.select_hyperslab(dataspace, H5S.seloper_t.SET, offset, null, dataDim, null);
+
         long newDataMemspace = H5S.create_simple(RANK, dataDim, null);
 
         GCHandle h = GCHandle.Alloc(dataArr, GCHandleType.Pinned);

@@ -18,7 +18,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     public AudioSource audioSource;
 
     [SerializeField]
-    private GameObject binWallPrefab;
+    private GameObject binWallPrefab = null;
 
     //Drag and drop
     public VideoCaptureCtrl videoCaptureCtrl;
@@ -96,7 +96,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     private bool _isPlaying;
 
     [SerializeField]
-    private Camera miniplayer;
+    private Camera miniplayer = null;
 
     private void Start() {
         dataViewerGUI.SetVisibility(false);

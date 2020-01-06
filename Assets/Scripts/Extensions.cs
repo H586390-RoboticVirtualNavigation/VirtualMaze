@@ -75,4 +75,8 @@ public static class Extensions {
     public static bool isNaN(this Vector2 vec) {
         return float.IsNaN(vec.x) || float.IsNaN(vec.y);
     }
+
+    public static bool Contains(this int[] array, int number) {
+        return Array.Exists(array, x => x == number);
+    }
 }

@@ -9,7 +9,7 @@ public class Bin : MonoBehaviour {
     private int _id = -9999;
 
     public Text idText;
-    public GameObject textCanvas;
+    public GameObject textCanvas = null;
 
     public int id {
         get => _id;
@@ -22,8 +22,13 @@ public class Bin : MonoBehaviour {
     }
     public BinWall parent { get; private set; }
 
-    public string owner { get => parent.owner; }
-    public int group { get => parent.group; }
+    [SerializeField]
+    private int manualGroup = -1;
+
+    public string Owner { get => parent.owner; }
+
+    //use group set in the scene if parent does not exist
+    public int Group { get => parent == null ? manualGroup : parent.group; }
 
     public delegate void OnBinHitEvent(Bin hit);
 
@@ -35,11 +40,11 @@ public class Bin : MonoBehaviour {
     }
 
     public void Hit() {
-        OnBinHit.Invoke(this);
+        OnBinHit?.Invoke(this);
         hitNum++;
     }
 
     internal void SetTextCanvasActive(bool v) {
-        textCanvas.SetActive(v);
+        textCanvas?.SetActive(v);
     }
 }

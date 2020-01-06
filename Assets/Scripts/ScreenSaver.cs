@@ -29,6 +29,11 @@ public class ScreenSaver : BasicGUIController {
     //if each frame is allocated
     private const int Fixation_Per_Frame_Error = 150;
 
+    [SerializeField]
+    private GameObject CueBinCollider;
+    [SerializeField]
+    private GameObject HintBinCollider;
+
     //UI objects
     public FileSelector eyeLinkFileInput;
     public FileSelector sessionInput;
@@ -419,7 +424,7 @@ public class ScreenSaver : BasicGUIController {
 
             List<Fsample> sampleCache = new List<Fsample>();
             int c = 0;
-            while (sessionReader.HasNext && c < 39) {
+            while (sessionReader.HasNext && c < 2) {
                 c++;
                 //add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
                 sessionFrames.Enqueue(sessionReader.CurrentData);
@@ -624,7 +629,7 @@ public class ScreenSaver : BasicGUIController {
 
         foreach (Fsample fs in sampleCache) {
             BinWallManager.BinGaze(fs.RightGaze, viewport, binWallPrefab, mapper, binsHitId);
-            recorder.RecordMovement(fs.time, fs.rawRightGaze, binsHitId);
+            recorder.RecordMovement(fs.time, binsHitId);
             binsHitId.Clear();
         }
     }
@@ -677,7 +682,7 @@ public class ScreenSaver : BasicGUIController {
             case DataTypes.SAMPLE_TYPE:
                 Fsample fs = (Fsample)data;
 
-                binRecorder.RecordMovement(fs.time, fs.rawRightGaze, null);
+                binRecorder.RecordMovement(fs.time, null);
 
                 //record the raw gaze data
                 recorder.IgnoreSample(data.dataType, data.time, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);

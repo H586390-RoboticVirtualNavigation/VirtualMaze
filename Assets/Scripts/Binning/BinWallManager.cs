@@ -45,56 +45,7 @@ public class BinWallManager {
 
         NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(numRaycasts, Allocator.TempJob);
         NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(numRaycasts, Allocator.TempJob);
-
-        int counter = 0;
-        foreach (Vector2 offset in secondaryOffset) {
-            Ray r = cam.ScreenPointToRay(gaze + offset);
-            commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, layerMaskArea);
-            counter++;
-        }
-
-        JobHandle h = RaycastCommand.ScheduleBatch(commands, results, 1, default);
-        h.Complete();
-
-        for (int i = 0; i < numRaycasts; i++) {
-            Collider c = results[i].collider;
-            if (c != null) {
-                Bin b = c.GetComponent<Bin>();
-                b.Hit();
-
-                int mappedId = mapper.MapBinToId(b.parent, b);
-
-                binsHitId.Add(mappedId);
-
-                b.idText.text = mappedId.ToString();
-                b.SetTextCanvasActive(true);
-            }
-        }
-
-        commands.Dispose();
-        results.Dispose();
-    }
-
-    public static void BinGazes(IEnumerable<Vector2> gazes, Camera cam, GameObject binWallPrefab, BinMapper mapper) {
-        int numRaycasts = secondaryOffset.Count;
-
-        NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(numRaycasts, Allocator.TempJob);
-        NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(numRaycasts, Allocator.TempJob);
-
-        Vector2 prevGaze = Vector2.positiveInfinity;
-
-        foreach (Vector2 gaze in gazes) {
-            if (gaze.isNaN()) {
-                continue;
-            }
-
-            //raycast only if gaze is sufficently far from the previous gaze
-            if ((gaze - prevGaze).sqrMagnitude < gazeSqDistThreshold) {
-                continue;
-            }
-
-            prevGaze = gaze;
-
+        try {
             int counter = 0;
             foreach (Vector2 offset in secondaryOffset) {
                 Ray r = cam.ScreenPointToRay(gaze + offset);
@@ -111,15 +62,68 @@ public class BinWallManager {
                     Bin b = c.GetComponent<Bin>();
                     b.Hit();
 
-                    b.idText.text = mapper.MapBinToId(b.parent, b).ToString();
+                    int mappedId = mapper.MapBinToId(b.parent, b);
+
+                    binsHitId.Add(mappedId);
+
+                    b.idText.text = mappedId.ToString();
                     b.SetTextCanvasActive(true);
                 }
             }
         }
+        finally {
+            commands.Dispose();
+            results.Dispose();
+        }
+    }
 
-        commands.Dispose();
-        results.Dispose();
+    public static void BinGazes(IEnumerable<Vector2> gazes, Camera cam, GameObject binWallPrefab, BinMapper mapper) {
+        int numRaycasts = secondaryOffset.Count;
 
+        NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(numRaycasts, Allocator.TempJob);
+        NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(numRaycasts, Allocator.TempJob);
+
+        Vector2 prevGaze = Vector2.positiveInfinity;
+
+        try {
+            foreach (Vector2 gaze in gazes) {
+                if (gaze.isNaN()) {
+                    continue;
+                }
+
+                //raycast only if gaze is sufficently far from the previous gaze
+                if ((gaze - prevGaze).sqrMagnitude < gazeSqDistThreshold) {
+                    continue;
+                }
+
+                prevGaze = gaze;
+
+                int counter = 0;
+                foreach (Vector2 offset in secondaryOffset) {
+                    Ray r = cam.ScreenPointToRay(gaze + offset);
+                    commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, layerMaskArea);
+                    counter++;
+                }
+
+                JobHandle h = RaycastCommand.ScheduleBatch(commands, results, 1, default);
+                h.Complete();
+
+                for (int i = 0; i < numRaycasts; i++) {
+                    Collider c = results[i].collider;
+                    if (c != null) {
+                        Bin b = c.GetComponent<Bin>();
+                        b.Hit();
+
+                        b.idText.text = mapper.MapBinToId(b.parent, b).ToString();
+                        b.SetTextCanvasActive(true);
+                    }
+                }
+            }
+        }
+        finally {
+            commands.Dispose();
+            results.Dispose();
+        }
     }
 
     public static void PrepareBins(Vector2 gaze, Camera cam, GameObject binWallPrefab, BinMapper mapper) {
@@ -129,31 +133,31 @@ public class BinWallManager {
         NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(numRaycasts, Allocator.TempJob);
 
         int counter = 0;
-
-        foreach (Vector2 offset in primaryOffset) {
-            Ray r = cam.ScreenPointToRay(gaze + offset);
-            commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, layerMaskRing);
-            counter++;
-        }
-
         HashSet<Collider> hitPool = new HashSet<Collider>();
 
-        JobHandle h = RaycastCommand.ScheduleBatch(commands, results, 1, default);
+        try {
+            foreach (Vector2 offset in primaryOffset) {
+                Ray r = cam.ScreenPointToRay(gaze + offset);
+                commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, layerMaskRing);
+                counter++;
+            }
 
-        h.Complete();
+            JobHandle h = RaycastCommand.ScheduleBatch(commands, results, 1, default);
+            h.Complete();
 
-        for (int i = 0; i < counter; i++) {
-            Collider c = results[i].collider;
-            if (c != null) {
-                hitPool.Add(c);
+            for (int i = 0; i < counter; i++) {
+                Collider c = results[i].collider;
+                if (c != null) {
+                    hitPool.Add(c);
+                }
             }
         }
-
-        commands.Dispose();
-        results.Dispose();
-
+        finally {
+            commands.Dispose();
+            results.Dispose();
+        }
         foreach (Collider c in hitPool) {
-            BinWallManager.BinObject(c.gameObject, binWallPrefab, mapper);
+            BinWallManager.AssignBinwall(c.gameObject, binWallPrefab, mapper);
         }
     }
 
@@ -165,36 +169,37 @@ public class BinWallManager {
 
         int counter = 0;
 
-        foreach (Vector2 gaze in gazes) {
-            if (gaze.isNaN()) {
-                continue;
-            }
-
-            foreach (Vector2 offset in primaryOffset) {
-                Ray r = cam.ScreenPointToRay(gaze + offset);
-                commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, layerMaskRing);
-                counter++;
-            }
-        }
-
         HashSet<Collider> hitPool = new HashSet<Collider>();
 
-        JobHandle h = RaycastCommand.ScheduleBatch(commands, results, 1, default);
+        try {
+            foreach (Vector2 gaze in gazes) {
+                if (gaze.isNaN()) {
+                    continue;
+                }
 
-        h.Complete();
+                foreach (Vector2 offset in primaryOffset) {
+                    Ray r = cam.ScreenPointToRay(gaze + offset);
+                    commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, layerMaskRing);
+                    counter++;
+                }
+            }
 
-        for (int i = 0; i < counter; i++) {
-            Collider c = results[i].collider;
-            if (c != null) {
-                hitPool.Add(c);
+            JobHandle h = RaycastCommand.ScheduleBatch(commands, results, 1, default);
+            h.Complete();
+
+            for (int i = 0; i < counter; i++) {
+                Collider c = results[i].collider;
+                if (c != null) {
+                    hitPool.Add(c);
+                }
             }
         }
-
-        commands.Dispose();
-        results.Dispose();
-
+        finally {
+            commands.Dispose();
+            results.Dispose();
+        }
         foreach (Collider c in hitPool) {
-            BinWallManager.BinObject(c.gameObject, binWallPrefab, mapper);
+            BinWallManager.AssignBinwall(c.gameObject, binWallPrefab, mapper);
         }
     }
 
@@ -231,29 +236,28 @@ public class BinWallManager {
         }
     }
 
-    public static void BinObject(GameObject obj, GameObject binWallPrefab, BinMapper mapper) {
+    public static void AssignBinwall(GameObject obj, GameObject binWallPrefab, BinMapper mapper) {
         if (activated.Contains(obj.name)) {
             return;
         }
 
         activated.Add(obj.name);
 
-        int group = mapper.MapObjectToGroup(obj);
-        if (group == BinMapper.Poster) {
-            string attached = Poster.GetNameOfAttachedTo(obj);
-            if (activated.Contains(attached)) {
+        int group = mapper.GetGroupID(obj);
+        string specialID = mapper.GetSpecialCacheId(group, obj);
+
+        if (!string.IsNullOrEmpty(specialID)) {
+            if (activated.Contains(specialID)) {
                 return;
             }
             else {
-                activated.Add(attached);
+                activated.Add(specialID);
             }
         }
 
-        Location location = mapper.MapObjectToLocation(group, obj);
+        Location location = mapper.GetLocationOfBinWall(group, obj);
 
-        //identification
         BinWall binWall = GetAvailableBinWall(group, binWallPrefab, mapper);
-
         binWall?.AttachTo(location, obj.name, group);
     }
 
@@ -274,7 +278,7 @@ public class BinWallManager {
 
         BinWallConfig config = mapper.MapObjectToBinWallConfig(group, 40);
 
-        int cache_id = mapper.MapGroupToCache(group);
+        int cache_id = mapper.MapGroupToWallCache(group);
 
         if (cache_id == 1 && activated.Contains(group.ToString())) {
             return null;
