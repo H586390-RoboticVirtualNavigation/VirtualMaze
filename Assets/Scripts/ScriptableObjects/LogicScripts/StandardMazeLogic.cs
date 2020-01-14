@@ -18,7 +18,7 @@ public class StandardMazeLogic : MazeLogic {
         while (rewards.Length != 1 && nextTarget == currentTarget) {
             nextTarget = rand.Next(0, rewards.Length);
         }
-        Debug.LogError(nextTarget);
+        Debug.Log($"nextTarget: {nextTarget}");
         return nextTarget;
     }
 

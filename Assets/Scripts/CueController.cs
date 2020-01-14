@@ -17,7 +17,7 @@ public class CueController : MonoBehaviour {
     private CharacterController controller = null;
 
     [SerializeField]
-    private Transform robot = null;
+    private RobotMovement robot = null;
 
     //offset with respect to the robot position.
     private Vector3 forwardOffset = new Vector3(0, 0, 0.5f);
@@ -68,14 +68,12 @@ public class CueController : MonoBehaviour {
         cueBoxCollider = cueImage.GetComponent<BoxCollider>();
         hintBoxCollider = hintImage.GetComponent<BoxCollider>();
 
+        robot.OnRobotMoved += UpdatePosition;
+
         SetMode(Mode.Experiment);
     }
 
-    private void LateUpdate() {
-        UpdatePosition();
-    }
-
-    public void UpdatePosition() {
+    public void UpdatePosition(Transform robot) {
         Vector3 a = rotationOffset * forwardOffset; // apply robot's current rotation to position
         a = robot.rotation * a;
         transform.position = robot.position + a + heightOffset; //set canvas location

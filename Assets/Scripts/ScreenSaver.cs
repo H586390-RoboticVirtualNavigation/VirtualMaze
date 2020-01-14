@@ -1,4 +1,5 @@
 ﻿using Eyelink.Structs;
+using HDF.PInvoke;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.IO;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -14,20 +16,25 @@ using UnityEngine.UI;
 /// </summary>
 
 public class ScreenSaver : BasicGUIController {
-    private const int Frame_Per_Batch = 200;
+    /* Flags */
+    private const int No_Missing = 0x0;
+    private const int Ignore_Data = 0x1;
+
+    /* Screen bounds */
+    private static readonly Vector2Int minBound = Vector2Int.zero;
+    private static readonly Vector2Int maxBound = new Vector2Int(1920, 1080);
+
+    /* Caching to prevent excess GC */
+    private WaitForEndOfFrame waitForEndOfFrame = new WaitForEndOfFrame();
+
+    /* Number of Unity Frames to process in a batch */
+    private const int Frame_Per_Batch = 1;
+
+    /* acceptable time difference between edf and session triggers for approximation of missing trigger */
+    private const int Accepted_Time_Diff = 20;
 
     [SerializeField]
     private GameObject binWallPrefab = null;
-
-    private const int No_Missing = 0x0;
-    private const int Ignore_Data = 0x1;
-    private const int Approx_From_Session = 0x2;
-
-    //acceptable time difference between edf and session triggers for approximation of missing trigger
-    private const int Time_Diff_Accept = 20;
-
-    //if each frame is allocated
-    private const int Fixation_Per_Frame_Error = 150;
 
     [SerializeField]
     private GameObject CueBinCollider;
@@ -44,55 +51,39 @@ public class ScreenSaver : BasicGUIController {
 
     public GazePointPool gazePointPool;
 
-    // Camera which renders the view of the subject
+    /* Camera which renders the view of the subject */
     public Camera viewport;
 
     public Transform robot;
     public FadeCanvas fadeController;
-
-    // Used to check if UI in the canvas is hit.
-    public GraphicRaycaster cueCaster;
 
     public CueController cueController;
 
     public RectTransform GazeCanvas;
     public Slider progressBar;
 
-    private TestTrigger expected = TestTrigger.TrialStartedTrigger;
-
-    private bool isloaded = false;
-    private WaitUntil IsSceneLoaded;
-
-    private static readonly Vector2Int minBound = Vector2Int.zero;
-    private static readonly Vector2Int maxBound = new Vector2Int(1920, 1080);
-
     private void Awake() {
-        IsSceneLoaded = new WaitUntil(() => isloaded);
-
         eyeLinkFileInput.OnPathSelected.AddListener(ChooseEyelinkFile);
         sessionInput.OnPathSelected.AddListener(ChooseSession);
         folderInput.OnPathSelected.AddListener(ChooseFolder);
 
         List<Dropdown.OptionData> list = new List<Dropdown.OptionData>();
 
-        // starts at 1 since index 0 is Start Scene
+        /* starts at 1 since index 0 is Start Scene in build settings */
         for (int i = 1; i < SceneManager.sceneCountInBuildSettings; i++) {
             string sceneName = Path.GetFileNameWithoutExtension(SceneUtility.GetScenePathByBuildIndex(i));
             list.Add(new Dropdown.OptionData(sceneName));
         }
+
+        //TODO create a dropdown in the UI so that the scene can be selected.
     }
 
     private void Start() {
         if (Application.isEditor) { //for testing purposes.
-            ChooseEyelinkFile(@"D:\Desktop\NUS\FYP\rawdata\20180824");
-            ChooseSession(@"D:\Desktop\NUS\FYP\rawdata\20180824");
-            ChooseFolder(@"D:\Documents\GitHub\VirtualMaze\out");
+            ChooseEyelinkFile(@"D:\Desktop\NUS\FYP\LatestData");
+            ChooseSession(@"D:\Desktop\NUS\FYP\LatestData");
+            ChooseFolder(@"D:\Desktop\NUS\FYP\LatestData");
         }
-    }
-
-    private void OnSceneLoaded(Scene s, LoadSceneMode mode) {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-        isloaded = true;
     }
 
     public void OnRender() {
@@ -119,16 +110,6 @@ public class ScreenSaver : BasicGUIController {
         StartCoroutine(ProcessSessionDataTask(sessionInput.text, eyeLinkFileInput.text, folderInput.text));
     }
 
-    private bool IsCsvFile(string filePath) {
-        return IsFileWithExtension(filePath, ".csv");
-    }
-
-    private bool IsTxtFile(string filePath) {
-        return IsFileWithExtension(filePath, ".txt");
-    }
-    private bool IsEdfFile(string filePath) {
-        return IsFileWithExtension(filePath, ".edf");
-    }
 
     private bool isMatFile(string filePath) {
         return IsFileWithExtension(filePath, ".mat");
@@ -147,7 +128,7 @@ public class ScreenSaver : BasicGUIController {
             IEnumerable<string> filesToProcess = GetSessionFilesFromDirectory(filePath);
             sessionInfo.text = "";
             Console.Write($"Processing in the following order of:\n\n{string.Join("\n", filesToProcess)}");
-            SetInputFieldValid(sessionInput);
+            SetInputFieldValid(sessionInput, true);
             sessionInput.text = filePath;
             return;
         }
@@ -155,127 +136,68 @@ public class ScreenSaver : BasicGUIController {
             return;
         }
 
-
-        bool success = false;
+        bool success = isMatFile(filePath);
         int numFrames = 0;
-        SessionContext context = null;
-
-        if (IsTxtFile(filePath)) {
-            try {
-                SessionReader.ExtractInfo(filePath, out context, out numFrames);
-                success = true;
-            }
-            catch (FormatException ex) {
-                success = false;
-                Debug.LogError(ex);
-            }
-        }
-        else if (isMatFile(filePath)) {
-            success = true;
-        }
 
         if (success) {
             sessionInput.text = filePath;
-            SetInputFieldValid(sessionInput);
             sessionInfo.text = $"{numFrames} frames";
-            Console.Write(context?.ToJsonString(true));
         }
         else {
-            SetInputFieldInvalid(sessionInput);
             Console.Write("Invalid Session File Detected, Unsupported File Type or Data");
         }
+        SetInputFieldValid(sessionInput, success);
     }
 
     void ChooseEyelinkFile(string filePath) {
         if (string.IsNullOrEmpty(filePath)) return;
 
         eyeLinkFileInput.text = filePath;
-
-        if (File.Exists(filePath)) {
-            SetInputFieldValid(eyeLinkFileInput);
-        }
-        else {
-            SetInputFieldInvalid(eyeLinkFileInput);
-        }
+        SetInputFieldValid(eyeLinkFileInput, File.Exists(filePath));
     }
 
     void ChooseFolder(string file) {
         if (string.IsNullOrEmpty(file)) { return; }
 
         folderInput.text = file;
-        if (Directory.Exists(file)) {
-            SetInputFieldValid(folderInput);
-        }
-        else {
-            SetInputFieldInvalid(folderInput);
-        }
+        SetInputFieldValid(folderInput, Directory.Exists(file));
     }
 
-    /// <summary>
-    /// Determines which session file or the other file needs to load more data into their queue due to missing triggers
-    /// </summary>
-    /// <param name="sTrigger">Current trigger of the Session Logs</param>
-    /// <param name="edfTrigger">Current Trigger of the EDF file</param>
-    /// <returns>True if session file should be processed again to the next trigger</returns>
-    private bool ShouldSessionFileCatchUp(SessionTrigger sTrigger, SessionTrigger edfTrigger) {
-        //if one trigger is either trial ended or trial timeout and the other is Trial started
-        bool premise1 = sTrigger >= SessionTrigger.TrialEndedTrigger && edfTrigger == SessionTrigger.TrialStartedTrigger;
-        bool premise2 = edfTrigger >= SessionTrigger.TrialEndedTrigger && sTrigger == SessionTrigger.TrialStartedTrigger;
+    private IEnumerator PrepareScene(string sceneName) {
+        if (!SceneManager.GetActiveScene().name.Equals(sceneName)) {
+            AsyncOperation opr = SceneManager.LoadSceneAsync(sceneName);
 
-        bool premise3 = edfTrigger >= SessionTrigger.TrialEndedTrigger && sTrigger >= SessionTrigger.TrialEndedTrigger;
-
-        if (premise1 || premise2 || premise3) {
-            return sTrigger > edfTrigger;
+            while (!opr.isDone) {
+                yield return null;
+            }
         }
-        else {
-            return sTrigger < edfTrigger;
-        }
-    }
-
-    private void PrepareScene(string sceneName) {
-        if (SceneManager.GetActiveScene().name.Equals(sceneName)) {
-            isloaded = true;
-            return;
-        }
-
-        SceneManager.sceneLoaded += OnSceneLoaded;
-        isloaded = false;
-        SceneManager.LoadScene(sceneName);
     }
 
     public IEnumerator ProcessSessionDataTask(string sessionPath, string edfPath, string toFolderPath) {
-        //Setup
+        /* Setup */
+        H5.close();
         fadeController.gameObject.SetActive(false);
+        CueBinCollider.SetActive(true);
+        HintBinCollider.SetActive(true);
+        Physics.autoSimulation = false;
+
         EyeDataReader eyeReader = null;
 
-        if (IsEdfFile(edfPath)) {
-            eyeReader = new EDFReader(edfPath, out int errVal);
-            if (errVal != 0) { //check if file can be parsed by library
-                string error = $"Unable to open .edf file";
-                Debug.LogError(error);
-                Console.WriteError(error);
-                yield break;
-            }
-        }
-        else if (isMatFile(edfPath)) {
+        if (isMatFile(edfPath)) {
             try {
                 eyeReader = new EyeMatReader(edfPath);
             }
             catch (Exception e) {
                 Debug.LogException(e);
                 Console.WriteError("Unable to open eye data mat file.");
-                eyeReader = null;
             }
         }
-        else {
-            eyeReader = new EyeCsvReader(edfPath);
-        }
 
-        if (eyeReader == null) {
+        ISessionDataReader sessionReader = CreateSessionReader(sessionPath);
+
+        if (eyeReader == null || sessionReader == null) {
             yield break;
         }
-
-        bool isMultipleSession = Directory.Exists(sessionPath);
 
         gazePointPool?.PreparePool();
 
@@ -284,42 +206,26 @@ public class ScreenSaver : BasicGUIController {
 
         cueController.SetMode(CueController.Mode.Recording);
 
-        //process data
-        if (isMultipleSession) {
-            foreach (string path in GetSessionFilesFromDirectory(sessionPath)) {
-                PrepareScene("Double Tee");
+        yield return PrepareScene("Double Tee");
 
-                yield return IsSceneLoaded;
-                isloaded = false;
+        string filename = $"{Path.GetFileNameWithoutExtension(sessionPath)}_{Path.GetFileNameWithoutExtension(edfPath)}.csv";
 
-                string filename = $"{Path.GetFileNameWithoutExtension(path)}_{Path.GetFileNameWithoutExtension(edfPath)}.csv";
+        DateTime start = DateTime.Now;
+        Debug.LogError($"s: {start}");
 
-                using (RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename)) {
-                    yield return ProcessSession(path, eyeReader, recorder);
-                    progressBar.value = 0;
-                    expected = TestTrigger.TrialStartedTrigger;
-                }
-            }
-        }
-        else {
-            PrepareScene("Double Tee");
-
-            string filename = $"{Path.GetFileNameWithoutExtension(sessionPath)}_{Path.GetFileNameWithoutExtension(edfPath)}.csv";
-
-            yield return IsSceneLoaded;
-            isloaded = false;
-
-            using (RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename)) {
-                yield return ProcessSession(sessionPath, eyeReader, recorder);
-                expected = TestTrigger.TrialStartedTrigger;
-            }
+        using (RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename)) {
+            yield return ProcessSession(sessionReader, eyeReader, recorder);
         }
 
-        //cleanup
+        Debug.LogError($"s: {start}, e: {DateTime.Now}");
+        Debug.LogError($"MaxSqDist: {BinWallManager.maxSqDist}");
+
+        /* Clean up */
         //SceneManager.LoadScene("Start");
         fadeController.gameObject.SetActive(true);
         progressBar.gameObject.SetActive(false);
         cueController.SetMode(CueController.Mode.Experiment);
+        Physics.autoSimulation = true;
         //SessionStatusDisplay.ResetStatus();
     }
 
@@ -328,53 +234,28 @@ public class ScreenSaver : BasicGUIController {
         return msgEvent == null || msgEvent.dataType == DataTypes.NO_PENDING_ITEMS || trigger == SessionTrigger.ExperimentVersionTrigger;
     }
 
-    private decimal LoadAndFix(Queue<SessionData> sessionFrames, ISessionDataReader sessionReader, Queue<AllFloatData> fixations, EyeDataReader eyeReader, Queue<MessageEvent> missingTriggers) {
-        decimal sessionEventPeriod = LoadToNextTriggerSession(sessionReader, sessionFrames, out SessionData sessionTrigger);
-        uint edfEventPeriod = LoadToNextTriggerEdf(eyeReader, fixations, missingTriggers, out MessageEvent data, out SessionTrigger edfTrigger);
-
-        print($"ses: { sessionEventPeriod: 0.00}, edf: { edfEventPeriod}");
-        return (sessionEventPeriod - edfEventPeriod);
-    }
-
-    private decimal LoadAndApproximate(Queue<SessionData> sessionFrames, ISessionDataReader sessionReader, Queue<AllFloatData> fixations, EyeDataReader eyeReader, out int status, out string reason) {
+    private decimal EnqueueData(Queue<SessionData> sessionFrames, ISessionDataReader sessionReader, Queue<AllFloatData> fixations, EyeDataReader eyeReader, out int status, out string reason) {
+        Profiler.BeginSample("Enqueue");
         decimal sessionEventPeriod = LoadToNextTriggerSession(sessionReader, sessionFrames, out SessionData sessionData);
         uint edfEventPeriod = LoadToNextTriggerEdf(eyeReader, fixations, out MessageEvent edfdata, out SessionTrigger edfTrigger);
 
-        SessionTrigger missingTrigger = SessionTrigger.NoTrigger;
-        status = No_Missing;
-        reason = null;
-
-        //check and account for missing trigger
-        while (sessionData.trigger != edfTrigger && !HasEdfSessionEnded(edfdata, edfTrigger) && sessionReader.HasNext) {
-            string errorMessage = $"Missing trigger detected at approx {fixations.Peek().time + sessionEventPeriod}. session: {sessionData.trigger}| edf: {edfTrigger}";
-            Console.WriteError(errorMessage);
-            Debug.LogWarning(errorMessage);
-
-            //Assuming that the previous iteration is synchronized
-            if (ShouldSessionFileCatchUp(sessionData.trigger, edfTrigger)) {
-                //session file should catch up
-                sessionEventPeriod += LoadToNextTriggerSession(sessionReader, sessionFrames, out sessionData);
-                missingTrigger = edfTrigger;
-            }
-            else {
-                //edfFile should catch up
-                edfEventPeriod += LoadToNextTriggerEdf(eyeReader, fixations, out edfdata, out edfTrigger);
-                missingTrigger = sessionData.trigger;
-            }
+        if (sessionData.trigger != edfTrigger) {
+            throw new Exception("Unaligned session and eyedata! Are there missing triggers in eyelink or Unity data?");
         }
 
         decimal excessTime = (sessionEventPeriod - edfEventPeriod);
 
-        // if missing trigger detected and the time difference between the 2 files is less than 20ms
-        if (SessionTrigger.NoTrigger != missingTrigger && Math.Abs(excessTime) > Time_Diff_Accept) {
+        status = No_Missing;
+        reason = null;
+
+        /* if missing trigger detected and the time difference between the 2 files more than the threshold*/
+        if (Math.Abs(excessTime) > Accepted_Time_Diff) {
             status = Ignore_Data;
-            reason = "Unable to approximate missing trigger.";
-        }
-        else if (SessionTrigger.NoTrigger != missingTrigger) {
-            status = Approx_From_Session;
+            reason = $"Time difference too large. Ignoring {fixations.Peek().time} to {edfdata.time}";
         }
 
-        print($"ses: { sessionEventPeriod:F4}, edf: { edfEventPeriod:F4}, excess: {excessTime:F4} | {status} |{fixations.Peek().ToString()} {sessionFrames.Count}");
+        print($"ses: { sessionEventPeriod:F4}, edf: { edfEventPeriod:F4}, excess: {excessTime:F4} |{fixations.Peek().ToString()} {sessionFrames.Count}");
+        Profiler.EndSample();
         return excessTime;
     }
 
@@ -396,14 +277,11 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    private WaitForEndOfFrame waitForEndOfFrame = new WaitForEndOfFrame();
-
-    private IEnumerator ProcessSession(string sessionPath, EyeDataReader eyeReader, RayCastRecorder recorder) {
+    private IEnumerator ProcessSession(ISessionDataReader sessionReader, EyeDataReader eyeReader, RayCastRecorder recorder) {
         int frameCounter = 0;
         int trialCounter = 1;
 
-        using (BinRecorder binRecorder = new BinRecorder())
-        using (ISessionDataReader sessionReader = CreateSessionReader(sessionPath)) {
+        using (BinRecorder binRecorder = new BinRecorder()) {
             if (sessionReader == null) {
                 yield break;
             }
@@ -413,9 +291,10 @@ public class ScreenSaver : BasicGUIController {
 
             Queue<SessionData> sessionFrames = new Queue<SessionData>();
             Queue<AllFloatData> fixations = new Queue<AllFloatData>();
-            Queue<MessageEvent> missingevents = new Queue<MessageEvent>();
 
-            LoadMissingTriggers("", missingevents);
+            List<Fsample> binSamples = new List<Fsample>();
+            Queue<BinWallManager.BinGazeJobData> jobQueue = new Queue<BinWallManager.BinGazeJobData>();
+            HashSet<int> binsHitId = new HashSet<int>();
 
             //feed in current Data due to preparation moving the data pointer forward
             fixations.Enqueue(data);
@@ -423,22 +302,13 @@ public class ScreenSaver : BasicGUIController {
             int debugMaxMissedOffset = 0;
 
             List<Fsample> sampleCache = new List<Fsample>();
-            int c = 0;
-            while (sessionReader.HasNext && c < 2) {
-                c++;
+            int numberOfTriggers = 0;
+            while (sessionReader.HasNext && numberOfTriggers < 6) {
+                numberOfTriggers++;
                 //add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
                 sessionFrames.Enqueue(sessionReader.CurrentData);
 
-                decimal excessTime;
-                int status = No_Missing;
-                string reason = null;
-
-                if (missingevents.Count > 0) {
-                    excessTime = LoadAndFix(sessionFrames, sessionReader, fixations, eyeReader, missingevents);
-                }
-                else {
-                    excessTime = LoadAndApproximate(sessionFrames, sessionReader, fixations, eyeReader, out status, out reason);
-                }
+                decimal excessTime = EnqueueData(sessionFrames, sessionReader, fixations, eyeReader, out int status, out string reason);
 
                 decimal timepassed = fixations.Peek().time;
 
@@ -463,44 +333,84 @@ public class ScreenSaver : BasicGUIController {
                         period = (sessionData.timeDeltaMs) - timeOffset;
                     }
 
-                    // does not matter if trigger in session file is missing since "true" timing is based on edf file
-                    if (status == Approx_From_Session) {
-                        //approx edf trigger from session file
-                        SessionTrigger approxTrigger = sessionData.trigger;
-                        if (approxTrigger != SessionTrigger.NoTrigger && ((ConvertToTestTrigger(approxTrigger) | expected) == expected)) {
-                            expected = ProcessTrigger(sessionData.trigger, expected, cueController);
-                            //if trigger is approximated, the apporximated trigger will always be the end of a frame because VirtualMaze logs
-                            // once every update() which represents a frame
-                            recorder.FlagEvent($"Approximated Trigger {sessionData.flag}");
-                        }
-                    }
-
                     debugtimeOffset += timeOffset;
 
                     timepassed += period;
 
                     MoveRobotTo(robot, sessionData);
 
-                    BinWallManager.Reset();
+                    BinWallManager.ResetWalls();
 
+                    List<Fsample> frameGazes = new List<Fsample>();
+
+
+                    bool isLastSampleInFrame = false;
+                    AllFloatData currData = null;
                     while (gazeTime <= timepassed && fixations.Count > 0) {
-                        AllFloatData currData = fixations.Dequeue();
+                        currData = fixations.Dequeue();
                         gazeTime = currData.time;
 
-                        bool isLastSampleInFrame = gazeTime >= timepassed;
+                        isLastSampleInFrame = gazeTime > timepassed;
 
-                        if (status == Ignore_Data) {
-                            IgnoreData(currData, recorder, reason, isLastSampleInFrame, binRecorder);
+                        if (currData is MessageEvent || isLastSampleInFrame) {
+                            break;
                         }
-                        else if (ProcessData(currData, recorder, isLastSampleInFrame, binRecorder, sampleCache) == SessionTrigger.TrialStartedTrigger) {
-                            trialCounter++;
-                            SessionStatusDisplay.DisplayTrialNumber(trialCounter);
+                        else if (currData is Fsample) {
+                            binSamples.Add((Fsample)currData);
                         }
+                    }
 
-                        //update UI objects
-                        if (currData is MessageEvent) {
-                            yield return waitForEndOfFrame;
+                    Profiler.BeginSample("PhysicsSimulation");
+                    Physics.SyncTransforms();
+                    Physics.Simulate(Time.fixedDeltaTime);
+                    Profiler.EndSample();
+
+                    /* process binsamples and let the raycast run in Jobs */
+                    Profiler.BeginSample("RaycastingSinglePrepare");
+                    RaycastGazesJob rCastJob = RaycastGazes(binSamples, recorder, currData, default);
+                    Profiler.EndSample();
+
+                    /* Start the binning process while rCastJob is running */
+                    Profiler.BeginSample("Binning");
+                    BinGazes(binSamples, binRecorder, jobQueue);
+                    Profiler.EndSample();
+
+                    Profiler.BeginSample("RaycastingSingleProcess");
+                    if (rCastJob != null) {
+                        using (rCastJob) {
+                            rCastJob.h.Complete(); //force completion if not done yet
+                            rCastJob.Process(currData, recorder, robot, isLastSampleInFrame, gazePointPool, false, GazeCanvas, viewport);
                         }
+                    }
+                    Profiler.EndSample();
+
+                    Profiler.BeginSample("MultiCast Processing");
+                    while (jobQueue.Count > 0) {
+                        using (BinWallManager.BinGazeJobData job = jobQueue.Dequeue()) {
+                            while (!job.h.IsCompleted) {
+
+                            }
+                            job.h.Complete();
+
+                            job.process(mapper, binsHitId);
+
+                            Profiler.BeginSample("HDFwrite");
+                            binRecorder.RecordMovement(job.sampleTime, binsHitId);
+                            Profiler.EndSample();
+
+                            Profiler.BeginSample("ClearHashset");
+                            binsHitId.Clear();
+                            Profiler.EndSample();
+                        }
+                    }
+                    Profiler.EndSample();
+
+                    binSamples.Clear();
+                    if (currData is Fsample) {
+                        binSamples.Add((Fsample)currData);
+                    }
+                    else {
+                        ProcessTrigger(currData);
                     }
 
                     frameCounter++;
@@ -515,17 +425,14 @@ public class ScreenSaver : BasicGUIController {
                 Debug.Log($"ses: {sessionFrames.Count}| fix: {fixations.Count}, timestamp {gazeTime:F4}, timepassed{timepassed:F4}");
                 decimal finalExcess = gazeTime - timepassed;
 
-                Debug.Log($"FINAL EXCESS: {finalExcess} | {finalExcess + sessionReader.CurrentData.timeDeltaMs} || {sessionReader.CurrentData.timeDeltaMs}");
+                Debug.Log($"FINAL EXCESS: {finalExcess} | {sessionReader.CurrentData.timeDeltaMs}");
                 Debug.Log($"Frame End total time offset: {debugtimeOffset}");
 
                 //clear queues to prepare for next trigger
                 sessionFrames.Clear();
 
-                if (Math.Abs(finalExcess) > 3) {
-                    if (status != Ignore_Data)
-                        Debug.LogError("excess to large");
-                    else
-                        Debug.LogError("excess to large so data ignored");
+                if (Math.Abs(finalExcess) > Accepted_Time_Diff) {
+                    Debug.LogError($"Final Excess ({finalExcess}) Larger that Accepted time diff ({Accepted_Time_Diff})");
                 }
 
                 if (fixations.Count > 0) {
@@ -545,46 +452,104 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    private void LoadMissingTriggers(string v, Queue<MessageEvent> missingevents) {
-        /* Since Missing triggers are fixed before data is fed into VirtualMaze, this function is unused.
-         * Development of proper readers for missingevent is also not done. All is hardcoded during this period.
-         * 
-         * Method still exist here in case of future need
-         * 
-         * Written 30 Dec 2019.
-         */
+    class RaycastGazesJob : IDisposable {
+        int numSamples;
+        List<Fsample> binSamples;
+        NativeArray<RaycastHit> results;
+        NativeArray<RaycastCommand> cmds;
+        public JobHandle h;
 
-        //missingevents.Enqueue(new MessageEvent(1822017, "Cue Offset 25", DataTypes.MESSAGEEVENT));
-        //missingevents.Enqueue(new MessageEvent(2015432, "End Trial 34", DataTypes.MESSAGEEVENT));
-        //missingevents.Enqueue(new MessageEvent(2078579, "Start Trial 11", DataTypes.MESSAGEEVENT));
-        //missingevents.Enqueue(new MessageEvent(2090559, "Cue Offset 25", DataTypes.MESSAGEEVENT));
-        //missingevents.Enqueue(new MessageEvent(2203264, "Timeout 41", DataTypes.MESSAGEEVENT));
-        //missingevents.Enqueue(new MessageEvent(2209282, "Start Trial 11", DataTypes.MESSAGEEVENT));
-        //missingevents.Enqueue(new MessageEvent(2210318, "Cue Offset 21", DataTypes.MESSAGEEVENT));
+        public RaycastGazesJob(JobHandle h, int numSamples, List<Fsample> binSamples, NativeArray<RaycastHit> results, NativeArray<RaycastCommand> cmds) {
+            this.numSamples = numSamples;
+            this.binSamples = binSamples;
+            this.results = results;
+            this.cmds = cmds;
+            this.h = h;
+        }
+
+        public void Process(AllFloatData currData, RayCastRecorder recorder, Transform robot, bool isLastSampleInFrame, GazePointPool gazePointPool, bool displayGazes, RectTransform GazeCanvas, Camera viewport) {
+            int lastGazeIndex = numSamples - 1;
+            for (int i = 0; i < numSamples; i++) {
+                if (i == lastGazeIndex && currData is MessageEvent) {
+                    recorder.FlagEvent(((MessageEvent)currData).message);
+                }
+
+                Fsample fsample = binSamples[i];
+                RaycastHit raycastHit = results[i];
+                if (raycastHit.collider != null) {
+                    Transform hitObj = raycastHit.transform;
+                    recorder.WriteSample(
+                            type: fsample.dataType,
+                            time: fsample.time,
+                            objName: hitObj.name,
+                            centerOffset: ScreenSaver.ComputeLocalPostion(hitObj, raycastHit),
+                            hitObjLocation: hitObj.position,
+                            pointHitLocation: raycastHit.point,
+                            rawGaze: fsample.rawRightGaze,
+                            subjectLoc: robot.position,
+                            subjectRotation: robot.rotation.eulerAngles.y,
+                            isLastSampleInFrame: i == lastGazeIndex && isLastSampleInFrame);
+                }
+                else {
+                    recorder.IgnoreSample(
+                            type: fsample.dataType,
+                            time: fsample.time,
+                            rawGaze: fsample.rawRightGaze,
+                            subjectLoc: robot.position,
+                            subjectRotation: robot.rotation.eulerAngles.y,
+                            isLastSampleInFrame: i == lastGazeIndex && isLastSampleInFrame
+                        );
+                }
+                if (displayGazes) {
+                    Image img = gazePointPool.AddGazePoint(GazeCanvas, viewport, fsample.RightGaze);
+                    if (img != null && i == lastGazeIndex) {
+                        img.color = Color.red;
+                    }
+                }
+            }
+        }
+        public void Dispose() {
+            results.Dispose();
+            cmds.Dispose();
+        }
     }
 
-    private SessionTrigger ProcessData(AllFloatData data, RayCastRecorder recorder, bool isLastSampleInFrame, BinRecorder binRecorder, List<Fsample> sampleCache = null) {
+    private RaycastGazesJob RaycastGazes(List<Fsample> binSamples, RayCastRecorder recorder, AllFloatData currData, JobHandle dependancy) {
+        int numSamples = binSamples.Count;
 
+        if (numSamples == 0) {
+            if (currData is MessageEvent) {
+                recorder.FlagEvent(((MessageEvent)currData).message);
+            }
+            return null;
+        }
+
+        NativeArray<RaycastCommand> cmds = new NativeArray<RaycastCommand>(numSamples, Allocator.TempJob);
+        NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(numSamples, Allocator.TempJob);
+
+
+        for (int i = 0; i < numSamples; i++) {
+            Vector2 gaze = binSamples[i].RightGaze;
+            if (IsInScreenBounds(gaze)) {
+                Ray r = viewport.ScreenPointToRay(gaze);
+                cmds[i] = new RaycastCommand(r.origin, r.direction, layerMask: BinWallManager.ignoreBinningLayer);
+            }
+        }
+        JobHandle h = RaycastCommand.ScheduleBatch(cmds, results, 1, dependancy);
+
+        return new RaycastGazesJob(h, numSamples, binSamples, results, cmds);
+    }
+
+    private SessionTrigger ProcessData(AllFloatData data, RayCastRecorder recorder, bool isLastSampleInFrame, BinRecorder binRecorder) {
         switch (data.dataType) {
             case DataTypes.SAMPLE_TYPE:
                 Fsample fs = (Fsample)data;
-                if (InScreenBounds(fs.rawRightGaze)) {
+                if (IsInScreenBounds(fs.rawRightGaze)) {
                     gazePointPool?.AddGazePoint(GazeCanvas, viewport, fs.RightGaze);
-                    if (sampleCache == null) {
-                        RaycastToScene(fs.RightGaze, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
-                        recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
 
-                    }
-                    else {
-                        sampleCache.Add(fs);
-                        if (isLastSampleInFrame) {
-                            if (binRecorder != null) {
-                                BinGazes(sampleCache, binRecorder);
-                            }
-                            BulkCastAndRecord(sampleCache, recorder, true);
-                            sampleCache.Clear();
-                        }
-                    }
+                    RaycastToScene(fs.RightGaze, out string objName, out Vector2 relativePos, out Vector3 objHitPos, out Vector3 gazePoint);
+
+                    recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, fs.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
                 }
                 else {
                     //ignore if gaze is out of bounds
@@ -592,17 +557,8 @@ public class ScreenSaver : BasicGUIController {
                 }
                 return SessionTrigger.NoTrigger;
             case DataTypes.MESSAGEEVENT:
-                //Raycast all samples in sampleCache, log and clear it afterwards.
-                if (sampleCache != null) {
-                    if (binRecorder != null) {
-                        BinGazes(sampleCache, binRecorder);
-                    }
-                    BulkCastAndRecord(sampleCache, recorder, isLastSampleInFrame);
-                    sampleCache.Clear();
-                }
-
                 MessageEvent fe = (MessageEvent)data;
-                expected = ProcessTrigger(fe.trigger, expected, cueController);
+                ProcessTrigger(fe.trigger, cueController);
 
                 recorder.FlagEvent(fe.message);
 
@@ -614,67 +570,52 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    private BinMapper mapper = new DoubleTeeBinMapper();
+    private BinMapper mapper = new DoubleTeeBinMapper(40);
 
-    private void BinGazes(List<Fsample> sampleCache, BinRecorder recorder) {
+    private void BinGazes(List<Fsample> sampleCache, BinRecorder recorder, Queue<BinWallManager.BinGazeJobData> jobQueue) {
         List<Vector2> gazeCache = new List<Vector2>();
 
-        foreach (Fsample fs in sampleCache) {
-            gazeCache.Add(fs.RightGaze);
-        }
+        Vector2 prev = Vector2.negativeInfinity;
 
-        BinWallManager.IdentifyObjects(gazeCache, viewport, binWallPrefab, mapper);
-
-        HashSet<int> binsHitId = new HashSet<int>();
+        Profiler.BeginSample("Loading Gazes");
 
         foreach (Fsample fs in sampleCache) {
-            BinWallManager.BinGaze(fs.RightGaze, viewport, binWallPrefab, mapper, binsHitId);
-            recorder.RecordMovement(fs.time, binsHitId);
-            binsHitId.Clear();
-        }
-    }
-
-    private void BulkCastAndRecord(List<Fsample> sampleCache, RayCastRecorder recorder, bool markLastSampleAsEndOfFrame) {
-        int numCache = sampleCache.Count;
-        if (numCache == 0) {
-            return;
-        }
-
-        NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(numCache, Allocator.TempJob);
-        NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(numCache, Allocator.TempJob);
-
-        Vector3 position = transform.position;
-
-        for (int i = 0; i < numCache; i++) {
-            Fsample s = sampleCache[i];
-            Ray r = viewport.ScreenPointToRay(s.RightGaze);
-            commands[i] = new RaycastCommand(r.origin, r.direction);
-        }
-
-        using (results)
-        using (commands) {
-            JobHandle h = RaycastCommand.ScheduleBatch(commands, results, 1, default);
-
-            h.Complete();
-
-            for (int i = 0; i < numCache; i++) {
-                bool isLastSampleInFrame = markLastSampleAsEndOfFrame && i == numCache - 1;
-                Fsample data = sampleCache[i];
-
-                Transform objhit = results[i].transform;
-
-                string objName = objhit.name;
-                Vector2 relativePos = ComputeLocalPostion(objhit, results[i]);
-                Vector3 objHitPos = objhit.position;
-                Vector3 gazePoint = results[i].point;
-
-                recorder.WriteSample(data.dataType, data.time, objName, relativePos, objHitPos, gazePoint, data.rawRightGaze, robot.position, robot.rotation.eulerAngles.y, isLastSampleInFrame);
+            Vector2 gaze = fs.RightGaze;
+            if (Vector2.SqrMagnitude(prev - gaze) > BinWallManager.gazeSqDistThreshold) {
+                gazeCache.Add(gaze);
+                prev = gaze;
             }
         }
+        Profiler.EndSample();
+
+        Profiler.BeginSample("Identify Obj");
+
+        float maxSqDist = BinWallManager.IdentifyObjects(gazeCache, viewport, binWallPrefab, mapper);
+
+        Profiler.EndSample();
+
+        Profiler.BeginSample("RaycastAndSave");
+
+        int modder = Mathf.FloorToInt(BinWallManager.secondaryOffset.Count / Mathf.Lerp(BinWallManager.secondaryOffset.Count * 0.50f, BinWallManager.secondaryOffset.Count, maxSqDist / (mapper.MaxPossibleSqDistance())));
+
+        JobHandle h = default;
+
+        foreach (Fsample fs in sampleCache) {
+            Profiler.BeginSample("BinSingleGaze");
+
+            BinWallManager.BinGazeJobData jobData = BinWallManager.BinGaze(fs.RightGaze, fs.time, viewport, h, modder);
+            if (jobData != null) {
+                h = jobData.h;
+                jobQueue.Enqueue(jobData);
+            }
+            Profiler.EndSample();
+        }
+        Profiler.EndSample();
     }
 
-    private bool InScreenBounds(Vector2 gazeXY) {
-        return !((gazeXY.x > maxBound.x) || (gazeXY.y > maxBound.y) || (gazeXY.x < minBound.x) || (gazeXY.y < minBound.y));
+    private bool IsInScreenBounds(Vector2 gazeXY) {
+        /* If gaze point is not NaN and within screen bounds */
+        return !gazeXY.isNaN() && gazeXY.x <= maxBound.x && gazeXY.y <= maxBound.y && gazeXY.x >= minBound.x && gazeXY.y >= minBound.y;
     }
 
     private void IgnoreData(AllFloatData data, RayCastRecorder recorder, string ignoreReason, bool isLastSampleInFrame, BinRecorder binRecorder) {
@@ -690,7 +631,7 @@ public class ScreenSaver : BasicGUIController {
                 break;
             case DataTypes.MESSAGEEVENT:
                 MessageEvent fe = (MessageEvent)data;
-                expected = ProcessTrigger(fe.trigger, expected, cueController);
+                ProcessTrigger(fe.trigger, cueController);
                 recorder.FlagEvent(fe.message);
 
                 break;
@@ -701,69 +642,30 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    [Flags]
-    public enum TestTrigger {
-        NoTrigger = 0x0,
-        TrialStartedTrigger = 0x1,
-        CueShownTrigger = 0x2,
-        TrialEndedTrigger = 0x4,
-        TimeoutTrigger = 0x8,
-        ExperimentVersionTrigger = 0xF
-    }
-
-    /// <summary>
-    /// Converts SessionTrigger to TestTrigger so that missing triggers can be identified easily.
-    /// </summary>
-    /// <param name="trigger">SessionTrigger to Convert</param>
-    /// <returns>TestTriggerEquilavant</returns>
-    private static TestTrigger ConvertToTestTrigger(SessionTrigger trigger) {
-        switch (trigger) {
-            case SessionTrigger.CueOffsetTrigger:
-                return TestTrigger.CueShownTrigger;
-            case SessionTrigger.ExperimentVersionTrigger:
-                return TestTrigger.ExperimentVersionTrigger;
-            case SessionTrigger.NoTrigger:
-                return TestTrigger.NoTrigger;
-            case SessionTrigger.TimeoutTrigger:
-                return TestTrigger.TimeoutTrigger;
-            case SessionTrigger.TrialEndedTrigger:
-                return TestTrigger.TrialEndedTrigger;
-            case SessionTrigger.TrialStartedTrigger:
-                return TestTrigger.TrialStartedTrigger;
-        }
-        return TestTrigger.NoTrigger;
-    }
-
-    private TestTrigger ProcessTrigger(AllFloatData data) {
+    private void ProcessTrigger(AllFloatData data) {
         if (data.dataType == DataTypes.MESSAGEEVENT) {
-            return ProcessTrigger(((MessageEvent)data).trigger, expected, cueController);
+            ProcessTrigger(((MessageEvent)data).trigger, cueController);
         }
-        return expected;
     }
 
     /// <summary>
     /// Processes the Trigger by showing or hiding the cues.
     /// </summary>
     /// <param name="trigger">Current Trigger</param>
-    public static TestTrigger ProcessTrigger(SessionTrigger trigger, TestTrigger expected, CueController cueController) {
-        TestTrigger test = ConvertToTestTrigger(trigger);
-
-        if ((test | expected) != expected) {
-            Debug.LogError($"Expected:{expected}, Received: {trigger}");
-        }
+    public static void ProcessTrigger(SessionTrigger trigger, CueController cueController) {
 
         switch (trigger) {
             case SessionTrigger.CueOffsetTrigger:
                 cueController.HideCue();
                 cueController.ShowHint();
                 SessionStatusDisplay.DisplaySessionStatus("Trial Running");
-                return TestTrigger.TimeoutTrigger | TestTrigger.TrialEndedTrigger;
+                break;
 
             case SessionTrigger.TrialStartedTrigger:
                 cueController.HideHint();
                 cueController.ShowCue();
                 SessionStatusDisplay.DisplaySessionStatus("Showing Cue");
-                return TestTrigger.CueShownTrigger;
+                break;
 
             case SessionTrigger.TimeoutTrigger:
             case SessionTrigger.TrialEndedTrigger:
@@ -775,24 +677,24 @@ public class ScreenSaver : BasicGUIController {
                     SessionStatusDisplay.DisplaySessionStatus("Trial Ended");
                 }
 
-                return TestTrigger.TrialStartedTrigger;
+                break;
 
             case SessionTrigger.ExperimentVersionTrigger:
                 SessionStatusDisplay.DisplaySessionStatus("Next Session");
-                return TestTrigger.TrialStartedTrigger;
+                break;
 
             case SessionTrigger.NoTrigger:
             //do nothing
             default:
                 Debug.LogError($"Unidentified Session Trigger: {trigger}");
-                return TestTrigger.NoTrigger;
+                break;
         }
     }
 
     /// <summary>
     /// Fires a raycast into the Scene based on the sample data to determine what object the sample data is fixating upon.
     /// </summary>
-    /// <param name="gazeData">Data sameple from edf file</param>
+    /// <param name="gazeData">Data sample from edf file</param>
     /// <param name="objName">Name of object the gazed object</param>
     /// <param name="relativePos">Local 2D offset of from the center of the object gazed</param>
     /// <param name="objHitPos">World position of the object in the scene</param>
@@ -805,7 +707,7 @@ public class ScreenSaver : BasicGUIController {
                                  out Vector3 gazePoint) {
         Ray r = viewport.ScreenPointToRay(gazeData);
 
-        if (Physics.Raycast(r, out RaycastHit hit, 200)) {
+        if (Physics.Raycast(r, out RaycastHit hit, maxDistance: 200, layerMask: BinWallManager.ignoreBinningLayer)) {
             Transform objhit = hit.transform;
 
             objName = hit.transform.name;
@@ -826,9 +728,9 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    private readonly Vector3[] axes = { Vector3.up, Vector3.down, Vector3.left, Vector3.right, Vector3.forward, Vector3.back };
+    private static readonly Vector3[] axes = { Vector3.up, Vector3.down, Vector3.left, Vector3.right, Vector3.forward, Vector3.back };
 
-    private Vector3 ModelNormal(Vector3 normal) {
+    private static Vector3 ModelNormal(Vector3 normal) {
         Vector3 result = Vector3.up;
         float min = float.MaxValue;
         foreach (Vector3 axis in axes) {
@@ -847,7 +749,7 @@ public class ScreenSaver : BasicGUIController {
     /// <param name="objHit">Transform of the object hit by the raycast</param>
     /// <param name="hit"></param>
     /// <returns>2D location of the point fixated by that gaze relative to the center of the image</returns>
-    private Vector2 ComputeLocalPostion(Transform objHit, RaycastHit hit) {
+    private static Vector2 ComputeLocalPostion(Transform objHit, RaycastHit hit) {
         Vector3 hitNormal = ModelNormal(hit.normal);
 
         Vector3 normal;
@@ -958,8 +860,7 @@ public class ScreenSaver : BasicGUIController {
         return totalTime;
     }
 
-    private uint LoadToNextTriggerEdf(EyeDataReader reader, Queue<AllFloatData> fixations, Queue<MessageEvent> fillerEvent, out MessageEvent latest, out SessionTrigger edfTrigger) {
-
+    private uint LoadToNextTriggerEdf(EyeDataReader reader, Queue<AllFloatData> fixations, out MessageEvent latest, out SessionTrigger edfTrigger) {
         bool isNextEventFound = false;
 
         while (!isNextEventFound) {
@@ -981,17 +882,6 @@ public class ScreenSaver : BasicGUIController {
                 edfTrigger = ev.trigger;
                 return ev.time - fixations.Peek().time;
             }
-            else if (fillerEvent != null && data.time >= fillerEvent.Peek().time) {
-
-                isNextEventFound = true;
-                MessageEvent ev = fillerEvent.Dequeue();
-                latest = ev;
-                edfTrigger = ev.trigger;
-
-                fixations.Enqueue(ev);
-
-                return ev.time - fixations.Peek().time;
-            }
             else if (type == DataTypes.NO_PENDING_ITEMS) {
                 break;
             }
@@ -1003,21 +893,13 @@ public class ScreenSaver : BasicGUIController {
     }
 
     /// <summary>
-    /// Loads data from the next data point to the next trigger (inclusive) and returns the total taken from the current 
-    /// position top the next Trigger
-    /// </summary>
-    private uint LoadToNextTriggerEdf(EyeDataReader reader, Queue<AllFloatData> fixations, out MessageEvent latest, out SessionTrigger edfTrigger) {
-        return LoadToNextTriggerEdf(reader, fixations, null, out latest, out edfTrigger);
-    }
-
-    /// <summary>
     /// Positions the robot as stated in the Session file.
     /// </summary>
     /// <param name="robot">Transfrom of the robot to move</param>
     /// <param name="reader">Session data of the Object</param>
     private void MoveRobotTo(Transform robot, SessionData reader) {
         RobotMovement.MoveRobotTo(robot, reader.config);
-        cueController.UpdatePosition();
+        cueController.UpdatePosition(robot);
     }
 
     private void SaveScreen(Camera cam, string filename) {

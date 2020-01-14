@@ -150,10 +150,10 @@ public class ExperimentGUIController : DataGUIController {
     private void OnSaveLocationSelected(string text) {
         if (IsValidSaveLocation(text)) {
             experimentController.SaveLocation = text;
-            SetInputFieldValid(saveLocationField);
+            SetInputFieldValid(saveLocationField, true);
         }
         else {
-            SetInputFieldInvalid(saveLocationField);
+            SetInputFieldValid(saveLocationField, true);
         }
     }
 

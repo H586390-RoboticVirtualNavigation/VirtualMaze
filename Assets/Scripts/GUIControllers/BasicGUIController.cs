@@ -7,12 +7,13 @@ using UnityEngine.UI;
 public abstract class BasicGUIController : MonoBehaviour {
     private static readonly Color errorColor = new Color(1, 0.35f, 0.35f);
 
-    protected void SetInputFieldValid(InputField field) {
-        field.image.color = Color.green;
-    }
-
-    protected void SetInputFieldInvalid(InputField field) {
-        field.image.color = errorColor;
+    protected void SetInputFieldValid(InputField field, bool valid) {
+        if (valid) {
+            field.image.color = Color.green;
+        }
+        else {
+            field.image.color = errorColor;
+        }
     }
 
     protected void SetInputFieldNeutral(InputField field) {

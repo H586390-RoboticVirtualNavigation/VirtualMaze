@@ -5,22 +5,24 @@ public class BinWall : MonoBehaviour {
     [SerializeField]
     private GameObject binPrefab = null;
 
-    [SerializeField]
-    private string _owner;
-    public string owner { get => _owner; private set => _owner = value; }
+    public GameObject parent { get; private set; } = null;
 
     [SerializeField]
-    private int _group;
-    public int group { get => _group; private set => _group = value; }
+    public string owner { get; private set; }
+
+    [SerializeField]
+    public int group { get; private set; }
 
     private List<Bin> binList = new List<Bin>();
     public HashSet<Bin> binsHit = new HashSet<Bin>();
 
     public static HashSet<BinWall> WallsHit = new HashSet<BinWall>();
-
+    private int _numberOfBins;
 
     public int numWidth { get; private set; }
     public int numHeight { get; private set; }
+
+    public int NumberOfBins { get => _numberOfBins; }
 
     private void OnDrawGizmos() {
         Gizmos.DrawSphere(transform.position, 0.5f);
@@ -51,6 +53,8 @@ public class BinWall : MonoBehaviour {
         numWidth = Mathf.FloorToInt(fillWidth / binWidth);
         numHeight = Mathf.FloorToInt(fillHeight / binHeight);
 
+        _numberOfBins = numWidth * numHeight;
+
         float widthEdgeOffset = binWidth / 2;
         float heightEdgeOffset = binHeight / 2f;
 
@@ -61,8 +65,9 @@ public class BinWall : MonoBehaviour {
 
         for (int h = 0; h < numHeight; h++) {
             for (int w = 0; w < numWidth; w++) {
+                /* Bins created starting from bottom left to top right where Bins are created to the right till the width is filled  */
                 GameObject obj = Instantiate(binPrefab, new Vector3(w * binWidth - widthCenterOffset + widthEdgeOffset,
-                    -h * binHeight + heightCenterOffset - heightEdgeOffset, 0), Quaternion.identity);
+                    h * binHeight - heightCenterOffset + heightEdgeOffset, 0), Quaternion.identity);
 
                 obj.transform.SetParent(transform, false);
                 obj.transform.localScale = new Vector3(binWidth, binHeight, 1);
@@ -77,16 +82,26 @@ public class BinWall : MonoBehaviour {
     }
 
     //moves wall to collider
-    public void AttachTo(Location c, string owner, int group) {
+    public void AttachTo(Location c, GameObject parent, int group) {
         transform.SetPositionAndRotation(c.position, c.rotation);
         gameObject.SetActive(true);
-        this.owner = owner;
+
+        this.parent = parent;
+        this.owner = parent.name;
+
         this.group = group;
     }
 
     private void RegisterBinHit(Bin hit) {
         binsHit.Add(hit);
         WallsHit.Add(this);
+    }
+
+    public void DebugShowCornerIds(BinMapper m) {
+        m.MapBinToId(this, binList[0]);
+        m.MapBinToId(this, binList[numWidth]);
+        m.MapBinToId(this, binList[numWidth * (numHeight - 1)]);
+        m.MapBinToId(this, binList[NumberOfBins - 1]);
     }
 }
 

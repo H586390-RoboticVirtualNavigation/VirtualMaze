@@ -67,7 +67,9 @@ public class GameController : MonoBehaviour {
 
     private void Start() {
         //Online sources says that if vSyncCount != 0, targetFrameRate will be ignored.
-        Application.targetFrameRate = 30;
+        if (!Application.isEditor) {
+            Application.targetFrameRate = 30;
+        }
 
         //if display is 60hz, Unity will run at 30hz
         //QualitySettings.vSyncCount = 2;

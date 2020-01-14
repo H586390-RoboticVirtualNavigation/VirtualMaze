@@ -74,7 +74,6 @@ public class LevelController : MonoBehaviour {
         EyeLink.Initialize();
         onSessionTrigger.AddListener(EyeLink.OnSessionTrigger);
         onSessionTrigger.AddListener(parallelPort.TryWriteTrigger);
-        DontDestroyOnLoad(this);
     }
 
     private void OnDestroy() {
@@ -248,8 +247,6 @@ public class LevelController : MonoBehaviour {
 
         //delay for inter trial window
         float countDownTime = Session.getTrailIntermissionDuration() / 1000.0f;
-        Debug.LogError($"TIMEOUT: {Session.getTrailIntermissionDuration()}");
-
 
         yield return SessionStatusDisplay.Countdown("InterTrial Countdown", countDownTime);
 

@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 public abstract class BinMapper {
     public const int NoGroup = -1;
@@ -14,27 +16,10 @@ public abstract class BinMapper {
     /// Assigns the size and number of bins in each Binwall
     /// </summary>
     /// <param name="group">Group id of the object</param>
-    /// <param name="numBinAtLength">Required number of bins for the length of the floor</param>
     /// <returns>The configurations required for the binwall</returns>
-    public abstract BinWallConfig MapObjectToBinWallConfig(int group, int numBinAtLength);
+    public abstract BinWallConfig MapObjectToBinWallConfig(int group);
 
-    /// <summary>
-    /// Calculate the position of the binwall to based on the group and Transform of the object.
-    /// 
-    /// Calls <see cref="GetLocation(int, GameObject)"/>  to extract the location of the object.
-    /// </summary>
-    /// <param name="group">Group id of the object</param>
-    /// <param name="obj">Object to assign a Binwall to</param>
-    /// <returns></returns>
-    public abstract Location GetLocationOfBinWall(int group, GameObject obj);
-
-    /// <summary>
-    /// Using the group id, extract the location of the GameObject
-    /// </summary>
-    /// <param name="group">Group id of the object</param>
-    /// <param name="obj">Object to assign a Binwall to</param>
-    /// <returns></returns>
-    protected abstract Location GetLocation(int group, GameObject obj);
+    public abstract void PlaceBinWall(int group, GameObject obj, BinWall binWall);
 
     /// <summary>
     /// Maps id of the bin in the binwall to the proper ID required.
@@ -63,6 +48,9 @@ public abstract class BinMapper {
     /// <returns></returns>
     /// <see cref="BinWallManager.AssignBinwall(GameObject, GameObject, BinMapper)"/>
     public abstract string GetSpecialCacheId(int group, GameObject obj);
+    public abstract bool IsSingleWallGroup(int group);
+
+    public abstract float MaxPossibleSqDistance();
 }
 
 public class DoubleTeeBinMapper : BinMapper {
@@ -102,61 +90,99 @@ public class DoubleTeeBinMapper : BinMapper {
     private readonly int[] XNegPillarWalls = { 20, 3, 5, 21 };
 
     /* Maze wall numbers grouped according to the pillars they belong in. */
-    private readonly int[] pillar1 = { 6, 29, 21, 10 };
-    private readonly int[] pillar2 = { 1, 5, 25, 26 };
-    private readonly int[] pillar3 = { 7, 8, 12, 20 };
-    private readonly int[] pillar4 = { 3, 4, 24, 15 };
+    private readonly int[] PillarBlue = { 6, 29, 21, 10 };
+    private readonly int[] PillarGreen = { 1, 5, 25, 26 };
+    private readonly int[] PillarYellow = { 7, 8, 12, 20 };
+    private readonly int[] PillarRed = { 3, 4, 24, 15 };
+
+    private const int NumberOfWallsInPillars = 4;
+
+    private Dictionary<int, int> groupOffsetTable = new Dictionary<int, int>();
+
+    //standard, for walls, ceiling and floor
+    private float binWidth = 0.625f; //25/40
+    private float binM_Height = 0.6f; //3 unity units/5 bins
+
+    /* Known values aquired from the scene */
+    private const float FloorWidth = 25f; // width is enough since it is square
+    private const float WallHeight = 5f; //4.93 in the scene but rounded up
+    private const float PillarWallHeight = 3f;
+
+    private int maxSqDist = Mathf.CeilToInt(FloorWidth * FloorWidth);
+
+    public DoubleTeeBinMapper(int numOfBinsForFloorLength) {
+        binWidth = FloorWidth / numOfBinsForFloorLength;
+        binM_Height = PillarWallHeight / Mathf.CeilToInt(PillarWallHeight / binWidth);
+
+        int numFloorBins = numOfBinsForFloorLength * numOfBinsForFloorLength;
+        int numWallsBins = numOfBinsForFloorLength * Mathf.RoundToInt(WallHeight / binWidth);
+
+        groupOffsetTable[CueImage] = 1; // first bin no need for offset but actual id is 1 based
+        groupOffsetTable[HintImage] = groupOffsetTable[CueImage] + 1;
+        groupOffsetTable[Ground] = groupOffsetTable[HintImage] + 1;// cue and hint image
+        groupOffsetTable[Ceiling] = groupOffsetTable[Ground] + numFloorBins;
+
+        groupOffsetTable[MazeWallXNeg] = groupOffsetTable[Ceiling] + numFloorBins;
+        groupOffsetTable[MazeWallZNeg] = groupOffsetTable[MazeWallXNeg];
+        groupOffsetTable[MazeWallXPos] = groupOffsetTable[MazeWallZNeg];
+        groupOffsetTable[MazeWallZPos] = groupOffsetTable[MazeWallXPos];
+
+        groupOffsetTable[PillarWalls] = groupOffsetTable[MazeWallZPos] + numWallsBins * 4;
+    }
 
     /// <summary>
     /// See <see cref="BinMapper.MapBinToId(BinWall, Bin)"/>
     /// </summary>
     public override int MapBinToId(BinWall wall, Bin bin) {
-        switch (bin.Group) {
-            case HintImage:
-                return 2;
+        int group = bin.Group;
 
+        if (group == Poster_group) {
+            group = GetGroupID(wall.parent);
+        }
+
+        int offset = groupOffsetTable[group];
+
+        /* multiplied by 4 because of 4 walls */
+        switch (group) {
+            /* Single bins, actual ids computed in offset table */
+            case HintImage:
             case CueImage:
-                return 1;
+                return offset;
 
             case Ground:
-                return bin.id + 3;
+                return bin.id + offset;
 
             case Ceiling:
                 int h = wall.numHeight - 1 - bin.id / wall.numWidth;
-                return bin.id % wall.numWidth + h * wall.numWidth + 1603;
+                return bin.id % wall.numWidth + h * wall.numWidth + offset;
 
             case MazeWallZNeg:
                 h = bin.id / wall.numWidth;
-                int numInRing = wall.numWidth * 4 * h + wall.numWidth;
-                return numInRing + bin.id % wall.numWidth + 3 + 3200;
+                int numInRing = (wall.numWidth * 4) * h + wall.numWidth;
+                return numInRing + bin.id % wall.numWidth + offset;
 
             case MazeWallZPos:
                 h = bin.id / wall.numWidth;
-                numInRing = wall.numWidth * 4 * h + wall.numWidth * 3;
-                return numInRing + bin.id % wall.numWidth + 3 + 3200;
+                numInRing = (wall.numWidth * 4) * h + wall.numWidth * 3;
+                return numInRing + bin.id % wall.numWidth + offset;
 
             case MazeWallXNeg:
                 h = bin.id / wall.numWidth;
-                numInRing = wall.numWidth * 4 * h;
-                return numInRing + bin.id % wall.numWidth + 3 + 3200;
+                numInRing = (wall.numWidth * 4) * h;
+                return numInRing + bin.id % wall.numWidth + offset;
 
             case MazeWallXPos:
                 h = bin.id / wall.numWidth;
-                numInRing = wall.numWidth * 4 * h + wall.numWidth * 2;
-                return numInRing + bin.id % wall.numWidth + 3 + 3200;
-
-            case Poster_group:
-                return bin.id;
+                numInRing = (wall.numWidth * 4) * h + wall.numWidth * 2;
+                return numInRing + bin.id % wall.numWidth + offset;
 
             case PillarWalls:
-                return MapPillarsToID(wall, bin);
-            case NoGroup:
-                break;
+                return MapPillarsToID(wall, bin) + offset;
 
+            case NoGroup:
             default:
-                break;
+                throw new Exception("NoGroup or unexpected group used to actual ID");
         }
-        return -1;
     }
 
     /// <summary>
@@ -200,10 +226,18 @@ public class DoubleTeeBinMapper : BinMapper {
     }
 
     /// <summary>
-    /// See <see cref="BinMapper.GetLocationOfBinWall(int, GameObject)"/>
+    /// See <see cref="BinMapper.PlaceBinWall"/>
     /// </summary>
-    public override Location GetLocationOfBinWall(int group, GameObject sceneObject) {
-        Location location = GetLocation(group, sceneObject);
+    public override void PlaceBinWall(int group, GameObject sceneObject, BinWall binWall) {
+        Location location;
+        GameObject posterWall = null;
+        if (group == Poster_group) {
+            posterWall = sceneObject.GetComponent<Poster>().AttachedTo;
+            location = Location.CopyTransform(posterWall.transform);
+        }
+        else {
+            location = Location.CopyTransform(sceneObject.transform);
+        }
 
         switch (group) {
             case Ground:
@@ -233,38 +267,36 @@ public class DoubleTeeBinMapper : BinMapper {
             case HintImage: //no group since it already exist in the scene
             case CueImage: //no group since it already exist in the scene
             case NoGroup:
-                return location;
-
             default:
                 break;
         }
 
-        return location;
+        if (posterWall != null) {
+            binWall?.AttachTo(location, posterWall, GetGroupID(posterWall));
+        }
+        else {
+            binWall?.AttachTo(location, sceneObject, group);
+        }
     }
 
     /// <summary>
     /// See <see cref="BinMapper.MapObjectToBinWallConfig(int, int)"/>
     /// </summary>
-    public override BinWallConfig MapObjectToBinWallConfig(int group, int numBinAtLength) {
-        //standard, for walls, ceiling and floor
-        float binWidth = 0.625f; //25/40
-
-        float binM_Height = 0.6f; //3 unity units/5 bins
-
+    public override BinWallConfig MapObjectToBinWallConfig(int group) {
         switch (group) {
             case Ground:
             case Ceiling:
-                return new BinWallConfig(binWidth, binWidth, 25, 25);
+                return new BinWallConfig(binWidth, binWidth, FloorWidth, FloorWidth);
 
             case MazeWallXNeg:
             case MazeWallXPos:
             case MazeWallZNeg:
             case MazeWallZPos:
-                return new BinWallConfig(binWidth, binWidth, 25, 5);
+                return new BinWallConfig(binWidth, binWidth, FloorWidth, WallHeight);
 
             case Poster_group:
             case PillarWalls:
-                return new BinWallConfig(binWidth, binM_Height, 5, 3);
+                return new BinWallConfig(binWidth, binM_Height, WallHeight, PillarWallHeight);
 
             case HintImage: //no group since it already exist in the scene
             case CueImage: //no group since it already exist in the scene
@@ -315,59 +347,66 @@ public class DoubleTeeBinMapper : BinMapper {
         }
     }
 
-    /// <summary>
-    /// See <see cref="BinMapper.GetLocation(int, GameObject)"/>
-    /// </summary>
-    protected override Location GetLocation(int group, GameObject obj) {
-        switch (group) {
-            case Poster_group:
-                Transform posterWall = obj.GetComponent<Poster>().AttachedTo.transform;
-                return Location.CopyTransform(posterWall.transform);
-
-            default:
-                return Location.CopyTransform(obj.transform);
-        }
+    public override bool IsSingleWallGroup(int group) {
+        return MazeWallGrps.Contains(group);
     }
 
+    private Dictionary<string, Tuple<int, int>> PillarOffsetTable = new Dictionary<string, Tuple<int, int>>();
+
     private int MapPillarsToID(BinWall wall, Bin bin) {
+
         int objId = GetOwnerId(wall.owner);
 
-        int ringNum = wall.numWidth * 4;
+        int ringNum = wall.numWidth * NumberOfWallsInPillars;
         int height = bin.id / wall.numWidth;
 
-        int offset = 4 * wall.numHeight * wall.numWidth;
+        /* wall id runs in the other direction as compared to the actual bin ids required.
+         * -1 to map the bins properly when fillping their direction*/
+        int remaindingBins = (wall.numWidth - 1) - bin.id % wall.numWidth;//
 
-        if (pillar1.Contains(objId)) {
-            offset *= 0;
+        int pillarOffset = 0;
+        int pillarDirectionOffset = 0;
+
+        if (PillarOffsetTable.TryGetValue(wall.owner, out Tuple<int, int> offsets)) {
+            pillarOffset = offsets.Item1;
+            pillarDirectionOffset = offsets.Item2;
         }
-        else if (pillar2.Contains(objId)) {
-            offset *= 1;
-        }
-        else if (pillar3.Contains(objId)) {
-            offset *= 2;
-        }
-        else if (pillar4.Contains(objId)) {
-            offset *= 3;
+        else {
+            /* pillar Green requires no offset */ //
+            if (PillarBlue.Contains(objId)) {
+                pillarOffset = NumberOfWallsInPillars * wall.NumberOfBins;
+            }
+            else if (PillarRed.Contains(objId)) {
+                pillarOffset = 2 * NumberOfWallsInPillars * wall.NumberOfBins;
+            }
+            else if (PillarYellow.Contains(objId)) {
+                pillarOffset = 3 * NumberOfWallsInPillars * wall.NumberOfBins;
+            }
+
+            //XNegPillarWalls requires no offset due to the direction it is facing
+            if (ZPosPillarWalls.Contains(objId)) {
+                pillarDirectionOffset = 1 * wall.numWidth;
+            }
+            else if (XPosPillarWalls.Contains(objId)) {
+                pillarDirectionOffset = 2 * wall.numWidth;
+            }
+            else if (ZNegPillarWalls.Contains(objId)) {
+                pillarDirectionOffset = 3 * wall.numWidth;
+            }
+
+            PillarOffsetTable[wall.owner] = new Tuple<int, int>(pillarOffset, pillarDirectionOffset);
         }
 
-        if (ZPosPillarWalls.Contains(objId)) {
-            return ringNum * height + 1 * wall.numWidth + wall.numWidth - bin.id % wall.numWidth + offset;
-        }
-        else if (XPosPillarWalls.Contains(objId)) {
-            return ringNum * height + 2 * wall.numWidth + wall.numWidth - bin.id % wall.numWidth + offset;
-        }
-        else if (ZNegPillarWalls.Contains(objId)) {
-            return ringNum * height + 3 * wall.numWidth + wall.numWidth - bin.id % wall.numWidth + offset;
-        }
-        else if (XNegPillarWalls.Contains(objId)) {
-            return ringNum * height + wall.numWidth - bin.id % wall.numWidth + offset;
-        }
-        return bin.id;
+        return ringNum * height + remaindingBins + pillarOffset + pillarDirectionOffset;
     }
 
     private int GetOwnerId(string objName) {
         int lastIndex = objName.LastIndexOf('_') + 1;
         return int.Parse(objName.Substring(lastIndex));
+    }
+
+    public override float MaxPossibleSqDistance() {
+        return maxSqDist;
     }
 }
 

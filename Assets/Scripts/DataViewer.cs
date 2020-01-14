@@ -119,12 +119,12 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         }
         else {
             if (!string.IsNullOrEmpty(savePath.text) && FileBrowser.IsValidFolder(savePath.text)) {
-                SetInputFieldValid(savePath);
+                SetInputFieldValid(savePath, true);
                 PathConfig.saveFolder = savePath.text;
                 StartCoroutine(Record());
             }
             else {
-                SetInputFieldInvalid(savePath);
+                SetInputFieldValid(savePath, false);
             }
 
         }
@@ -222,18 +222,18 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
         if (!string.IsNullOrEmpty(path)) {
             if (File.Exists(path)) {
-                SetInputFieldValid(dataFileField);
+                SetInputFieldValid(dataFileField, true);
                 SpikeTimeParser spikeReader = TryCreateSpikeTrainFile(spikeTrainFileField.text);
 
                 trials.Clear();
                 Console.Write("Loading Trials......");
                 yield return null;
 
+                yield return PrepareScene();
+
                 RaycastDataLoader.Load(path, trials, spikeReader);
 
                 trialSelect.ClearOptions();
-                TrialIndex = 0;
-
                 FillTrialOptions(trialSelect.options);
 
                 TrialIndex = 0;
@@ -242,11 +242,9 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
                 subMenu.SetVisibility(true);
                 recordCanvas.Show();
                 Console.Write($"{path} loaded");
-
-                StartCoroutine(PrepareScene());
             }
             else {
-                SetInputFieldInvalid(dataFileField);
+                SetInputFieldValid(dataFileField, false);
             }
         }
     }
@@ -254,11 +252,11 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     private SpikeTimeParser TryCreateSpikeTrainFile(string path) {
         if (!string.IsNullOrEmpty(path)) {
             if (File.Exists(path)) {
-                SetInputFieldValid(spikeTrainFileField);
+                SetInputFieldValid(spikeTrainFileField, true);
                 return new SpikeTimeParser(path);
             }
             else {
-                SetInputFieldInvalid(spikeTrainFileField);
+                SetInputFieldValid(spikeTrainFileField, false);
                 return null;
             }
         }
@@ -276,8 +274,6 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
         }
 
         rewards = RewardArea.GetAllRewardsFromScene();
-
-        TrialIndex = 0;
     }
 
     private void OnScrubber(float value) {
@@ -353,21 +349,21 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
     float timeToClear = 0;
 
     private void ShowNextFrame(bool forceShow) {
-        //timepassed += Time.deltaTime * 1000;
-        //if (forceShow || timepassed >= timeToClear) {
-        timepassed = 0;
+        timepassed += Time.deltaTime * 1000;
+        if (forceShow || timepassed >= timeToClear) {
+            timepassed = 0;
 
-        Trial trial = trials[TrialIndex];
+            Trial trial = trials[TrialIndex];
 
-        timeToClear = trial.GetFrameAt(FrameIndex).DataCount;
+            timeToClear = trial.GetFrameAt(FrameIndex).DataCount;
 
-        if (FrameIndex < trial.GetFrameCount() - 1) {
-            FrameIndex++;
+            if (FrameIndex < trial.GetFrameCount() - 1) {
+                FrameIndex++;
+            }
+            else {
+                IsPlaying = false;
+            }
         }
-        else {
-            IsPlaying = false;
-        }
-        //}
     }
 
     private void ShowPrevFrame() {
@@ -381,10 +377,10 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
     List<Vector2> frameGazeCache = new List<Vector2>();
 
-    DoubleTeeBinMapper m = new DoubleTeeBinMapper();
+    DoubleTeeBinMapper m = new DoubleTeeBinMapper(40);
 
     public void ShowFrame(Trial trial, int frameNum) {
-        BinWallManager.Reset();
+        BinWallManager.ResetWalls();
         pool.ClearScreen();
 
         Frame frame = trial.GetFrameAt(frameNum);
@@ -393,6 +389,7 @@ public class DataViewer : BasicGUIController, CueController.ITriggerActions {
 
         if (frame.Config != null) {
             RobotMovement.MoveRobotTo(robot, frame.Config);
+            cueController.UpdatePosition(robot);
         }
 
         dataIgnoredStatus.gameObject.SetActive(frame.Config == null);

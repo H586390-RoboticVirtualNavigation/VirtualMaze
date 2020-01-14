@@ -1,83 +1,146 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class BinWallManager {
     const int GroundCeiling = 0;
     const int PillarWalls = 1;
     const int MazeWalls = 2;
 
-    static List<Vector2> primaryOffset = new List<Vector2>();
-    static List<Vector2> secondaryOffset = new List<Vector2>();
-    private static float gazeSqDistThreshold;
+    public static List<Vector2> primaryOffset = new List<Vector2>();
+    public static List<Vector2> secondaryOffset = new List<Vector2>();
+    public static float gazeSqDistThreshold;
 
     private static Dictionary<int, List<BinWall>> wallCache = new Dictionary<int, List<BinWall>>();
 
     private static HashSet<string> activated = new HashSet<string>();
+    public static float maxSqDist;
 
-    static int a = LayerMask.NameToLayer("");
-
-    static readonly int layerMaskArea;
-    static readonly int layerMaskRing;
+    private static readonly int binningLayerOnly;
+    public static readonly int ignoreBinningLayer;
 
     const int UNIT_AREA = 100 * 100; //100 by 100 pixels
-    const float TURN_FRACTION = 0.618f * 2 * Mathf.PI;
+
+    /* 0.618 is golden ratio, reduces chances of raycast overlapping */
+    private const float TURN_FRACTION = 0.618f * 2 * Mathf.PI;
+
+    private const int MINIMUM_NUM_OF_RAYCAST = 10;
+
+    /* Reduces the density by this amount */
+    private const int PRI_DENSITY_DIVISOR = 10;
 
     static BinWallManager() {
         int shift = LayerMask.NameToLayer("Binning");
-        layerMaskArea = (1 << shift);
-        layerMaskRing = (1 << shift) ^ -5; //-5 is default layermask, XOR with desired mask
+        binningLayerOnly = (1 << shift);
+        ignoreBinningLayer = (1 << shift) ^ Physics.DefaultRaycastLayers; //-5 is default layermask, XOR with desired mask
         ReconfigureGazeOffsetCache(50, 220); //radius of 50 pixels, density of approx 1 raycast per 45 pixels
     }
+
     public static void DisplayGazes(List<Vector2> gazes, Camera c, GameObject binWallPrefab, BinMapper mapper) {
         IdentifyObjects(gazes, c, binWallPrefab, mapper);
-        BinGazes(gazes, c, binWallPrefab, mapper);
+        ViewBinGazes(gazes, c, binWallPrefab, mapper);
         gazes.Clear();
     }
 
-    public static void BinGaze(Vector2 gaze, Camera cam, GameObject binWallPrefab, BinMapper mapper, HashSet<int> binsHitId) {
+    /// <summary>
+    /// Raycasts a set area around the gaze point.
+    /// </summary>
+    /// <param name="gaze">Screen point cooridinates of the gaze</param>
+    /// <param name="cam">View of the subject</param>
+    /// <param name="sampleTime"> timestamp of the gazepoint</param>
+    /// <param name="binsHitId">Hashset to contain the actual ids of the bins hit</param>
+    /// <param name="dependency">Jobs to run this job after</param>
+    /// <param name="modder">Number to mod the number of rays to be casted for near objects</param>
+    /// <remarks> Size and density of the raycast area can be changed via <see cref="ReconfigureGazeOffsetCache(int, int)"/></remarks>
+    public static BinGazeJobData BinGaze(Vector2 gaze, uint sampleTime, Camera cam, JobHandle dependency, int modder) {
         if (gaze.isNaN()) {
-            return;
+            return null;
         }
 
-        int numRaycasts = secondaryOffset.Count;
+        int numRaycasts;
+
+        if (modder > 1) {
+            numRaycasts = secondaryOffset.Count / modder + 1;
+        }
+        else {
+            numRaycasts = secondaryOffset.Count;
+        }
 
         NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(numRaycasts, Allocator.TempJob);
         NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(numRaycasts, Allocator.TempJob);
-        try {
-            int counter = 0;
-            foreach (Vector2 offset in secondaryOffset) {
+
+        int counter = 0;
+        int idx = 0;
+
+        Profiler.BeginSample("Fill array");
+        foreach (Vector2 offset in secondaryOffset) {
+            if (counter % modder == 0) {
                 Ray r = cam.ScreenPointToRay(gaze + offset);
-                commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, layerMaskArea);
-                counter++;
+                commands[idx] = new RaycastCommand(r.origin, r.direction, layerMask: binningLayerOnly);
+                idx++;
             }
+            counter++;
+        }
+        Profiler.EndSample();
 
-            JobHandle h = RaycastCommand.ScheduleBatch(commands, results, 1, default);
-            h.Complete();
+        JobHandle h = RaycastCommand.ScheduleBatch(commands, results, 1, dependency);
 
+        return new BinGazeJobData(h, commands, results, numRaycasts, sampleTime);
+    }
+
+    public class BinGazeJobData : IDisposable {
+        public JobHandle h;
+        public NativeArray<RaycastCommand> cmds;
+        public NativeArray<RaycastHit> results;
+        public int numRaycasts;
+        public uint sampleTime;
+
+        public BinGazeJobData(JobHandle h, NativeArray<RaycastCommand> cmds, NativeArray<RaycastHit> results, int numRaycasts, uint time) {
+            this.h = h;
+            this.cmds = cmds;
+            this.results = results;
+            this.numRaycasts = numRaycasts;
+            this.sampleTime = time;
+        }
+
+        public void Dispose() {
+            cmds.Dispose();
+            results.Dispose();
+        }
+
+        public void process(BinMapper mapper, HashSet<int> binsHitId) {
             for (int i = 0; i < numRaycasts; i++) {
+                Profiler.BeginSample("GetCollider");
                 Collider c = results[i].collider;
+                Profiler.EndSample();
                 if (c != null) {
+                    Profiler.BeginSample("GetComponent");
                     Bin b = c.GetComponent<Bin>();
+                    Profiler.EndSample();
+
+                    Profiler.BeginSample("HIT");
                     b.Hit();
+                    Profiler.EndSample();
 
+                    Profiler.BeginSample("Mapper");
                     int mappedId = mapper.MapBinToId(b.parent, b);
+                    Profiler.EndSample();
 
-                    binsHitId.Add(mappedId);
-
-                    b.idText.text = mappedId.ToString();
-                    b.SetTextCanvasActive(true);
+                    if (binsHitId.Add(mappedId)) {
+                        b.idText.text = mappedId.ToString();
+                    }
                 }
             }
         }
-        finally {
-            commands.Dispose();
-            results.Dispose();
-        }
     }
 
-    public static void BinGazes(IEnumerable<Vector2> gazes, Camera cam, GameObject binWallPrefab, BinMapper mapper) {
+    static Color transparentRed = new Color(1, 0, 0, 0.3f);
+    static Color transGreen = new Color(0, 1, 0, 0.3f);
+
+    public static void ViewBinGazes(IEnumerable<Vector2> gazes, Camera cam, GameObject binWallPrefab, BinMapper mapper) {
         int numRaycasts = secondaryOffset.Count;
 
         NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(numRaycasts, Allocator.TempJob);
@@ -101,7 +164,7 @@ public class BinWallManager {
                 int counter = 0;
                 foreach (Vector2 offset in secondaryOffset) {
                     Ray r = cam.ScreenPointToRay(gaze + offset);
-                    commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, layerMaskArea);
+                    commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, binningLayerOnly);
                     counter++;
                 }
 
@@ -126,42 +189,7 @@ public class BinWallManager {
         }
     }
 
-    public static void PrepareBins(Vector2 gaze, Camera cam, GameObject binWallPrefab, BinMapper mapper) {
-        int numRaycasts = primaryOffset.Count;
-
-        NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(numRaycasts, Allocator.TempJob);
-        NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(numRaycasts, Allocator.TempJob);
-
-        int counter = 0;
-        HashSet<Collider> hitPool = new HashSet<Collider>();
-
-        try {
-            foreach (Vector2 offset in primaryOffset) {
-                Ray r = cam.ScreenPointToRay(gaze + offset);
-                commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, layerMaskRing);
-                counter++;
-            }
-
-            JobHandle h = RaycastCommand.ScheduleBatch(commands, results, 1, default);
-            h.Complete();
-
-            for (int i = 0; i < counter; i++) {
-                Collider c = results[i].collider;
-                if (c != null) {
-                    hitPool.Add(c);
-                }
-            }
-        }
-        finally {
-            commands.Dispose();
-            results.Dispose();
-        }
-        foreach (Collider c in hitPool) {
-            BinWallManager.AssignBinwall(c.gameObject, binWallPrefab, mapper);
-        }
-    }
-
-    public static void IdentifyObjects(List<Vector2> gazes, Camera cam, GameObject binWallPrefab, BinMapper mapper) {
+    public static float IdentifyObjects(List<Vector2> gazes, Camera cam, GameObject binWallPrefab, BinMapper mapper) {
         int numRaycasts = gazes.Count * primaryOffset.Count;
 
         NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(numRaycasts, Allocator.TempJob);
@@ -171,6 +199,8 @@ public class BinWallManager {
 
         HashSet<Collider> hitPool = new HashSet<Collider>();
 
+        float maxSqDist = -1;
+
         try {
             foreach (Vector2 gaze in gazes) {
                 if (gaze.isNaN()) {
@@ -179,7 +209,7 @@ public class BinWallManager {
 
                 foreach (Vector2 offset in primaryOffset) {
                     Ray r = cam.ScreenPointToRay(gaze + offset);
-                    commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, layerMaskRing);
+                    commands[counter] = new RaycastCommand(r.origin, r.direction, float.MaxValue, ignoreBinningLayer);
                     counter++;
                 }
             }
@@ -190,7 +220,9 @@ public class BinWallManager {
             for (int i = 0; i < counter; i++) {
                 Collider c = results[i].collider;
                 if (c != null) {
+                    maxSqDist = Mathf.Max(maxSqDist, Vector3.SqrMagnitude(results[i].point - commands[i].from));
                     hitPool.Add(c);
+                    Debug.DrawLine(commands[i].from, results[i].point, transGreen);
                 }
             }
         }
@@ -199,16 +231,18 @@ public class BinWallManager {
             results.Dispose();
         }
         foreach (Collider c in hitPool) {
-            BinWallManager.AssignBinwall(c.gameObject, binWallPrefab, mapper);
+            AssignBinwall(c.gameObject, binWallPrefab, mapper);
         }
+
+        return maxSqDist;
     }
 
     public static void ReconfigureGazeOffsetCache(int radius, int density) {
-        gazeSqDistThreshold = Mathf.Pow(radius / 2f, 2) + 10;
+        gazeSqDistThreshold = Mathf.Pow(radius / 2f, 2);
 
         /*primary offset density is reduced as it is only used to identify all
           possible objects in the scene covered by the gaze */
-        CreateOffsetList(radius, Mathf.Max(density / 10, 10), primaryOffset);
+        CreateOffsetList(radius, Mathf.Max(density / PRI_DENSITY_DIVISOR, MINIMUM_NUM_OF_RAYCAST), primaryOffset);
         CreateOffsetList(radius, density, secondaryOffset);
     }
 
@@ -255,13 +289,15 @@ public class BinWallManager {
             }
         }
 
-        Location location = mapper.GetLocationOfBinWall(group, obj);
-
         BinWall binWall = GetAvailableBinWall(group, binWallPrefab, mapper);
-        binWall?.AttachTo(location, obj.name, group);
+        mapper.PlaceBinWall(group, obj, binWall);
     }
 
-    public static void Reset() {
+    public static void ResetManager() {
+        maxSqDist = -1;
+    }
+
+    public static void ResetWalls() {
         activated.Clear();
         foreach (List<BinWall> pool in wallCache.Values) {
             foreach (BinWall wall in pool) {
@@ -276,13 +312,12 @@ public class BinWallManager {
             return null;
         }
 
-        BinWallConfig config = mapper.MapObjectToBinWallConfig(group, 40);
-
-        int cache_id = mapper.MapGroupToWallCache(group);
-
-        if (cache_id == 1 && activated.Contains(group.ToString())) {
+        if (mapper.IsSingleWallGroup(group) && activated.Contains(group.ToString())) {
             return null;
         }
+
+        BinWallConfig config = mapper.MapObjectToBinWallConfig(group);
+        int cache_id = mapper.MapGroupToWallCache(group);
 
         activated.Add(group.ToString());
 

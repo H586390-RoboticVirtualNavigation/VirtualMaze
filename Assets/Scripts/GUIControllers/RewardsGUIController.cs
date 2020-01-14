@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine.UI;
 
 public class RewardsGUIController : DataGUIController {
     private const string Text_OnState = "Valve On";
@@ -33,11 +29,11 @@ public class RewardsGUIController : DataGUIController {
         if (!rewardsController.IsPortOpen) {
             if (rewardsController.RewardValveOn()) {
                 valveStateText.text = Text_OffState;
-                SetInputFieldValid(portNumField);
+                SetInputFieldValid(portNumField, true);
             }
             else {
                 Console.Write("cant open reward serial");
-                SetInputFieldInvalid(portNumField);
+                SetInputFieldValid(portNumField, false);
             }
         }
         else {

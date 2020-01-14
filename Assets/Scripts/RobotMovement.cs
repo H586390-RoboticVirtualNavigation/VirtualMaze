@@ -46,7 +46,6 @@ public class RobotMovement : ConfigurableComponent {
         }
     }
 
-    private Rigidbody rigidBody;
     [SerializeField]
     private CharacterController charController = null; //drag and drop
     private bool enableMovement = true;
@@ -67,8 +66,6 @@ public class RobotMovement : ConfigurableComponent {
 
     protected override void Awake() {
         base.Awake();
-        rigidBody = GetComponent<Rigidbody>();
-        rigidBody.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
     }
 
     // Update is called once per frame
@@ -92,13 +89,12 @@ public class RobotMovement : ConfigurableComponent {
 
         if (ShouldRotate(horizontal)) {
             Quaternion rotateBy = Quaternion.Euler(0, horizontal * RotationSpeed * Time.deltaTime, 0);
-            rigidBody.rotation = (transform.rotation * rotateBy);
+            transform.rotation = (transform.rotation * rotateBy);
         }
 
         if (ShouldMove(vertical)) {
             Vector3 moveBy = transform.forward * vertical * MovementSpeed * Time.deltaTime;
             charController.Move(moveBy);
-            //rigidBody.position = transform.position + moveBy;
         }
     }
 
@@ -145,6 +141,8 @@ public class RobotMovement : ConfigurableComponent {
         Quaternion startrot = transform.rotation;
         startrot.y = waypoint.rotation.y;
         transform.rotation = startrot;
+
+        OnRobotMoved?.Invoke(transform);
     }
 
     /// <summary>

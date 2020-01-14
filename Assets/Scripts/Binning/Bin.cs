@@ -3,9 +3,6 @@ using UnityEngine.UI;
 
 public class Bin : MonoBehaviour {
     [SerializeField]
-    private int hitNum = 0;
-
-    [SerializeField]
     private int _id = -9999;
 
     public Text idText;
@@ -25,6 +22,7 @@ public class Bin : MonoBehaviour {
     [SerializeField]
     private int manualGroup = -1;
 
+
     public string Owner { get => parent.owner; }
 
     //use group set in the scene if parent does not exist
@@ -41,10 +39,11 @@ public class Bin : MonoBehaviour {
 
     public void Hit() {
         OnBinHit?.Invoke(this);
-        hitNum++;
     }
 
     internal void SetTextCanvasActive(bool v) {
-        textCanvas?.SetActive(v);
+        if (textCanvas != null) {
+            textCanvas.SetActive(v);
+        }
     }
 }

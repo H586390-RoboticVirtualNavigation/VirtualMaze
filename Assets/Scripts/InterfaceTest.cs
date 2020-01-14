@@ -22,7 +22,11 @@ public class InterfaceTest : MonoBehaviour, IDisposable {
 
     public GameObject binWallPrefab;
 
+    bool isReady = false;
+
     private void Start() {
+        isReady = true;
+
         int shift = LayerMask.NameToLayer("Binning");
         layerMaskArea = (1 << shift);
         layerMaskRing = (1 << shift) ^ -5; //-5 is default layermask
@@ -38,7 +42,8 @@ public class InterfaceTest : MonoBehaviour, IDisposable {
     }
 
     private void Update() {
-        BinWallManager.Reset();
+
+        BinWallManager.ResetWalls();
         hitPool.Clear();
         RingCast();
 
@@ -100,7 +105,7 @@ public class InterfaceTest : MonoBehaviour, IDisposable {
         }
     }
 
-    DoubleTeeBinMapper mapper = new DoubleTeeBinMapper();
+    DoubleTeeBinMapper mapper = new DoubleTeeBinMapper(40);
 
     private void RingCast() {
         NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(rayOffsetPrelim.Count, Allocator.TempJob);

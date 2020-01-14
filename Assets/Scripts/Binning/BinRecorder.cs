@@ -2,11 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Unity.Jobs;
 
 public class BinRecorder : IDisposable {
     const int RANK = 2; // number of dimensions in dataset
     const int NUM_OF_COLUMNS = 2;
-    private readonly string DATASETNAME = "values";
+    private readonly string DATASETNAME = "data";
 
     private long dataspace;
     private long file;
@@ -53,26 +54,31 @@ public class BinRecorder : IDisposable {
         H5F.close(file);
     }
 
+    struct SaveToHDFJob : IJob {
+        public void Execute() {
+            throw new NotImplementedException();
+        }
+    }
+
     public void RecordMovement(uint timestamp, HashSet<int> bin_ids) {
         HDFHelper.RefreshDataSpace(dataset, ref dataspace);
-
         ulong[] currDatasetDim = new ulong[RANK];
-        H5S.get_simple_extent_dims(dataspace, currDatasetDim, null);
 
+        H5S.get_simple_extent_dims(dataspace, currDatasetDim, null);
         ulong[] newDatasetDim = { currDatasetDim[0] + (ulong)bin_ids.Count, currDatasetDim[1] };
         H5D.set_extent(dataset, newDatasetDim);
 
         HDFHelper.RefreshDataSpace(dataset, ref dataspace);
-
         int datalen = bin_ids.Count;
 
         /* Prepare the data to be saved */
-        double[,] dataArr = new double[datalen, NUM_OF_COLUMNS]; //2 columns, timestamp and bin
+        double[] dataArr = new double[datalen * NUM_OF_COLUMNS]; //2 columns, timestamp and bin
 
         int i = 0;
         foreach (int id in bin_ids) {
-            dataArr[i, 0] = timestamp;
-            dataArr[i, 1] = id;
+            int row = i * 2;
+            dataArr[row] = timestamp;
+            dataArr[row + 1] = id;
             i++;
         }
 
@@ -92,5 +98,6 @@ public class BinRecorder : IDisposable {
         h.Free();
 
         H5S.close(newDataMemspace);
+
     }
 }

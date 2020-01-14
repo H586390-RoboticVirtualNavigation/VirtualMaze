@@ -64,13 +64,13 @@ public class EyeMatReader : EyeDataReader {
                 else {
                     float gx = file.eyePos[0, currentTime];
                     float gy = file.eyePos[1, currentTime];
-                    if (float.IsNaN(gx)) {
-                        gx = 100_000_000f;
-                    }
+                    //if (float.IsNaN(gx)) {
+                    //    gx = 100_000_000f;
+                    //}
 
-                    if (float.IsNaN(gy)) {
-                        gy = 100_000_000f;
-                    }
+                    //if (float.IsNaN(gy)) {
+                    //    gy = 100_000_000f;
+                    //}
 
                     currentData = new Fsample(file.timestamps[0, currentTime], gx, gy, DataTypes.SAMPLE_TYPE);
                 }
@@ -81,7 +81,6 @@ public class EyeMatReader : EyeDataReader {
 
     private double GetStateTime(int stateIndex) {
         // -1 since matlab is 1 based array
-        Debug.Log($"trialindex: {stateIndex % 3}, {stateIndex / 3} from {stateIndex}");
         return file.trial_index[stateIndex % 3, stateIndex / 3] - 1;
     }
 
