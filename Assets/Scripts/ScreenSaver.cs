@@ -28,7 +28,7 @@ public class ScreenSaver : BasicGUIController {
     private WaitForEndOfFrame waitForEndOfFrame = new WaitForEndOfFrame();
 
     /* Number of Unity Frames to process in a batch */
-    private const int Frame_Per_Batch = 1;
+    private const int Frame_Per_Batch = 100;
 
     /* acceptable time difference between edf and session triggers for approximation of missing trigger */
     private const int Accepted_Time_Diff = 20;
@@ -37,9 +37,9 @@ public class ScreenSaver : BasicGUIController {
     private GameObject binWallPrefab = null;
 
     [SerializeField]
-    private GameObject CueBinCollider;
+    private GameObject CueBinCollider = null;
     [SerializeField]
-    private GameObject HintBinCollider;
+    private GameObject HintBinCollider = null;
 
     //UI objects
     public FileSelector eyeLinkFileInput;
@@ -322,6 +322,7 @@ public class ScreenSaver : BasicGUIController {
 
             while (sessionFrames.Count > 0 && fixations.Count > 0) {
                 SessionData sessionData = sessionFrames.Dequeue();
+                frameCounter++;
 
                 decimal period;
                 if (sessionFrames.Count > 0) {
@@ -379,7 +380,7 @@ public class ScreenSaver : BasicGUIController {
                 if (rCastJob != null) {
                     using (rCastJob) {
                         rCastJob.h.Complete(); //force completion if not done yet
-                        rCastJob.Process(currData, recorder, robot, isLastSampleInFrame, gazePointPool, displayGazes: true, GazeCanvas, viewport);
+                        rCastJob.Process(currData, recorder, robot, isLastSampleInFrame, gazePointPool, displayGazes: frameCounter == Frame_Per_Batch, GazeCanvas, viewport);
                     }
                 }
                 Profiler.EndSample();
@@ -413,7 +414,6 @@ public class ScreenSaver : BasicGUIController {
                     ProcessTrigger(currData);
                 }
 
-                frameCounter++;
                 frameCounter %= Frame_Per_Batch;
                 if (frameCounter == 0) {
                     progressBar.value = sessionReader.ReadProgress;
