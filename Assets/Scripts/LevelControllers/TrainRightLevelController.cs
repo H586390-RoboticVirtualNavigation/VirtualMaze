@@ -45,7 +45,7 @@ public class TrainRightLevelController : MonoBehaviour {
 
         if (NetworkConnection.instance.replayMode == true) {
             this.gameObject.SetActive(false);
-            fade.FadeIn();
+            fade.FadeToScreen();
         }
     }
 
@@ -163,7 +163,7 @@ public class TrainRightLevelController : MonoBehaviour {
         SetPositionToStart();
 
         //fade in
-        fade.FadeIn();
+        fade.FadeToScreen();
         while (fade.fadeInDone == false) {
             yield return new WaitForSeconds(0.05f);
         }
@@ -223,7 +223,7 @@ public class TrainRightLevelController : MonoBehaviour {
         }
 
 
-        fade.FadeIn();
+        fade.FadeToScreen();
         while (fade.fadeInDone == false) {
             yield return new WaitForSeconds(0.05f);
         }

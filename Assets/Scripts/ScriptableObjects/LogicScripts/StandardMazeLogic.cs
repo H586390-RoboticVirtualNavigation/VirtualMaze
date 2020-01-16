@@ -22,11 +22,19 @@ public class StandardMazeLogic : MazeLogic {
         return nextTarget;
     }
 
-    public override bool IsTrialCompleteAfterReward(bool currentTaskSuccess) {
+    public override Sprite GetTargetImage(RewardArea[] rewards, int targetIndex) {
+        return rewards[targetIndex].cueImage;
+    }
+
+    public override bool IsTrialCompleteAfterCurrentTask(bool currentTaskSuccess) {
         return currentTaskSuccess; // 1 poster per trial
     }
 
     public override void Setup(RewardArea[] rewards) {
         //nothing to do here
+    }
+
+    public override bool ShowCue(int targetIndex) {
+        return true;
     }
 }

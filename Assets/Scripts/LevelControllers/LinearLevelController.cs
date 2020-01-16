@@ -172,7 +172,7 @@ public class LinearLevelController : MonoBehaviour {
 		SetPositionToStart ();
 		
 		//fade in
-		fade.FadeIn ();
+		fade.FadeToScreen ();
 		while (fade.fadeInDone == false) {
 			yield return new WaitForSeconds(0.05f);
 		}

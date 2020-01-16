@@ -19,11 +19,19 @@ public class FixedMazeLogic : MazeLogic {
         return Mathf.Min(nextTarget, numRewards - 1);
     }
 
-    public override bool IsTrialCompleteAfterReward(bool currentTaskSuccess) {
+    public override Sprite GetTargetImage(RewardArea[] rewards, int targetIndex) {
+        return rewards[rewards.Length - 1].cueImage;
+    }
+
+    public override bool IsTrialCompleteAfterCurrentTask(bool currentTaskSuccess) {
         return currentTaskSuccess && rewardIndex >= numRewards - 1;
     }
 
     public override void Setup(RewardArea[] rewards) {
         numRewards = rewards.Length;
+    }
+
+    public override bool ShowCue(int targetIndex) {
+        return targetIndex == 0;
     }
 }

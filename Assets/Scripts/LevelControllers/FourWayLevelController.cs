@@ -119,7 +119,7 @@ public class FourWayLevelController : MonoBehaviour {
 		//GuiController.experimentStatus = string.Format ("session {0} trial {1}", gameController.sessionCounter, trialCounter);
 		
 		//fade in
-		fade.FadeIn ();
+		fade.FadeToScreen ();
 		while (fade.fadeInDone == false) {
 			yield return new WaitForSeconds(0.05f);
 		}
@@ -157,7 +157,7 @@ public class FourWayLevelController : MonoBehaviour {
 		//GuiController.experimentStatus = string.Format ("session {0} trial {1}", gameController.sessionCounter, trialCounter);
 		
 		//fade in
-		fade.FadeIn ();
+		fade.FadeToScreen ();
 		while (fade.fadeInDone == false) {
 			yield return new WaitForSeconds(0.05f);
 		}

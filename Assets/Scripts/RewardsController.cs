@@ -1,6 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.IO.Ports;
-using System;
 using UnityEngine;
 
 public class RewardsController : ConfigurableComponent {
@@ -25,7 +25,7 @@ public class RewardsController : ConfigurableComponent {
 
     private const int buadRate = 9600;
     private static SerialPort rewardSerial;
-    
+
     public bool IsPortOpen { get; private set; }
 
     public bool RewardValveOn() {
@@ -62,6 +62,7 @@ public class RewardsController : ConfigurableComponent {
 
     public void Reward() {
         StartCoroutine(RewardRoutine());
+        Debug.Log("Reward Given");
     }
 
     private IEnumerator RewardRoutine() {

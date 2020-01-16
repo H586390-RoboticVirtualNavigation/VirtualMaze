@@ -30,14 +30,14 @@ public class FadeCanvas : MonoBehaviour {
     }
 
     public Coroutine AutoFadeIn() {
-        return StartCoroutine(FadeIn());
+        return StartCoroutine(FadeToScreen());
     }
 
     public Coroutine AutoFadeOut() {
-        return StartCoroutine(FadeOut());
+        return StartCoroutine(FadetoBlack());
     }
 
-    public IEnumerator FadeOut() {
+    public IEnumerator FadetoBlack() {
         if (isFadedOut) {
             yield break;
         }
@@ -55,7 +55,7 @@ public class FadeCanvas : MonoBehaviour {
         fadeOutDone = true;
     }
 
-    public IEnumerator FadeIn() {
+    public IEnumerator FadeToScreen() {
         if (!isFadedOut) {
             yield break;
         }

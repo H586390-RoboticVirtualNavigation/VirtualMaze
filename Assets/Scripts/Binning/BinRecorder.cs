@@ -1,10 +1,24 @@
 ﻿using HDF.PInvoke;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using Unity.Jobs;
 
 public class BinRecorder : IDisposable {
+
+    /* HDF.PInvoke is unable to derive its constants (via C# properties) on the Mac Versions of Unity.
+     * Acquiring the constants from the Windows version and hardcoding the values seems
+     * to be a valid workaround. -15 Jan 2019*/
+#if UNITY_EDITOR_OSX || UNITY_EDITOR_OSX
+    const long DATATYPE = 216172782113783851L;
+    const long H5P_DATASET_CREATE = 648518346341351433L;
+#else
+    static long H5T_NATIVE_DOUBLE = H5T.NATIVE_DOUBLE;
+    static long H5P_DATASET_CREATE = H5P.DATASET_CREATE;
+#endif
+
+
     const int RANK = 2; // number of dimensions in dataset
     const int NUM_OF_COLUMNS = 2;
     private readonly string DATASETNAME = "data";
@@ -14,7 +28,7 @@ public class BinRecorder : IDisposable {
     private int status;
     private long dataset;
 
-    public BinRecorder() {
+    public BinRecorder(string saveLocation) {
         ulong[] dims = { 0, NUM_OF_COLUMNS }; // row, col
         ulong[] maxDims = { H5S.UNLIMITED, H5S.UNLIMITED };
         ulong[] chunk_dims = { 1000, 2 };
@@ -23,10 +37,10 @@ public class BinRecorder : IDisposable {
         dataspace = H5S.create_simple(RANK, dims, maxDims);
 
         /* Create a new file. If file exists its contents will be overwritten. */
-        file = H5F.create("binData.hdf", H5F.ACC_TRUNC, H5P.DEFAULT, H5P.DEFAULT);
+        file = H5F.create($"{saveLocation}{Path.DirectorySeparatorChar}binData.hdf", H5F.ACC_TRUNC, H5P.DEFAULT, H5P.DEFAULT);
 
         /* Modify dataset creation properties, i.e. enable chunking  */
-        long prop = H5P.create(H5P.DATASET_CREATE);
+        long prop = H5P.create(H5P_DATASET_CREATE);
         status = H5P.set_chunk(prop, RANK, chunk_dims);
 
         /* Set fill value*/
@@ -34,13 +48,13 @@ public class BinRecorder : IDisposable {
 
         GCHandle h1 = GCHandle.Alloc(fillValue, GCHandleType.Pinned);
 
-        status = H5P.set_fill_value(prop, H5T.NATIVE_DOUBLE, h1.AddrOfPinnedObject());
+        status = H5P.set_fill_value(prop, H5T_NATIVE_DOUBLE, h1.AddrOfPinnedObject());
 
         h1.Free();
 
         /* Create a new dataset within the file using chunk
        creation properties.  */
-        dataset = H5D.create(file, DATASETNAME, H5T.NATIVE_DOUBLE, dataspace,
+        dataset = H5D.create(file, DATASETNAME, H5T_NATIVE_DOUBLE, dataspace,
                              H5P.DEFAULT, prop, H5P.DEFAULT);
 
         H5P.close(prop);
@@ -92,7 +106,7 @@ public class BinRecorder : IDisposable {
         GCHandle h = GCHandle.Alloc(dataArr, GCHandleType.Pinned);
 
         /* Write data to dataset */
-        status = H5D.write(dataset, H5T.NATIVE_DOUBLE, newDataMemspace, dataspace,
+        status = H5D.write(dataset, H5T_NATIVE_DOUBLE, newDataMemspace, dataspace,
                            H5P.DEFAULT, h.AddrOfPinnedObject());
 
         h.Free();

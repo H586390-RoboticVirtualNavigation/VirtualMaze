@@ -55,6 +55,9 @@ public class LevelController : MonoBehaviour {
     [SerializeField]
     private ParallelPort parallelPort = null;
 
+    [SerializeField]
+    private RewardsController rewardsCtrl = null;
+
     // cache waitForUnpause for efficiency
     private WaitUntil waitIfPaused;
 
@@ -122,45 +125,66 @@ public class LevelController : MonoBehaviour {
     IEnumerator MainLoop() {
         int trialCounter = 0;
         targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
-        bool firstTrial = true;
 
         yield return waitIfPaused;
         yield return FadeInAndStartSession();
 
+        PrepareNextTask(true);// first task always true
+
         while (trialCounter < numTrials) {
             // +1 since trailCounter is starts from 0
             SessionStatusDisplay.DisplayTrialNumber(trialCounter + 1);
-
-            // start the first task.
-            if (firstTrial) {
-                firstTrial = false;
-                PrepareNextTask(true);// first task always true
+            if (logicProvider.ShowCue(targetIndex)) {
+                yield return ShowCues();
             }
             else {
-                yield return InterTrial();
+                cueController.ShowHint();
             }
 
-            yield return ShowCues();
+            robotMovement.SetMovementActive(true); // enable robot
             yield return TrialTimer();
 
+            // disable reward
+            rewards[targetIndex].StopBlinking();
+            rewards[targetIndex].IsActivated = false;
+
             if (!success) {
+                targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
+
+                if (resetRobotPositionDuringInterTrial) {
+                    yield return FadeCanvas.fadeCanvas.AutoFadeOut();
+                }
+
+                cueController.HideHint();
+
                 float timeoutDuration = Session.timeoutDuration / 1000f;
-
-
                 yield return SessionStatusDisplay.Countdown("Timeout", timeoutDuration);
 
-                if (resetRobotPositionDuringInterTrial && restartOnTaskFail) {
-                    yield return FadeCanvas.fadeCanvas.AutoFadeOut();
-                    robotMovement.MoveToWaypoint(startWaypoint);
+                if (trialCounter < numTrials) {
+                    yield return InterTrial();
+                }
+
+                if (!restartOnTaskFail) {
+                    trialCounter++;
+                }
+
+                yield return PauseIfRequired();
+            }
+            else if (logicProvider.IsTrialCompleteAfterCurrentTask(success)) {
+                cueController.HideHint();
+                rewardsCtrl.Reward();
+                trialCounter++;
+                targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
+
+                yield return PauseIfRequired();
+
+                if (trialCounter < numTrials) {
+                    yield return InterTrial();
                 }
             }
 
-            if (logicProvider.IsTrialCompleteAfterReward(success)) {
-                trialCounter++;
-                // checks if should pause else continue.
-            }
+            PrepareNextTask(success); // continue with next task or reward.
 
-            PrepareNextTask(success);
             success = false; //reset the success
         }
 
@@ -181,7 +205,7 @@ public class LevelController : MonoBehaviour {
         robotMovement.MoveToWaypoint(startWaypoint);
 
         //fade in and wait for fadein to complete
-        yield return FadeCanvas.fadeCanvas.FadeIn();
+        yield return FadeCanvas.fadeCanvas.FadeToScreen();
     }
 
     /// <summary>
@@ -189,15 +213,14 @@ public class LevelController : MonoBehaviour {
     /// </summary>
     /// <param name="currentTaskSuccess">flag if the curent task is successful</param>
     private void PrepareNextTask(bool currentTaskSuccess) {
-        //restart trial unless indicated
-        if (!currentTaskSuccess && restartOnTaskFail) {
-            Console.Write("Restart Trial");
-        }
-        else {
-            // prepare next 
-            targetIndex = logicProvider.GetNextTarget(targetIndex, rewards);
-            cueController.SetTargetImage(rewards[targetIndex].cueImage);
-        }
+        // prepare next 
+        targetIndex = logicProvider.GetNextTarget(targetIndex, rewards);
+        cueController.SetTargetImage(logicProvider.GetTargetImage(rewards, targetIndex));
+
+        rewards[targetIndex].IsActivated = true; // enable reward
+        rewards[targetIndex].StartBlinking(); // start blinking if target has light
+        RewardArea.OnRewardTriggered += OnRewardTriggered;
+
     }
 
     private IEnumerator ShowCues() {
@@ -212,13 +235,7 @@ public class LevelController : MonoBehaviour {
         cueController.HideCue();
         cueController.ShowHint();
 
-        rewards[targetIndex].IsActivated = true; // enable reward
-        rewards[targetIndex].StartBlinking(); // start blinking if target has light
-        robotMovement.SetMovementActive(true); // enable robot
-
         onSessionTrigger.Invoke(SessionTrigger.CueOffsetTrigger, targetIndex);
-
-        RewardArea.OnRewardTriggered += OnRewardTriggered;
     }
 
     private void OnRewardTriggered(RewardArea rewardArea) {
@@ -240,20 +257,24 @@ public class LevelController : MonoBehaviour {
             robotMovement.MoveToWaypoint(startWaypoint);
         }
 
-        if (isPaused) {
-            Console.Write("ExperimentPaused");
-        }
-        yield return waitIfPaused;
+        yield return PauseIfRequired();
 
         //delay for inter trial window
         float countDownTime = Session.getTrailIntermissionDuration() / 1000.0f;
 
         yield return SessionStatusDisplay.Countdown("InterTrial Countdown", countDownTime);
 
-        if (resetRobotPositionDuringInterTrial) {
-            //fade in and wait for fade in to finish
-            yield return FadeCanvas.fadeCanvas.FadeIn();
+
+        //fade in and wait for fade in to finish
+        yield return FadeCanvas.fadeCanvas.FadeToScreen();
+
+    }
+
+    private IEnumerator PauseIfRequired() {
+        if (isPaused) {
+            Console.Write("ExperimentPaused");
         }
+        yield return waitIfPaused;
     }
 
     private IEnumerator TrialTimer() {
@@ -268,19 +289,13 @@ public class LevelController : MonoBehaviour {
 
         //disable robot movement
         robotMovement.SetMovementActive(false);
-        cueController.HideHint();
-
-        // disable reward
-        rewards[targetIndex].StopBlinking();
-        rewards[targetIndex].IsActivated = false;
 
         if (success) {
             onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
         }
         else {
             onSessionTrigger.Invoke(SessionTrigger.TimeoutTrigger, targetIndex);
-            //play audio
-            PlayerAudio.instance.PlayErrorClip();
+            PlayerAudio.instance.PlayErrorClip(); //play audio
         }
     }
 

@@ -9,7 +9,11 @@ public class ShuffledMazeLogic : MazeLogic {
         return order[index++];
     }
 
-    public override bool IsTrialCompleteAfterReward(bool currentTaskSuccess) {
+    public override Sprite GetTargetImage(RewardArea[] rewards, int targetIndex) {
+        return rewards[targetIndex].cueImage;
+    }
+
+    public override bool IsTrialCompleteAfterCurrentTask(bool currentTaskSuccess) {
         bool completed = (index == order.Length);
         if (completed) {
             Shuffle(order);
@@ -28,6 +32,10 @@ public class ShuffledMazeLogic : MazeLogic {
         }
 
         Shuffle(order);
+    }
+
+    public override bool ShowCue(int targetIndex) {
+        return true;
     }
 
     /// <summary>

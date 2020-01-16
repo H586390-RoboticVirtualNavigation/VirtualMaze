@@ -38,7 +38,9 @@ public class SessionContext {
         rewardsNumber = session.numTrials;
 
         foreach (RewardArea reward in rewards) {
-            posterLocations.Add(new PosterLocation(reward.target.position, reward.target.name));
+            if (reward.target != null) {
+                posterLocations.Add(new PosterLocation(reward.target.position, reward.target.name));
+            }
         }
 
         GetJoystickSettings(settings);

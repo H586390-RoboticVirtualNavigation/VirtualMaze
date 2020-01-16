@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using Random = UnityEngine.Random;
@@ -12,6 +13,7 @@ using Random = UnityEngine.Random;
 /// Override desired methods to implement more than 1 task per trial or any custom code.
 /// 
 /// </summary>
+[Obsolete("LevelController have taken over the task of this class", error: false)]
 public class BasicLevelController : MonoBehaviour {
     // Broadcasts when the session is finshed.
     public UnityEvent onSessionFinishEvent = new UnityEvent();
@@ -113,7 +115,7 @@ public class BasicLevelController : MonoBehaviour {
         robotMovement.MoveToWaypoint(startWaypoint);
 
         //fade in and wait for fadein to complete
-        yield return FadeCanvas.fadeCanvas.FadeIn();
+        yield return FadeCanvas.fadeCanvas.FadeToScreen();
 
         // start the first trial.
         StartCoroutine(GoNextTask(true));// first task always true
@@ -257,7 +259,7 @@ public class BasicLevelController : MonoBehaviour {
 
         if (resetRobotPositionDuringInterTrial) {
             //fade in and wait for fade in to finish
-            yield return FadeCanvas.fadeCanvas.FadeIn();
+            yield return FadeCanvas.fadeCanvas.FadeToScreen();
         }
     }
 
@@ -292,7 +294,7 @@ public class BasicLevelController : MonoBehaviour {
         yield return SessionStatusDisplay.Countdown("Timeout", timeoutDuration);
 
         if (resetRobotPositionDuringInterTrial && restartOnTaskFail) {
-            yield return FadeCanvas.fadeCanvas.FadeIn();
+            yield return FadeCanvas.fadeCanvas.FadeToScreen();
         }
 
         StartCoroutine(GoNextTask(false));

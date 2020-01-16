@@ -81,7 +81,10 @@ public class RewardArea : MonoBehaviour {
     }
 
     protected virtual void OnTriggerStay(Collider other) {
-        if (IsActivated) {
+        if (target == null && IsActivated) {
+            OnRewardTriggered?.Invoke(this);
+        }
+        else if (IsActivated) {
             CheckFieldOfView(other.transform);
         }
     }
