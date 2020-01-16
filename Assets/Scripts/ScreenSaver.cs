@@ -28,7 +28,7 @@ public class ScreenSaver : BasicGUIController {
     private WaitForEndOfFrame waitForEndOfFrame = new WaitForEndOfFrame();
 
     /* Number of Unity Frames to process in a batch */
-    private const int Frame_Per_Batch = 200;
+    private const int Frame_Per_Batch = 1;
 
     /* acceptable time difference between edf and session triggers for approximation of missing trigger */
     private const int Accepted_Time_Diff = 20;
@@ -379,7 +379,7 @@ public class ScreenSaver : BasicGUIController {
                 if (rCastJob != null) {
                     using (rCastJob) {
                         rCastJob.h.Complete(); //force completion if not done yet
-                        rCastJob.Process(currData, recorder, robot, isLastSampleInFrame, gazePointPool, false, GazeCanvas, viewport);
+                        rCastJob.Process(currData, recorder, robot, isLastSampleInFrame, gazePointPool, displayGazes: true, GazeCanvas, viewport);
                     }
                 }
                 Profiler.EndSample();

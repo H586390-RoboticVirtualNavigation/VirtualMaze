@@ -15981,7 +15981,7 @@ MonoBehaviour:
   robot: {fileID: 416224}
   fadeController: {fileID: 11434004}
   cueController: {fileID: 7489421944467076256}
-  GazeCanvas: {fileID: 0}
+  GazeCanvas: {fileID: 2190452814113358901}
   progressBar: {fileID: 6121307805537254465}
 --- !u!1 &6474123425981459034
 GameObject:
