@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -303,7 +304,7 @@ public class ScreenSaver : BasicGUIController {
 
         List<Fsample> sampleCache = new List<Fsample>();
         int numberOfTriggers = 0;
-        while (sessionReader.HasNext /*&& numberOfTriggers < 6*/) {
+        while (sessionReader.HasNext /*&& numberOfTriggers < 59*/) {
             numberOfTriggers++;
             //add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
             sessionFrames.Enqueue(sessionReader.CurrentData);
@@ -825,7 +826,9 @@ public class ScreenSaver : BasicGUIController {
     /// <param name="trigger">The trigger where the loading stops</param>
     /// <returns>Total time taken from one current trigger to the next</returns>
     private decimal LoadToNextTriggerSession(ISessionDataReader reader, Queue<SessionData> frames, out SessionData data) {
-        decimal totalTime = 0; // reader.CurrentData.timeDeltaMs;
+        /* Kahan Summation Algo for more accurate floating pt addition */
+        decimal totalTime = 0;//sum
+        decimal c = 0;
 
         data = null;
         bool isNextEventFound = false;
@@ -835,12 +838,20 @@ public class ScreenSaver : BasicGUIController {
         while (!isNextEventFound && reader.Next()) {
             data = reader.CurrentData;
             frames.Enqueue(data);
-            totalTime += data.timeDeltaMs;
+
+            KahanSummation(ref totalTime, ref c, data.timeDeltaMs);
 
             isNextEventFound = data.trigger != SessionTrigger.NoTrigger;
         }
 
         return totalTime;
+    }
+
+    [MethodImpl(MethodImplOptions.NoOptimization)]
+    private void KahanSummation(ref decimal sum, ref decimal c, decimal item) {
+        decimal y = item - c;
+        decimal t = sum + y;
+        c = (t - sum) - y;
     }
 
     private uint LoadToNextTriggerEdf(EyeDataReader reader, Queue<AllFloatData> fixations, out MessageEvent latest, out SessionTrigger edfTrigger) {
