@@ -11,7 +11,7 @@ public class BinRecorder : IDisposable {
      * Acquiring the constants from the Windows version and hardcoding the values seems
      * to be a valid workaround. -15 Jan 2019*/
 #if UNITY_EDITOR_OSX || UNITY_EDITOR_OSX
-    const long DATATYPE = 216172782113783851L;
+    const long H5T_NATIVE_DOUBLE = 216172782113783851L;
     const long H5P_DATASET_CREATE = 648518346341351433L;
 #else
     static long H5T_NATIVE_DOUBLE = H5T.NATIVE_DOUBLE;

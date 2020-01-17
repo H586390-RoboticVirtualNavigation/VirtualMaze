@@ -217,7 +217,7 @@ public class ScreenSaver : BasicGUIController {
         using (RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename)) {
             yield return ProcessSession(sessionReader, eyeReader, recorder, bRec);
         }
-
+        Console.Write($"s: {start}, e: {DateTime.Now}");
         Debug.LogError($"s: {start}, e: {DateTime.Now}");
 
         /* Clean up */
@@ -304,7 +304,7 @@ public class ScreenSaver : BasicGUIController {
 
         List<Fsample> sampleCache = new List<Fsample>();
         int numberOfTriggers = 0;
-        while (sessionReader.HasNext /*&& numberOfTriggers < 59*/) {
+        while (sessionReader.HasNext && numberOfTriggers < 59) {
             numberOfTriggers++;
             //add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
             sessionFrames.Enqueue(sessionReader.CurrentData);
@@ -312,11 +312,12 @@ public class ScreenSaver : BasicGUIController {
             decimal excessTime = EnqueueData(sessionFrames, sessionReader, fixations, eyeReader, out int status, out string reason);
 
             decimal timepassed = fixations.Peek().time;
+            decimal c1 = 0;
+            decimal c2 = 0;
 
             decimal timeOffset = excessTime / (sessionFrames.Count - 1);
 
             print($"timeError: {excessTime}|{timeOffset} for {sessionFrames.Count} frames @ {sessionReader.CurrentIndex} and {fixations.Count} fix");
-
             uint gazeTime = 0;
 
             decimal debugtimeOffset = 0;
@@ -335,9 +336,8 @@ public class ScreenSaver : BasicGUIController {
                     period = (sessionData.timeDeltaMs) - timeOffset;
                 }
 
-                debugtimeOffset += timeOffset;
-
-                timepassed += period;
+                KahanSummation(ref debugtimeOffset, ref c2, timeOffset);
+                KahanSummation(ref timepassed, ref c1, period);
 
                 MoveRobotTo(robot, sessionData);
 
@@ -852,6 +852,7 @@ public class ScreenSaver : BasicGUIController {
         decimal y = item - c;
         decimal t = sum + y;
         c = (t - sum) - y;
+        sum = t;
     }
 
     private uint LoadToNextTriggerEdf(EyeDataReader reader, Queue<AllFloatData> fixations, out MessageEvent latest, out SessionTrigger edfTrigger) {
