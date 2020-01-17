@@ -304,9 +304,11 @@ public class ScreenSaver : BasicGUIController {
 
         List<Fsample> sampleCache = new List<Fsample>();
         int numberOfTriggers = 0;
-        while (sessionReader.HasNext && numberOfTriggers < 59) {
+        while (sessionReader.HasNext /*&& numberOfTriggers < 59*/) {
             numberOfTriggers++;
-            //add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
+            /*add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
+             * and the previous frame raised a trigger for it to be printed in this frame*/
+
             sessionFrames.Enqueue(sessionReader.CurrentData);
 
             decimal excessTime = EnqueueData(sessionFrames, sessionReader, fixations, eyeReader, out int status, out string reason);
@@ -345,9 +347,9 @@ public class ScreenSaver : BasicGUIController {
 
                 List<Fsample> frameGazes = new List<Fsample>();
 
-
                 bool isLastSampleInFrame = false;
                 AllFloatData currData = null;
+
                 while (gazeTime <= timepassed && fixations.Count > 0) {
                     currData = fixations.Dequeue();
                     gazeTime = currData.time;
