@@ -24,25 +24,29 @@ public class RobotMovement : ConfigurableComponent {
         public bool isForwardEnabled;
         public bool isRightEnabled;
         public bool isLeftEnabled;
+        public bool isYInverted;
+        public bool isXInverted;
 
-        public Settings(
-            float rotationSpeed,
-            float movementSpeed,
-            bool isJoystickEnabled,
-            bool isReverseEnabled,
-            bool isForwardEnabled,
-            bool isRightEnabled,
-            bool isLeftEnabled
-            ) {
-
+        public Settings(float rotationSpeed,
+                        float movementSpeed,
+                        bool isJoystickEnabled,
+                        bool isReverseEnabled,
+                        bool isForwardEnabled,
+                        bool isRightEnabled,
+                        bool isLeftEnabled,
+                        bool isYInverted,
+                        bool isXInverted) {
             this.rotationSpeed = rotationSpeed;
             this.movementSpeed = movementSpeed;
 
-            this.isForwardEnabled = isForwardEnabled;
             this.isJoystickEnabled = isJoystickEnabled;
-            this.isLeftEnabled = isLeftEnabled;
-            this.isRightEnabled = isRightEnabled;
             this.isReverseEnabled = isReverseEnabled;
+            this.isForwardEnabled = isForwardEnabled;
+            this.isRightEnabled = isRightEnabled;
+            this.isLeftEnabled = isLeftEnabled;
+
+            this.isYInverted = isYInverted;
+            this.isXInverted = isXInverted;
         }
     }
 
@@ -60,6 +64,8 @@ public class RobotMovement : ConfigurableComponent {
     public bool IsLeftEnabled { get => settings.isLeftEnabled; set => settings.isLeftEnabled = value; }
     public bool IsRightEnabled { get => settings.isRightEnabled; set => settings.isRightEnabled = value; }
     public bool IsReverseEnabled { get => settings.isReverseEnabled; set => settings.isReverseEnabled = value; }
+    public bool IsXInverted { get => settings.isXInverted; internal set => settings.isXInverted = value; }
+    public bool IsYInverted { get => settings.isYInverted; internal set => settings.isYInverted = value; }
 
     //movement broadcaster
     public event RobotMovementEvent OnRobotMoved;
@@ -85,6 +91,13 @@ public class RobotMovement : ConfigurableComponent {
             ///Input.GetAxis has smoothing of input values which is unwanted
             vertical = Input.GetAxisRaw("Vertical");
             horizontal = Input.GetAxisRaw("Horizontal");
+        }
+
+        if (IsXInverted) {
+            horizontal *= -1;
+        }
+        if (IsYInverted) {
+            vertical *= -1;
         }
 
         if (ShouldRotate(horizontal)) {
@@ -162,7 +175,7 @@ public class RobotMovement : ConfigurableComponent {
     }
 
     public override ComponentSettings GetDefaultSettings() {
-        return new Settings(5f, 5f, true, true, true, true, true);
+        return new Settings(5f, 5f, true, true, true, true, true, false, false);
     }
 
     public override Type GetSettingsType() {

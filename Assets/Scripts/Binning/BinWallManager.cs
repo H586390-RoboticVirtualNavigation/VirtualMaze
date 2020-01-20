@@ -337,6 +337,11 @@ public class BinWallManager {
 
         binWall.CreateWall(config);
         pool.Add(binWall);
+
+        Profiler.BeginSample("PhysicsSimulation");
+        Physics.SyncTransforms();
+        Profiler.EndSample();
+
         return binWall;
     }
 }

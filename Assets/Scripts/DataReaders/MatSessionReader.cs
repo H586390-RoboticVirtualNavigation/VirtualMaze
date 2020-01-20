@@ -22,6 +22,8 @@ public class MatSessionReader : ISessionDataReader {
         this.file = file;
         numTrial = file.unityData.GetLength(1);
 
+        Debug.LogWarning(numTrial);
+
         trialIndex = new int[file.unityTriggersIndex.GetLength(1)];
         for (int i = 0; i < trialIndex.Length - 1; i++) {
             //store the index of all starttrial triggers

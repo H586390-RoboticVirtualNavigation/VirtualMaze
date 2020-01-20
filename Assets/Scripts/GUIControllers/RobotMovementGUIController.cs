@@ -1,4 +1,5 @@
-﻿using UnityEngine.UI;
+﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class RobotMovementGUIController : DataGUIController {
     //drag and drop respective GameObjects with corresponding components in Unity Editor.
@@ -13,10 +14,17 @@ public class RobotMovementGUIController : DataGUIController {
     public Toggle isLeftEnabledToggle;
     public Toggle isRightEnabledToggle;
 
+    [SerializeField]
+    private Toggle isXInverted;
+
+    [SerializeField]
+    private Toggle isYInverted;
+
     private void Awake() {
         rotationSpeedSlider.onValueChanged.AddListener(OnRotationSpeedChanged);
         movementSpeedSlider.onValueChanged.AddListener(OnMovementSpeedChanged);
 
+        robotMovement.OnConfigChanged.AddListener(UpdateSettingsGUI);
     }
 
     public override void UpdateSettingsGUI() {
@@ -28,6 +36,9 @@ public class RobotMovementGUIController : DataGUIController {
         isReverseEnabledToggle.isOn = robotMovement.IsReverseEnabled;
         isLeftEnabledToggle.isOn = robotMovement.IsLeftEnabled;
         isRightEnabledToggle.isOn = robotMovement.IsRightEnabled;
+
+        isXInverted.isOn = robotMovement.IsXInverted;
+        isYInverted.isOn = robotMovement.IsYInverted;
     }
 
     //listeners for UI GameObjects, drag and drop in respective Child UI Components
@@ -57,6 +68,14 @@ public class RobotMovementGUIController : DataGUIController {
 
     public void OnRightEnableToggled(bool value) {
         robotMovement.IsRightEnabled = value;
+    }
+
+    public void OnXInvertToggled(bool value) {
+        robotMovement.IsXInverted = value;
+    }
+
+    public void OnYInvertToggled(bool value) {
+        robotMovement.IsYInverted = value;
     }
     //End of Listeners for UI Objects
 }

@@ -4,6 +4,8 @@
     public readonly uint[,] timestamps;
     public readonly float[,] eyePos;
 
+    public int Length { get => timestamps.Length; }
+
     public EyelinkMatFile(string _filename) : base(_filename) {
         using (HDF5Group data = HDFHelper.GetMyDataGroup(this)) {
             trial_index = HDFHelper.GetDataMatrix<double>(data, "trial_timestamps");
@@ -23,4 +25,6 @@
 
         //trial_codes = (int[,])grp.Datasets["trial_codes"].GetData();
     }
+
+
 }

@@ -176,12 +176,14 @@ public class ScreenSaver : BasicGUIController {
     public IEnumerator ProcessSessionDataTask(string sessionPath, string edfPath, string toFolderPath) {
         /* Setup */
         H5.close();
+        H5.open();
         fadeController.gameObject.SetActive(false);
         CueBinCollider.SetActive(true);
         HintBinCollider.SetActive(true);
-        Physics.autoSimulation = false;
 
         EyeDataReader eyeReader = null;
+
+        Physics.SyncTransforms();
 
         if (isMatFile(edfPath)) {
             try {
@@ -205,6 +207,8 @@ public class ScreenSaver : BasicGUIController {
         progressBar.gameObject.SetActive(true);
 
         cueController.SetMode(CueController.Mode.Recording);
+        cueController.UpdatePosition(robot);
+        Physics.SyncTransforms();
 
         yield return PrepareScene("Double Tee");
 
@@ -225,7 +229,8 @@ public class ScreenSaver : BasicGUIController {
         fadeController.gameObject.SetActive(true);
         progressBar.gameObject.SetActive(false);
         cueController.SetMode(CueController.Mode.Experiment);
-        Physics.autoSimulation = true;
+        CueBinCollider.SetActive(false);
+        HintBinCollider.SetActive(false);
         //SessionStatusDisplay.ResetStatus();
 
         print($"{minGaze}, {maxGaze}");
@@ -304,7 +309,7 @@ public class ScreenSaver : BasicGUIController {
 
         List<Fsample> sampleCache = new List<Fsample>();
         int numberOfTriggers = 0;
-        while (sessionReader.HasNext /*&& numberOfTriggers < 59*/) {
+        while (sessionReader.HasNext && numberOfTriggers < 29) {
             numberOfTriggers++;
             /*add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
              * and the previous frame raised a trigger for it to be printed in this frame*/
@@ -364,9 +369,8 @@ public class ScreenSaver : BasicGUIController {
                     }
                 }
 
-                Profiler.BeginSample("PhysicsSimulation");
+                Profiler.BeginSample("SyncTransform");
                 Physics.SyncTransforms();
-                Physics.Simulate(Time.fixedDeltaTime);
                 Profiler.EndSample();
 
                 /* process binsamples and let the raycast run in Jobs */
@@ -472,6 +476,7 @@ public class ScreenSaver : BasicGUIController {
 
         public void Process(AllFloatData currData, RayCastRecorder recorder, Transform robot, bool isLastSampleInFrame, GazePointPool gazePointPool, bool displayGazes, RectTransform GazeCanvas, Camera viewport) {
             int lastGazeIndex = numSamples - 2;
+            Image img = null;
             for (int i = 0; i < numSamples; i++) {
                 if (i == lastGazeIndex && currData is MessageEvent) {
                     recorder.FlagEvent(((MessageEvent)currData).message);
@@ -504,11 +509,11 @@ public class ScreenSaver : BasicGUIController {
                         );
                 }
                 if (displayGazes) {
-                    Image img = gazePointPool.AddGazePoint(GazeCanvas, viewport, fsample.RightGaze);
-                    if (img != null && i == lastGazeIndex) {
-                        img.color = Color.red;
-                    }
+                    img = gazePointPool.AddGazePoint(GazeCanvas, viewport, fsample.RightGaze);
                 }
+            }
+            if (img != null) {
+                img.color = Color.red;
             }
         }
         public void Dispose() {
