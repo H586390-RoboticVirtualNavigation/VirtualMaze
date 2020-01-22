@@ -107,28 +107,30 @@ public class RewardArea : MonoBehaviour {
 
         float angle = Vector3.Angle(direction, robot.forward);
 
-        //1.588 is estimated by logging the distance of the target and robot 
+        //1.588 offset is estimated by logging the distance of the target and robot 
         //position when the robot is pressing itself against the target
         float distanceWithOffset = requiredDistance + 1.588f;
 
         //uncomment to see the required view in the scene tab
-        Vector3 left = Quaternion.AngleAxis(-requiredViewAngle / 2f, Vector3.up) * robot.forward * distanceWithOffset;
-        Vector3 right = Quaternion.AngleAxis(requiredViewAngle / 2f, Vector3.up) * robot.forward * distanceWithOffset;
-        Debug.DrawRay(robot.position, left, Color.black);
-        Debug.DrawRay(robot.position, right, Color.black);
-        Debug.DrawRay(robot.position, direction.normalized * distanceWithOffset, Color.cyan);
+        if (Debug.isDebugBuild) {
+            Vector3 left = Quaternion.AngleAxis(-requiredViewAngle / 2f, Vector3.up) * robot.forward * distanceWithOffset;
+            Vector3 right = Quaternion.AngleAxis(requiredViewAngle / 2f, Vector3.up) * robot.forward * distanceWithOffset;
+            Debug.DrawRay(robot.position, left, Color.black);
+            Debug.DrawRay(robot.position, right, Color.black);
+            Debug.DrawRay(robot.position, direction.normalized * distanceWithOffset, Color.cyan);
+        }
 
         //check if in view angle
         if (angle < requiredViewAngle * 0.5f) {
             //checks if close enough
             if (Vector3.Distance(target.position, robot.position) <= distanceWithOffset) {
-                Debug.Log("Reward!!!");
+                //Debug.Log("Reward!!!");
                 OnRewardTriggered?.Invoke(this);
             }
-            else {
-                if (Debug.isDebugBuild)
-                    Debug.Log("inView!!!" + Vector3.Distance(target.position, robot.position) + " " + distanceWithOffset);
-            }
+            //else {
+            //    if (Debug.isDebugBuild)
+            //        Debug.Log("inView!!!" + Vector3.Distance(target.position, robot.position) + " " + distanceWithOffset);
+            //}
         }
     }
 

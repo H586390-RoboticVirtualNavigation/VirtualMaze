@@ -19,12 +19,19 @@ public class CueController : MonoBehaviour {
     [SerializeField]
     private RobotMovement robot = null;
 
-    //offset with respect to the robot position.
-    private Vector3 forwardOffset = new Vector3(0, 0, 0.5f);
-    private Vector3 heightOffset = new Vector3(0, 1.35f, 0);
+
 
     //follows only the X rotation of the player camera
-    private Quaternion rotationOffset = Quaternion.Euler(12f, 0, 0);
+
+    private static Quaternion rotationOffset = Quaternion.Euler(12f, 0, 0);
+    private static Vector3 heightOffset = new Vector3(0, 1.35f, 0);
+    private static readonly Vector3 positionOffset;
+
+    static CueController() {
+        //offset with respect to the robot position.
+        Vector3 forwardOffset = new Vector3(0, 0, 0.5f);
+        positionOffset = rotationOffset * forwardOffset;
+    }
 
     public enum Mode {
         Recording,
@@ -74,9 +81,9 @@ public class CueController : MonoBehaviour {
     }
 
     public void UpdatePosition(Transform robot) {
-        Vector3 a = rotationOffset * forwardOffset; // apply robot's current rotation to position
-        a = robot.rotation * a;
-        transform.position = robot.position + a + heightOffset; //set canvas location
+        Vector3 relativePosition = robot.rotation * positionOffset;
+
+        transform.position = robot.position + relativePosition + heightOffset; //set canvas location
 
         transform.rotation = robot.rotation * rotationOffset; //apply camera X rotation to canvas rotation
     }

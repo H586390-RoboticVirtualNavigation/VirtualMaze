@@ -7,7 +7,7 @@ using ELink = SREYELINKLib.EyeLink;
 
 
 public static class EyeLink {
-#if (UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX)
+#if (UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX)
     private static bool openDummy = true;
 
     public static void TryEyemsg_Printf(String msg) {

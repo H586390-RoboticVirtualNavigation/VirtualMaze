@@ -73,6 +73,7 @@ public class LevelController : MonoBehaviour {
         RewardArea.OnEnteredTriggerZone += OnZoneEnter;
         RewardArea.OnExitedTriggerZone += OnZoneExit;
 
+
         //Prepare Eyelink
         EyeLink.Initialize();
         onSessionTrigger.AddListener(EyeLink.OnSessionTrigger);
@@ -85,11 +86,15 @@ public class LevelController : MonoBehaviour {
     }
 
     private void OnZoneExit(RewardArea rewardArea) {
-        OnExitedTriggerZone?.Invoke(rewardArea, rewardArea.Equals(rewards[targetIndex]));
+        if (targetIndex != MazeLogic.NullRewardIndex) {
+            OnExitedTriggerZone?.Invoke(rewardArea, rewardArea.Equals(rewards[targetIndex]));
+        }
     }
 
     private void OnZoneEnter(RewardArea rewardArea) {
-        OnEnteredTriggerZone?.Invoke(rewardArea, rewardArea.Equals(rewards[targetIndex]));
+        if (targetIndex != MazeLogic.NullRewardIndex) {
+            OnEnteredTriggerZone?.Invoke(rewardArea, rewardArea.Equals(rewards[targetIndex]));
+        }
     }
 
     //stop and reset levelcontroller

@@ -613,16 +613,17 @@ public class ScreenSaver : BasicGUIController {
 
         int modder = Mathf.FloorToInt(BinWallManager.secondaryOffset.Count / Mathf.Lerp(BinWallManager.secondaryOffset.Count * 0.50f, BinWallManager.secondaryOffset.Count, maxSqDist / (mapper.MaxPossibleSqDistance())));
 
-        JobHandle h = default;
+        JobHandle latestHandle = default;
 
         foreach (Fsample fs in sampleCache) {
             Profiler.BeginSample("BinSingleGaze");
 
-            BinWallManager.BinGazeJobData jobData = BinWallManager.BinGaze(fs.RightGaze, fs.time, viewport, h, modder);
+            BinWallManager.BinGazeJobData jobData = BinWallManager.BinGaze(fs.RightGaze, fs.time, viewport, latestHandle, modder);
             if (jobData != null) {
-                h = jobData.h;
+                latestHandle = jobData.h;
                 jobQueue.Enqueue(jobData);
             }
+
             Profiler.EndSample();
         }
         Profiler.EndSample();
