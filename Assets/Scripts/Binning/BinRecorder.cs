@@ -11,7 +11,7 @@ public class BinRecorder : IDisposable {
     /* HDF.PInvoke is unable to derive its constants (via C# properties) on the Mac Versions of Unity.
      * Acquiring the constants from the Windows version and hardcoding the values seems
      * to be a valid workaround. -15 Jan 2019*/
-#if UNITY_EDITOR_OSX || UNITY_EDITOR_OSX
+#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
     const long H5T_NATIVE_DOUBLE = 216172782113783851L;
     const long H5P_DATASET_CREATE = 648518346341351433L;
 #else
