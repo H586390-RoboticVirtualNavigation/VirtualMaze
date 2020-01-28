@@ -5,6 +5,10 @@ using UnityEngine;
 using UnityEditor.Callbacks;
 using UnityEditor;
 
+/// <summary>
+/// Refer to https://github.com/surban/HDF.PInvoke/blob/master/HDF5/H5DLLImporter.cs
+/// for the locations where the HDF.PInvoke searchs for HDF5 libraries.
+/// </summary>
 public class PostBuildScript
 {
     [PostProcessBuild(1)]
@@ -17,6 +21,10 @@ public class PostBuildScript
 
             case BuildTarget.StandaloneOSX:
                 MacCopyLibs(Path.GetDirectoryName(pathToBuiltProject));
+                break;
+
+            case BuildTarget.StandaloneLinux64:
+                LinuxCopyLibs(Path.GetDirectoryName(pathToBuiltProject));
                 break;
 
             default:
@@ -38,7 +46,7 @@ public class PostBuildScript
 
         string pluginsPath = Path.Combine(dataPath, "Plugins");
 
-        string destPath = Path.Combine(dataPath, @"Resources/Runtimes/osx-x64/native/");
+        string destPath = Path.Combine(dataPath, @"Resources/runtimes/osx-x64/native/");
         Directory.CreateDirectory(destPath);
 
         CopyFolder(pluginsPath, destPath);
@@ -52,6 +60,23 @@ public class PostBuildScript
         Directory.CreateDirectory(monoPath);
 
         CopyFolder(pluginsPath, monoPath);
+    }
+
+    private static void LinuxCopyLibs(string pathToBuiltProject) {
+        //change the app name as required. "*.app"
+        string dataPath = Path.Combine(pathToBuiltProject, "VirtualMaze_Data");
+
+        if (!Directory.Exists(dataPath)) {
+            Debug.LogError("Save the build as \"VirtualMaze\"! Build the game from File > Build Settings > Build to rename the Build!");
+            throw new System.Exception("Unsupported buildName. Rename to VirtualMaze or change the PostBuildScript.cs");
+        }
+
+        string pluginsPath = Path.Combine(dataPath, "Plugins");
+
+        string destPath = Path.Combine(pathToBuiltProject, @"runtimes/linux-x64/native/");
+        Directory.CreateDirectory(destPath);
+
+        CopyFolder(pluginsPath, destPath);
     }
 
     private static void CopyFolder(string from, string to)

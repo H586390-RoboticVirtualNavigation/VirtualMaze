@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace Eyelink.EdfAccess {
     public class EdfAccessWrapper {
         //see https://docs.unity3d.com/Manual/PlatformDependentCompilation.html 
-#if (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN)
+#if (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX)
         const string dll = "edfapi"; //name of dll file. not including extension
 #elif (UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX)
         const string dll = "edfapiMac"; //name of bundle file. not including extension
