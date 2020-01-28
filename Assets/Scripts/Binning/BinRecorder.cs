@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using Unity.Jobs;
+using UnityEngine;
 
 public class BinRecorder : IDisposable {
 
@@ -25,10 +26,23 @@ public class BinRecorder : IDisposable {
 
     private long dataspace;
     private long file;
-    private int status;
+    private int _status;
     private long dataset;
 
+    public int Status {
+        get => _status;
+        set {
+            if (value == -1) {
+                throw new Exception($"HDFLibrary Error! Status = {value}, \"Statics\" used, H5TDouble: {H5T.NATIVE_DOUBLE} H5P_DSET_CREATE {H5P.DATASET_CREATE}");
+            }
+            _status = value;
+        }
+    }
+
     public BinRecorder(string saveLocation) {
+        Debug.Log($"H5TDouble {H5T.NATIVE_DOUBLE}");
+        Debug.Log($"H5PDAtaSetCreate {H5P.DATASET_CREATE}");
+
         ulong[] dims = { 0, NUM_OF_COLUMNS }; // row, col
         ulong[] maxDims = { H5S.UNLIMITED, H5S.UNLIMITED };
         ulong[] chunk_dims = { 1000, 2 };
@@ -41,14 +55,14 @@ public class BinRecorder : IDisposable {
 
         /* Modify dataset creation properties, i.e. enable chunking  */
         long prop = H5P.create(H5P_DATASET_CREATE);
-        status = H5P.set_chunk(prop, RANK, chunk_dims);
+        Status = H5P.set_chunk(prop, RANK, chunk_dims);
 
         /* Set fill value*/
         double fillValue = 0;
 
         GCHandle h1 = GCHandle.Alloc(fillValue, GCHandleType.Pinned);
 
-        status = H5P.set_fill_value(prop, H5T_NATIVE_DOUBLE, h1.AddrOfPinnedObject());
+        Status = H5P.set_fill_value(prop, H5T_NATIVE_DOUBLE, h1.AddrOfPinnedObject());
 
         h1.Free();
 
@@ -99,14 +113,14 @@ public class BinRecorder : IDisposable {
         ulong[] dataDim = { (ulong)datalen, NUM_OF_COLUMNS };
         ulong[] offset = new ulong[RANK] { currDatasetDim[0], 0 };
 
-        status = H5S.select_hyperslab(dataspace, H5S.seloper_t.SET, offset, null, dataDim, null);
+        Status = H5S.select_hyperslab(dataspace, H5S.seloper_t.SET, offset, null, dataDim, null);
 
         long newDataMemspace = H5S.create_simple(RANK, dataDim, null);
 
         GCHandle h = GCHandle.Alloc(dataArr, GCHandleType.Pinned);
 
         /* Write data to dataset */
-        status = H5D.write(dataset, H5T_NATIVE_DOUBLE, newDataMemspace, dataspace,
+        Status = H5D.write(dataset, H5T_NATIVE_DOUBLE, newDataMemspace, dataspace,
                            H5P.DEFAULT, h.AddrOfPinnedObject());
 
         h.Free();
