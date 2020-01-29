@@ -14,9 +14,9 @@ public abstract class MazeLogic : ScriptableObject, IMazeLogicProvider {
         Destroy(this);
     }
 
-    public virtual void ProcessReward(RewardArea rewardArea) {
+    public virtual void ProcessReward(RewardArea rewardArea, bool success) {
         if (rewardArea.target != null) {
-            Console.Write(rewardArea.target.name); // log reward name
+            Console.Write($"{rewardArea.target.name} : {success}"); // log reward name
         }
     }
 }

@@ -4,6 +4,9 @@ using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 
+/// <summary>
+/// Random script for quick testing of code. Free to change
+/// </summary>
 public class InterfaceTest : MonoBehaviour, IDisposable {
     int layerMaskRing = 0, layerMaskArea = 0;
 

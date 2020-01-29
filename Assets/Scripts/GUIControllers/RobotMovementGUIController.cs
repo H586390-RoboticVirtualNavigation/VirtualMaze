@@ -15,16 +15,16 @@ public class RobotMovementGUIController : DataGUIController {
     public Toggle isRightEnabledToggle;
 
     [SerializeField]
-    private Toggle isXInverted;
+    private Toggle isXInverted = null;
 
     [SerializeField]
-    private Toggle isYInverted;
+    private Toggle isYInverted = null;
 
     private void Awake() {
         rotationSpeedSlider.onValueChanged.AddListener(OnRotationSpeedChanged);
         movementSpeedSlider.onValueChanged.AddListener(OnMovementSpeedChanged);
 
-        robotMovement.OnConfigChanged.AddListener(UpdateSettingsGUI);
+        //robotMovement.OnConfigChanged.AddListener(UpdateSettingsGUI);
     }
 
     public override void UpdateSettingsGUI() {

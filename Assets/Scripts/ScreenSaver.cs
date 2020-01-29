@@ -83,6 +83,8 @@ public class ScreenSaver : BasicGUIController {
             ChooseEyelinkFile(@"D:\Desktop\NUS\FYP\LatestData");
             ChooseSession(@"D:\Desktop\NUS\FYP\LatestData");
             ChooseFolder(@"D:\Desktop\NUS\FYP\LatestData");
+
+            Debug.Log(Path.GetDirectoryName(Uri.UnescapeDataString(new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).AbsolutePath)));
         }
     }
 
@@ -173,7 +175,7 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    public IEnumerator ProcessSessionDataTask(string sessionPath, string edfPath, string toFolderPath) {
+    public IEnumerator ProcessSessionDataTask(string sessionPath, string edfPath, string toFolderPath, BinMapper mapper) {
         /* Setup */
         H5.close();
         H5.open();
@@ -219,7 +221,7 @@ public class ScreenSaver : BasicGUIController {
 
         using (BinRecorder bRec = new BinRecorder(toFolderPath))
         using (RayCastRecorder recorder = new RayCastRecorder(toFolderPath, filename)) {
-            yield return ProcessSession(sessionReader, eyeReader, recorder, bRec);
+            yield return ProcessSession(sessionReader, eyeReader, recorder, bRec, mapper);
         }
         Console.Write($"s: {start}, e: {DateTime.Now}");
         Debug.LogError($"s: {start}, e: {DateTime.Now}");
@@ -284,7 +286,7 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    private IEnumerator ProcessSession(ISessionDataReader sessionReader, EyeDataReader eyeReader, RayCastRecorder recorder, BinRecorder binRecorder) {
+    private IEnumerator ProcessSession(ISessionDataReader sessionReader, EyeDataReader eyeReader, RayCastRecorder recorder, BinRecorder binRecorder, BinMapper mapper) {
         int frameCounter = 0;
         int trialCounter = 1;
 
@@ -309,7 +311,7 @@ public class ScreenSaver : BasicGUIController {
 
         List<Fsample> sampleCache = new List<Fsample>();
         int numberOfTriggers = 0;
-        while (sessionReader.HasNext && numberOfTriggers < 29) {
+        while (sessionReader.HasNext/* && numberOfTriggers < 29*/) {
             numberOfTriggers++;
             /*add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
              * and the previous frame raised a trigger for it to be printed in this frame*/
@@ -380,7 +382,7 @@ public class ScreenSaver : BasicGUIController {
 
                 /* Start the binning process while rCastJob is running */
                 Profiler.BeginSample("Binning");
-                BinGazes(binSamples, binRecorder, jobQueue);
+                BinGazes(binSamples, binRecorder, jobQueue, mapper);
                 Profiler.EndSample();
 
                 Profiler.BeginSample("RaycastingSingleProcess");
@@ -578,12 +580,12 @@ public class ScreenSaver : BasicGUIController {
         }
     }
 
-    private BinMapper mapper = new DoubleTeeBinMapper(40);
+
 
     private float minGaze = float.PositiveInfinity;
     private float maxGaze = float.NegativeInfinity;
 
-    private void BinGazes(List<Fsample> sampleCache, BinRecorder recorder, Queue<BinWallManager.BinGazeJobData> jobQueue) {
+    private void BinGazes(List<Fsample> sampleCache, BinRecorder recorder, Queue<BinWallManager.BinGazeJobData> jobQueue, BinMapper mapper) {
         List<Vector2> gazeCache = new List<Vector2>();
 
         Vector2 prev = Vector2.negativeInfinity;

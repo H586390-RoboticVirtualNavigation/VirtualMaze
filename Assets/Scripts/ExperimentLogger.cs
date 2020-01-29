@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 /// <summary>
 /// Logs information regarding the Experiment in to a text file.
@@ -128,6 +129,7 @@ public class ExperimentLogger {
     }
 
     public void LogMovement(SessionTrigger trigger, int rewardIndex, Transform robot) {
+        Profiler.BeginSample("Log Trigger");
         WriteLine(
             string.Format(
                 Format_LogRobotMovement,
@@ -138,7 +140,7 @@ public class ExperimentLogger {
                 robot.rotation.eulerAngles.y
             )
         );
-        fs.Flush();
+        Profiler.EndSample();
     }
 
     private void WriteHeader(StreamWriter fs, SessionContext context) {

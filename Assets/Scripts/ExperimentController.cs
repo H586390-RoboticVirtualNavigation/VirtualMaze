@@ -144,13 +144,14 @@ public class ExperimentController : ConfigurableComponent {
                 StopExperiment();
             }
 
-            //start the scene
-            yield return lvlController.StartSession(session);
             //start logging robotmovement
             robot.OnRobotMoved += OnRobotMoved;
 
-            yield return new WaitWhile(() => !sessionEnded);
-            sessionEnded = false;
+            //start the scene
+            yield return lvlController.StartSession(session);
+
+            robot.OnRobotMoved -= OnRobotMoved;
+            logger.CloseLog();
         }
 
         StopExperiment();
@@ -163,8 +164,6 @@ public class ExperimentController : ConfigurableComponent {
             StopExperiment();
         }
         else {
-
-            lvlController.onSessionFinishEvent.AddListener(OnSessionEnd);
             lvlController.onSessionTrigger.AddListener(OnSessionTriggered);
             lvlController.isPaused = isPaused;
             lvlController.resetRobotPositionDuringInterTrial = resetPositionOnTrial;
@@ -184,14 +183,6 @@ public class ExperimentController : ConfigurableComponent {
         started = false;
         //Clean up when Experiment is stopped adruptly.
         logger.CloseLog();
-    }
-
-    bool sessionEnded = false;
-
-    private void OnSessionEnd() {
-        robot.OnRobotMoved -= OnRobotMoved;
-        logger.CloseLog();
-        sessionEnded = true;
     }
 
     private void OnRobotMoved(Transform t) {

@@ -79,7 +79,7 @@ public class RewardsController : ConfigurableComponent {
     }
 
     public override ComponentSettings GetCurrentSettings() {
-        return new Settings(portNum, rewardDurationMilliSecs, RewardArea.requiredViewAngle, RewardArea.requiredViewAngle);
+        return new Settings(portNum, rewardDurationMilliSecs, RewardArea.requiredViewAngle, RewardArea.requiredDistance);
     }
 
     public override ComponentSettings GetDefaultSettings() {

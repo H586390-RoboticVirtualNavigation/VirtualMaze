@@ -20,8 +20,13 @@ public class LevelController : MonoBehaviour {
     public delegate void OnExitTriggerZone(RewardArea rewardArea, bool isTarget);
     public static event OnExitTriggerZone OnExitedTriggerZone;
 
-    // Broadcasts when the session is finshed.
-    public UnityEvent onSessionFinishEvent = new UnityEvent();
+    /// <summary>
+    /// Triggers when the player stays in the reward area
+    /// </summary>
+    /// <param name="rewardArea">RewardArea of the trigger zone entered</param>
+    /// <param name="isTarget">If the area the current target</param>
+    public delegate void InTriggerZone(RewardArea rewardArea, bool isTarget);
+    public static event InTriggerZone InTriggerZoneListener;
 
     // Broadcasts when any sessionTriggers happens.
     public SessionTriggerEvent onSessionTrigger = new SessionTriggerEvent();
@@ -72,6 +77,7 @@ public class LevelController : MonoBehaviour {
 
         RewardArea.OnEnteredTriggerZone += OnZoneEnter;
         RewardArea.OnExitedTriggerZone += OnZoneExit;
+        RewardArea.InTriggerZoneListener += WhileInTriggerZone;
 
 
         //Prepare Eyelink
@@ -80,9 +86,16 @@ public class LevelController : MonoBehaviour {
         onSessionTrigger.AddListener(parallelPort.TryWriteTrigger);
     }
 
+    private void WhileInTriggerZone(RewardArea rewardArea) {
+        if (targetIndex != MazeLogic.NullRewardIndex) {
+            InTriggerZoneListener?.Invoke(rewardArea, rewardArea.Equals(rewards[targetIndex]));
+        }
+    }
+
     private void OnDestroy() {
         RewardArea.OnEnteredTriggerZone -= OnZoneEnter;
         RewardArea.OnExitedTriggerZone -= OnZoneExit;
+        RewardArea.InTriggerZoneListener -= WhileInTriggerZone;
     }
 
     private void OnZoneExit(RewardArea rewardArea) {
@@ -99,11 +112,14 @@ public class LevelController : MonoBehaviour {
 
     //stop and reset levelcontroller
     public void StopLevel() {
+        numTrials = 0;
+        success = false;
+        targetIndex = MazeLogic.NullRewardIndex;
         logicProvider?.Cleanup(rewards);
         cueController.HideAll();
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
-        StopAllCoroutines();
         FadeCanvas.fadeCanvas.AutoFadeOut();
+        StopAllCoroutines();
     }
 
     public IEnumerator StartSession(Session session) {
@@ -124,17 +140,20 @@ public class LevelController : MonoBehaviour {
 
         //disable robot movement
         robotMovement.SetMovementActive(false);
-        StartCoroutine(MainLoop());
+        yield return MainLoop();
     }
 
     IEnumerator MainLoop() {
         int trialCounter = 0;
         targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
 
+        /* If this is true, it means that this session has multiple tasks and should restart fully */
+        bool shouldFullyRestart = false;
+
         yield return waitIfPaused;
         yield return FadeInAndStartSession();
 
-        PrepareNextTask(true);// first task always true
+        PrepareNextTask(true); //first task is always true
 
         while (trialCounter < numTrials) {
             // +1 since trailCounter is starts from 0
@@ -150,11 +169,21 @@ public class LevelController : MonoBehaviour {
             yield return TrialTimer();
 
             // disable reward
-            rewards[targetIndex].StopBlinking();
-            rewards[targetIndex].IsActivated = false;
+            try {
+                rewards[targetIndex].StopBlinking();
+                rewards[targetIndex].IsActivated = false;
+            }
+            catch {
+                Debug.LogError(targetIndex);
+                throw;
+            }
+
+            logicProvider.ProcessReward(rewards[targetIndex], success);
 
             if (!success) {
-                targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
+                if (shouldFullyRestart) {
+                    targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
+                }
 
                 if (resetRobotPositionDuringInterTrial) {
                     yield return FadeCanvas.fadeCanvas.AutoFadeOut();
@@ -175,20 +204,29 @@ public class LevelController : MonoBehaviour {
 
                 yield return PauseIfRequired();
             }
-            else if (logicProvider.IsTrialCompleteAfterCurrentTask(success)) {
-                cueController.HideHint();
-                rewardsCtrl.Reward();
-                trialCounter++;
-                targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
+            else {
+                if (logicProvider.IsTrialCompleteAfterCurrentTask(success)) {
+                    cueController.HideHint();
+                    rewardsCtrl.Reward();
+                    trialCounter++;
 
-                yield return PauseIfRequired();
+                    if (shouldFullyRestart) {
+                        targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
+                    }
 
-                if (trialCounter < numTrials) {
-                    yield return InterTrial();
+                    yield return PauseIfRequired();
+
+                    if (trialCounter < numTrials) {
+                        yield return InterTrial();
+                    }
+                }
+                else {
+                    /* Success detected but trial has not ended */
+                    shouldFullyRestart = true;
                 }
             }
 
-            PrepareNextTask(success); // continue with next task or reward.
+            PrepareNextTask(success || !restartOnTaskFail || targetIndex == MazeLogic.NullRewardIndex); // continue with next task or reward.
 
             success = false; //reset the success
         }
@@ -201,7 +239,6 @@ public class LevelController : MonoBehaviour {
             yield return null;
         }
         StopLevel();
-        onSessionFinishEvent.Invoke();
     }
 
     private IEnumerator FadeInAndStartSession() {
@@ -216,11 +253,12 @@ public class LevelController : MonoBehaviour {
     /// <summary>
     /// Method to decide the next target.
     /// </summary>
-    /// <param name="currentTaskSuccess">flag if the curent task is successful</param>
-    private void PrepareNextTask(bool currentTaskSuccess) {
+    private void PrepareNextTask(bool success) {
         // prepare next 
-        targetIndex = logicProvider.GetNextTarget(targetIndex, rewards);
-        cueController.SetTargetImage(logicProvider.GetTargetImage(rewards, targetIndex));
+        if (success) {
+            targetIndex = logicProvider.GetNextTarget(targetIndex, rewards);
+            cueController.SetTargetImage(logicProvider.GetTargetImage(rewards, targetIndex));
+        }
 
         rewards[targetIndex].IsActivated = true; // enable reward
         rewards[targetIndex].StartBlinking(); // start blinking if target has light
@@ -250,7 +288,6 @@ public class LevelController : MonoBehaviour {
         }
         //temporarily disable listener as occasionally this will be triggered twice.
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
-        logicProvider.ProcessReward(rewardArea);
 
         success = true;
     }

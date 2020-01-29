@@ -65,6 +65,13 @@ public class RewardArea : MonoBehaviour {
     public delegate void OnExitTriggerZone(RewardArea rewardArea);
     public static event OnExitTriggerZone OnExitedTriggerZone;
 
+    /// <summary>
+    /// Triggers when the player is within the reward area
+    /// </summary>
+    /// <param name="rewardArea">RewardArea of the trigger zone entered</param>
+    public delegate void InTriggerZone(RewardArea rewardArea);
+    public static event InTriggerZone InTriggerZoneListener;
+
     private bool blinkState;
     private readonly WaitForSeconds half_period = new WaitForSeconds(0.5f);
 
@@ -87,6 +94,7 @@ public class RewardArea : MonoBehaviour {
         else if (IsActivated) {
             CheckFieldOfView(other.transform);
         }
+        InTriggerZoneListener?.Invoke(this);
     }
 
     private void OnTriggerEnter(Collider other) {

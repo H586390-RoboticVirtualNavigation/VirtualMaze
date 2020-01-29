@@ -12,6 +12,18 @@ public class HiddenRewardMazeLogic : StandardMazeLogic {
         LevelController.OnExitedTriggerZone += TriggerZoneExit;
     }
 
+    public override int GetNextTarget(int currentTarget, RewardArea[] rewards) {
+        LevelController.InTriggerZoneListener += WhileInTriggerZone;
+        return base.GetNextTarget(currentTarget, rewards);
+    }
+
+    private void WhileInTriggerZone(RewardArea rewardArea, bool isTarget) {
+        if (isTarget && !rewardArea.target.gameObject.activeInHierarchy) {
+            SetRewardTargetVisible(rewardArea, true);
+        }
+        LevelController.InTriggerZoneListener -= WhileInTriggerZone;
+    }
+
     private void TriggerZoneExit(RewardArea rewardArea, bool isTarget) {
         SetRewardTargetVisible(rewardArea, false);
     }
@@ -32,8 +44,8 @@ public class HiddenRewardMazeLogic : StandardMazeLogic {
         LevelController.OnExitedTriggerZone -= TriggerZoneExit;
     }
 
-    public override void ProcessReward(RewardArea rewardArea) {
-        base.ProcessReward(rewardArea);
+    public override void ProcessReward(RewardArea rewardArea, bool success) {
+        base.ProcessReward(rewardArea, success);
         SetRewardTargetVisible(rewardArea, false);
     }
 }
