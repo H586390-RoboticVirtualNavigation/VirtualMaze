@@ -27,6 +27,7 @@ public class Console : MonoBehaviour {
     public static void WriteError(string text) {
         Instance.console.color = Color.red;
         Instance.console.text = text;
+        Debug.LogError(text);
     }
 
     public static void Write(string text) {
