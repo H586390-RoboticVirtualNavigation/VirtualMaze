@@ -28,6 +28,14 @@ public class LevelController : MonoBehaviour {
     public delegate void InTriggerZone(RewardArea rewardArea, bool isTarget);
     public static event InTriggerZone InTriggerZoneListener;
 
+    /// <summary>
+    /// Triggers when the player stays in the reward area
+    /// </summary>
+    /// <param name="rewardArea">RewardArea of the trigger zone entered</param>
+    /// <param name="isTarget">If the area the current target</param>
+    public delegate void InRewardProximity(RewardArea rewardArea, bool isTarget);
+    public static event InRewardProximity InRewardProximityEvent;
+
     // Broadcasts when any sessionTriggers happens.
     public SessionTriggerEvent onSessionTrigger = new SessionTriggerEvent();
 
@@ -78,12 +86,19 @@ public class LevelController : MonoBehaviour {
         RewardArea.OnEnteredTriggerZone += OnZoneEnter;
         RewardArea.OnExitedTriggerZone += OnZoneExit;
         RewardArea.InTriggerZoneListener += WhileInTriggerZone;
+        RewardArea.OnProximityTriggered += InProximity;
 
 
         //Prepare Eyelink
         EyeLink.Initialize();
         onSessionTrigger.AddListener(EyeLink.OnSessionTrigger);
         onSessionTrigger.AddListener(parallelPort.TryWriteTrigger);
+    }
+
+    private void InProximity(RewardArea rewardArea) {
+        if (targetIndex != MazeLogic.NullRewardIndex) {
+            InRewardProximityEvent?.Invoke(rewardArea, rewardArea.Equals(rewards[targetIndex]));
+        }
     }
 
     private void WhileInTriggerZone(RewardArea rewardArea) {
@@ -96,6 +111,7 @@ public class LevelController : MonoBehaviour {
         RewardArea.OnEnteredTriggerZone -= OnZoneEnter;
         RewardArea.OnExitedTriggerZone -= OnZoneExit;
         RewardArea.InTriggerZoneListener -= WhileInTriggerZone;
+        RewardArea.OnProximityTriggered -= InProximity;
     }
 
     private void OnZoneExit(RewardArea rewardArea) {

@@ -34,6 +34,15 @@ public class BinWallManager {
     public const int Default_Radius = 50;
     public const int Default_Density = 220;
 
+    internal static void DestroyAllWalls() {
+        foreach (List<BinWall> l in wallCache.Values) {
+            foreach (BinWall b in l) {
+                UnityEngine.Object.Destroy(b);
+            }
+        }
+        wallCache.Clear();
+    }
+
     private static int radius = -1;
     private static int density = -1;
 
