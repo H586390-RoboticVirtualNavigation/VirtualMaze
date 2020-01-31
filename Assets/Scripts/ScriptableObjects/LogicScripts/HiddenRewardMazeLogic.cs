@@ -8,7 +8,7 @@ public class HiddenRewardMazeLogic : StandardMazeLogic {
             SetRewardTargetVisible(area, false);
         }
 
-        TrackEnterProximity(true);
+        TrackEnterTriggerZone(true);
         TrackExitTriggerZone(true);
     }
 
@@ -21,12 +21,12 @@ public class HiddenRewardMazeLogic : StandardMazeLogic {
         }
     }
 
-    protected void TrackEnterProximity(bool enable) {
+    protected void TrackEnterTriggerZone(bool enable) {
         if (enable) {
-            LevelController.InRewardProximityEvent += TriggerZoneEnter;
+            LevelController.OnEnteredTriggerZone += TriggerZoneEnter;
         }
         else {
-            LevelController.InRewardProximityEvent -= TriggerZoneEnter;
+            LevelController.OnEnteredTriggerZone -= TriggerZoneEnter;
         }
     }
 
@@ -58,7 +58,7 @@ public class HiddenRewardMazeLogic : StandardMazeLogic {
 
     public override void Cleanup(RewardArea[] rewards) {
         base.Cleanup(rewards);
-        TrackEnterProximity(false);
+        TrackEnterTriggerZone(false);
         TrackExitTriggerZone(false);
     }
 

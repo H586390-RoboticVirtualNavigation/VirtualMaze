@@ -15,4 +15,4 @@ MonoBehaviour:
   numTrials: 0
   mazeName: Open Maze Training
   scene: OpenMaze
-  logic: {fileID: 11400000, guid: a063be49e648f784cb70477d4a850a46, type: 2}
+  logic: {fileID: 11400000, guid: ad1f52b7d60deb44a84447969049dce3, type: 2}

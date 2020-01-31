@@ -9,29 +9,20 @@ public class RewardsGUIController : DataGUIController {
     public InputField rewardDurationField;
     public Toggle rewardDurationValid;
     public Text valveStateText;
-    public InputField requiredViewAngleInput;
-    public InputField requiredDistanceInput;
-    public InputField proximityDistanceInput;
+    public DescriptiveSlider requiredViewAngleSlider;
+    public DescriptiveSlider requiredDistanceSlider;
     public RewardsController rewardsController;
 
     private void Awake() {
         portNumField.onEndEdit.AddListener(OnPortNumFieldEndEdit);
         rewardDurationField.onEndEdit.AddListener(OnDurationFieldEndEdit);
 
-        requiredViewAngleInput.onEndEdit.AddListener(OnRequiredViewAngleChanged);
-        requiredDistanceInput.onEndEdit.AddListener(OnRequiredDistanceChanged);
-        proximityDistanceInput.onEndEdit.AddListener(OnProximityDistanceChanged);
+        requiredViewAngleSlider.onValueChanged.AddListener(OnRequiredViewAngleChanged);
+        requiredDistanceSlider.onValueChanged.AddListener(OnRequiredDistanceChanged);
     }
 
-    private void OnRequiredViewAngleChanged(string value) {
-        if (float.TryParse(value, out float angle)) {
-            RewardArea.RequiredViewAngle = angle;
-        }
-        else {
-            Console.WriteError("Invaild view angle");
-        }
-
-        requiredViewAngleInput.text = RewardArea.RequiredViewAngle.ToString();
+    private void OnRequiredViewAngleChanged(float value) {
+        RewardArea.requiredViewAngle = value;
     }
 
     public void ToggleValveState() {
@@ -62,24 +53,8 @@ public class RewardsGUIController : DataGUIController {
         }
     }
 
-    public void OnRequiredDistanceChanged(string value) {
-        if (float.TryParse(value, out float distance)) {
-            RewardArea.RequiredDistance = distance;
-        }
-        else {
-            Console.WriteError("Invaild minimum distance");
-        }
-        requiredDistanceInput.text = RewardArea.RequiredDistance.ToString();
-    }
-
-    public void OnProximityDistanceChanged(string value) {
-        if (float.TryParse(value, out float distance)) {
-            RewardArea.ProximityDistance = distance;
-        }
-        else {
-            Console.WriteError("Invaild proximity distance");
-        }
-        proximityDistanceInput.text = RewardArea.ProximityDistance.ToString();
+    public void OnRequiredDistanceChanged(float value) {
+        RewardArea.requiredDistance = value;
     }
 
     public override void UpdateSettingsGUI() {
@@ -90,9 +65,8 @@ public class RewardsGUIController : DataGUIController {
         rewardDurationField.text = millis;
         rewardDurationValid.isOn = IsDurationInputValid(millis);
 
-        requiredViewAngleInput.text = RewardArea.RequiredViewAngle.ToString();
-        requiredDistanceInput.text = RewardArea.RequiredDistance.ToString();
-        proximityDistanceInput.text = RewardArea.ProximityDistance.ToString();
+        requiredViewAngleSlider.value = RewardArea.requiredViewAngle;
+        requiredDistanceSlider.value = RewardArea.requiredDistance;
     }
 
     private bool IsDurationInputValid(string duration) {
