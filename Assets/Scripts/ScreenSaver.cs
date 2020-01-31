@@ -46,14 +46,8 @@ public class ScreenSaver : BasicGUIController {
     public FileSelector eyeLinkFileInput;
     public FileSelector sessionInput;
     public FileSelector folderInput;
-
-    [SerializeField]
-    private InputField numberOfLengthBinsInput = null;
-    [SerializeField]
-    private InputField gazeRadiusInput = null;
-    [SerializeField]
-    private InputField densityInput = null;
-
+    public InputField from;
+    public InputField to;
     public Text sessionInfo;
 
     public GazePointPool gazePointPool;
@@ -98,55 +92,24 @@ public class ScreenSaver : BasicGUIController {
         // check if file exists
         string sessionPath = sessionInput.text;
         if (!Directory.Exists(sessionPath) && !File.Exists(sessionPath)) {
-            Console.WriteError($"{sessionPath} does not exist");
+            Debug.LogError($"{sessionPath} does not exist");
             return;
         }
 
         //check if directory exists
         string toFolderPath = folderInput.text;
         if (!Directory.Exists(toFolderPath)) {
-            Console.WriteError($"{toFolderPath} does not exist");
+            Debug.LogError($"{toFolderPath} does not exist");
             return;
         }
 
         string edfPath = eyeLinkFileInput.text;
         if (!File.Exists(edfPath)) { //check if file exist
-            Console.WriteError($"{edfPath} does not exist");
+            Debug.LogError($"{edfPath} does not exist");
             return;
         }
 
-        int numberOfLengthBins = 40;
-        if (string.IsNullOrEmpty(numberOfLengthBinsInput.text)) {
-            Console.Write("Default number of bins used");
-        }
-        else if (!int.TryParse(numberOfLengthBinsInput.text, out numberOfLengthBins)) {
-            Console.WriteError($"{numberOfLengthBinsInput.text} is not a valid number");
-            return;
-        }
-
-        Debug.Log(numberOfLengthBins);
-
-        int gazeRadius = 50;
-        if (string.IsNullOrEmpty(gazeRadiusInput.text)) {
-            Console.Write("Default radius used");
-        }
-        else if (!int.TryParse(gazeRadiusInput.text, out gazeRadius)) {
-            Console.WriteError($"{gazeRadiusInput.text} is not a valid number");
-            return;
-        }
-
-        int density = 220;
-        if (string.IsNullOrEmpty(densityInput.text)) {
-            Console.Write("Default density used");
-        }
-        else if (!int.TryParse(densityInput.text, out density)) {
-            Console.WriteError($"{densityInput.text} is not a valid number");
-            return;
-        }
-
-        BinMapper mapper = new DoubleTeeBinMapper(numberOfLengthBins);
-        BinWallManager.ReconfigureGazeOffsetCache(gazeRadius, density);
-        StartCoroutine(ProcessSessionDataTask(sessionInput.text, eyeLinkFileInput.text, folderInput.text, mapper));
+        StartCoroutine(ProcessSessionDataTask(sessionInput.text, eyeLinkFileInput.text, folderInput.text));
     }
 
 
@@ -348,7 +311,7 @@ public class ScreenSaver : BasicGUIController {
 
         List<Fsample> sampleCache = new List<Fsample>();
         int numberOfTriggers = 0;
-        while (sessionReader.HasNext && numberOfTriggers < 8) {
+        while (sessionReader.HasNext/* && numberOfTriggers < 29*/) {
             numberOfTriggers++;
             /*add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
              * and the previous frame raised a trigger for it to be printed in this frame*/

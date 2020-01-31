@@ -8,26 +8,8 @@ public class HiddenRewardMazeLogic : StandardMazeLogic {
             SetRewardTargetVisible(area, false);
         }
 
-        TrackEnterTriggerZone(true);
-        TrackExitTriggerZone(true);
-    }
-
-    protected void TrackExitTriggerZone(bool enable) {
-        if (enable) {
-            LevelController.OnExitedTriggerZone += TriggerZoneExit;
-        }
-        else {
-            LevelController.OnExitedTriggerZone -= TriggerZoneExit;
-        }
-    }
-
-    protected void TrackEnterTriggerZone(bool enable) {
-        if (enable) {
-            LevelController.OnEnteredTriggerZone += TriggerZoneEnter;
-        }
-        else {
-            LevelController.OnEnteredTriggerZone -= TriggerZoneEnter;
-        }
+        LevelController.OnEnteredTriggerZone += TriggerZoneEnter;
+        LevelController.OnExitedTriggerZone += TriggerZoneExit;
     }
 
     public override int GetNextTarget(int currentTarget, RewardArea[] rewards) {
@@ -52,14 +34,14 @@ public class HiddenRewardMazeLogic : StandardMazeLogic {
         }
     }
 
-    protected void SetRewardTargetVisible(RewardArea area, bool visible) {
+    void SetRewardTargetVisible(RewardArea area, bool visible) {
         area.target.gameObject.SetActive(visible);
     }
 
     public override void Cleanup(RewardArea[] rewards) {
         base.Cleanup(rewards);
-        TrackEnterTriggerZone(false);
-        TrackExitTriggerZone(false);
+        LevelController.OnEnteredTriggerZone -= TriggerZoneEnter;
+        LevelController.OnExitedTriggerZone -= TriggerZoneExit;
     }
 
     public override void ProcessReward(RewardArea rewardArea, bool success) {

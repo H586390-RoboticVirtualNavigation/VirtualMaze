@@ -78,78 +78,41 @@ public class GameController : MonoBehaviour {
 
             string[] args = Environment.GetCommandLineArgs();
             bool isSessionList = false;
-
-            int numofLengthBins = BinMapper.DEFAULT_NUM_BIN_LENGTH;
-            int radius = BinWallManager.Default_Radius;
-            int density = BinWallManager.Default_Density;
-            string sessionListPath = null;
-
             for (int i = 0; i < args.Length; i++) {
                 Debug.LogError($"ARG {i}: {args[i]}");
-                switch (args[i].ToLower()) {
-                    case "-sessionlist":
-                        isSessionList = true;
-                        logger.Print($"Session List detected!");
-                        Debug.LogError($"{args[i + 1]}");
-                        sessionListPath = args[i + 1];
-                        break;
-
-                    case "-numOfLengthBins":
-                        if (int.TryParse(args[i + 1], out numofLengthBins)) {
-                            logger.Print($"Setting number of length bins to : {numofLengthBins}");
-                        }
-                        else {
-                            logger.Print($"Unable to parse {args[i + 1]} to integer, using  {numofLengthBins} as default");
-                        }
-                        break;
-                    case "-density":
-                        if (int.TryParse(args[i + 1], out density)) {
-                            logger.Print($"Setting number of length bins to : {density}");
-                        }
-                        else {
-                            logger.Print($"Unable to parse {args[i + 1]} to integer, using  {density} as default");
-                        }
-                        break;
-                    case "-radius":
-                        if (int.TryParse(args[i + 1], out radius)) {
-                            logger.Print($"Setting number of length bins to : {radius}");
-                        }
-                        else {
-                            logger.Print($"Unable to parse {args[i + 1]} to integer, using  {radius} as default");
-                        }
-                        break;
+                if (args[i].ToLower().Equals("-sessionlist")) {
+                    isSessionList = true;
+                    logger.Print($"Session List detected!");
+                    Debug.LogError($"{args[i + 1]}");
+                    SessionListMode(logger, args[i + 1]);
                 }
             }
-
-            Queue<DirectoryInfo> dirQ = new Queue<DirectoryInfo>();
-
             if (!isSessionList) {
-                PwdMode(logger, dirQ);
+                PwdMode(logger);
             }
-            else {
-                SessionListMode(logger, sessionListPath, dirQ);
-            }
-            BinWallManager.ReconfigureGazeOffsetCache(radius, density);
-            ProcessExperimentQueue(dirQ, logger, numofLengthBins);
         }
     }
 
-    private void SessionListMode(BatchModeLogger logger, string listPath, Queue<DirectoryInfo> dirQ) {
+    private void SessionListMode(BatchModeLogger logger, string listPath) {
         using (StreamReader reader = new StreamReader(listPath)) {
-
+            Queue<DirectoryInfo> dirQ = new Queue<DirectoryInfo>();
             while (reader.Peek() > 0) {
                 DirectoryInfo dir = new DirectoryInfo(reader.ReadLine());
                 dirQ.Enqueue(dir);
             }
+
+            ProcessExperimentQueue(dirQ, logger);
         }
     }
 
-    private void PwdMode(BatchModeLogger logger, Queue<DirectoryInfo> dirQ) {
+    private void PwdMode(BatchModeLogger logger) {
         DirectoryInfo pwd = new DirectoryInfo(PresentWorkingDirectory);
-        dirQ.Enqueue(pwd);
+        Queue<DirectoryInfo> q = new Queue<DirectoryInfo>();
+        q.Enqueue(pwd);
+        ProcessExperimentQueue(q, logger);
     }
 
-    private void ProcessExperimentQueue(Queue<DirectoryInfo> dirQ, BatchModeLogger logger, int numOfBinsForFloorLength) {
+    private void ProcessExperimentQueue(Queue<DirectoryInfo> dirQ, BatchModeLogger logger) {
         Queue<string> sessionQ = new Queue<string>();
 
         while (dirQ.Count > 0) {
@@ -169,11 +132,9 @@ public class GameController : MonoBehaviour {
             }
         }
 
-        BinMapper mapper = new DoubleTeeBinMapper(numOfBinsForFloorLength);
-
         if (sessionQ.Count > 0) {
             logger.Print($"{sessionQ.Count} sessions to be processed");
-            ProcessSession(sessionQ, logger, mapper);
+            ProcessSession(sessionQ, logger);
         }
         else {
             logger.Print("No Session directories found! Exiting");
@@ -182,7 +143,7 @@ public class GameController : MonoBehaviour {
         }
     }
 
-    private async void ProcessSession(Queue<string> sessions, BatchModeLogger logger, BinMapper mapper) {
+    private async void ProcessSession(Queue<string> sessions, BatchModeLogger logger) {
         string path;
         int total = sessions.Count;
         int count = 1, notifyAliveCount = 0;
@@ -191,7 +152,7 @@ public class GameController : MonoBehaviour {
             path = sessions.Dequeue();
             logger.Print($"Starting({count}/{total}): {path}");
 
-            StartCoroutine(ProcessWrapper(path + unityfileMatFile, path + eyelinkMatFile, path, mapper));
+            StartCoroutine(ProcessWrapper(path + unityfileMatFile, path + eyelinkMatFile, path));
             while (!generationComplete) {
                 await Task.Delay(10000); //10 second notify-alive message
 
@@ -224,14 +185,14 @@ public class GameController : MonoBehaviour {
         return Regex.IsMatch(dirInfo.Name, SessionPattern);
     }
 
-    private IEnumerator ProcessWrapper(string sessionPath, string edfPath, string toFolderPath, BinMapper mapper) {
+    private IEnumerator ProcessWrapper(string sessionPath, string edfPath, string toFolderPath) {
         print($"session: {sessionPath}");
         print($"edf: {edfPath}");
         print($"toFolder: {toFolderPath}");
 
         generationComplete = false;
         try {
-            yield return saver.ProcessSessionDataTask(sessionPath, edfPath, toFolderPath, mapper);
+            yield return saver.ProcessSessionDataTask(sessionPath, edfPath, toFolderPath);
         }
         finally { //so that the batchmode app will quit or move on the the next session
             generationComplete = true;

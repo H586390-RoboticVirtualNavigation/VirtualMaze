@@ -27,21 +27,16 @@ public class BinWallManager {
     /* 0.618 is golden ratio, reduces chances of raycast overlapping */
     private const float TURN_FRACTION = 0.618f * 2 * Mathf.PI;
 
-    private const int MINIMUM_RAYCAST_DENSITY = 10;
+    private const int MINIMUM_NUM_OF_RAYCAST = 10;
 
     /* Reduces the density by this amount */
     private const int PRI_DENSITY_DIVISOR = 10;
-    public const int Default_Radius = 50;
-    public const int Default_Density = 220;
-
-    private static int radius = -1;
-    private static int density = -1;
 
     static BinWallManager() {
         int shift = LayerMask.NameToLayer("Binning");
         binningLayerOnly = (1 << shift);
         ignoreBinningLayer = (1 << shift) ^ Physics.DefaultRaycastLayers; //-5 is default layermask, XOR with desired mask
-        ReconfigureGazeOffsetCache(Default_Radius, Default_Density); //radius of 50 pixels, density of approx 1 raycast per 45 pixels
+        ReconfigureGazeOffsetCache(50, 220); //radius of 50 pixels, density of approx 1 raycast per 45 pixels
     }
 
     public static void DisplayGazes(List<Vector2> gazes, Camera c, GameObject binWallPrefab, BinMapper mapper) {
@@ -243,17 +238,12 @@ public class BinWallManager {
     }
 
     public static void ReconfigureGazeOffsetCache(int radius, int density) {
-        if (BinWallManager.radius != radius || BinWallManager.density != density) {
-            BinWallManager.radius = radius;
-            BinWallManager.density = density;
+        gazeSqDistThreshold = Mathf.Pow(radius / 2f, 2);
 
-            gazeSqDistThreshold = Mathf.Pow(radius / 2f, 2);
-
-            /*primary offset density is reduced as it is only used to identify all
-              possible objects in the scene covered by the gaze */
-            CreateOffsetList(radius, Mathf.Max(density / PRI_DENSITY_DIVISOR, MINIMUM_RAYCAST_DENSITY), primaryOffset);
-            CreateOffsetList(radius, Mathf.Max(density, MINIMUM_RAYCAST_DENSITY), secondaryOffset);
-        }
+        /*primary offset density is reduced as it is only used to identify all
+          possible objects in the scene covered by the gaze */
+        CreateOffsetList(radius, Mathf.Max(density / PRI_DENSITY_DIVISOR, MINIMUM_NUM_OF_RAYCAST), primaryOffset);
+        CreateOffsetList(radius, density, secondaryOffset);
     }
 
     /// <summary>
@@ -267,7 +257,6 @@ public class BinWallManager {
 
         //Calculate number of Rays
         int numRays = Mathf.CeilToInt(Mathf.Pow(radius, 2) * Mathf.PI * density / UNIT_AREA);
-        numRays = Math.Max(numRays, 2); //minimum of 2 to prevent divide by 0 later
 
         for (int i = 0; i < numRays; i++) {
             //sqrt to reduce clustering at the center
