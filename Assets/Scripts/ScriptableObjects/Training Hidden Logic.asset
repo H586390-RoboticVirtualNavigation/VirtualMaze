@@ -10,5 +10,5 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4ae04f5e5958f044aad2dd3a828bcb96, type: 3}
-  m_Name: New Training Hidden Logic
+  m_Name: Training Hidden Logic
   m_EditorClassIdentifier: 

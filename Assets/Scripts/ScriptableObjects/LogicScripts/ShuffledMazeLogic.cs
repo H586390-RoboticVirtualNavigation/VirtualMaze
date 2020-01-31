@@ -42,13 +42,13 @@ public class ShuffledMazeLogic : MazeLogic {
     /// Shuffles the array
     /// </summary>
     /// <param name="arrayToShuffle"></param>
-    void Shuffle(int[] arrayToShuffle) {
+    public static void Shuffle(int[] arrayToShuffle) {
         // shuffle array
-        for (var j = order.Length - 1; j > 0; j--) {
+        for (var j = arrayToShuffle.Length - 1; j > 0; j--) {
             var r = Random.Range(0, j);
-            var tmp = order[j];
-            order[j] = order[r];
-            order[r] = tmp;
+            var tmp = arrayToShuffle[j];
+            arrayToShuffle[j] = arrayToShuffle[r];
+            arrayToShuffle[r] = tmp;
         }
     }
 }
