@@ -348,7 +348,7 @@ public class ScreenSaver : BasicGUIController {
 
         List<Fsample> sampleCache = new List<Fsample>();
         int numberOfTriggers = 0;
-        while (sessionReader.HasNext && numberOfTriggers < 8) {
+        while (sessionReader.HasNext /*&& numberOfTriggers < 8*/) {
             numberOfTriggers++;
             /*add current to buffer since sessionData.timeDelta is the time difference from the previous frame.
              * and the previous frame raised a trigger for it to be printed in this frame*/
