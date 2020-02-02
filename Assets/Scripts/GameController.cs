@@ -104,7 +104,7 @@ public class GameController : MonoBehaviour {
                         break;
                     case "-density":
                         if (int.TryParse(args[i + 1], out density)) {
-                            logger.Print($"Setting number of length bins to : {density}");
+                            logger.Print($"Setting density to : {density}");
                         }
                         else {
                             logger.Print($"Unable to parse {args[i + 1]} to integer, using  {density} as default");
@@ -112,7 +112,7 @@ public class GameController : MonoBehaviour {
                         break;
                     case "-radius":
                         if (int.TryParse(args[i + 1], out radius)) {
-                            logger.Print($"Setting number of length bins to : {radius}");
+                            logger.Print($"Setting radius to : {radius}");
                         }
                         else {
                             logger.Print($"Unable to parse {args[i + 1]} to integer, using  {radius} as default");
