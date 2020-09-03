@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -80,7 +80,7 @@ public class LevelController : MonoBehaviour {
     //Strings
     private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent";
 
-    private void Awake() {
+	private void Awake() {
         waitIfPaused = new WaitUntil(() => !isPaused);
 
         RewardArea.OnEnteredTriggerZone += OnZoneEnter;
@@ -92,7 +92,8 @@ public class LevelController : MonoBehaviour {
         //Prepare Eyelink
         EyeLink.Initialize();
         onSessionTrigger.AddListener(EyeLink.OnSessionTrigger);
-        onSessionTrigger.AddListener(parallelPort.TryWriteTrigger);
+        //kw edit (commented out)
+        //onSessionTrigger.AddListener(parallelPort.TryWriteTrigger);
     }
 
     private void InProximity(RewardArea rewardArea) {
@@ -286,6 +287,13 @@ public class LevelController : MonoBehaviour {
         Debug.Log("showCues");
         PlayerAudio.instance.PlayStartClip(); // play start sound
 
+        // kw edit direct call to parallelport, extracted from listener
+        Debug.Log("direct blank cue onset call");
+        ParallelPort.TryOut32(parallelPort.portHexAddress, (int)SessionTrigger.TrialStartedTrigger + (int)targetIndex + 1);
+        Debug.Log($"PPA \"{parallelPort.portHexAddress}\" in use");
+        Debug.Log($"TST \"{(int)SessionTrigger.TrialStartedTrigger}\" in use");
+        Debug.Log($"TI \"{(int)targetIndex + 1}\" in use");
+
         cueController.ShowCue();
         onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
 
@@ -293,6 +301,13 @@ public class LevelController : MonoBehaviour {
 
         cueController.HideCue();
         cueController.ShowHint();
+
+        // kw edit direct call to parallelport, extracted from listener
+        Debug.Log("direct blank cue offset call");
+        ParallelPort.TryOut32(parallelPort.portHexAddress, (int)SessionTrigger.CueOffsetTrigger + (int)targetIndex + 1);
+        Debug.Log($"PPA \"{parallelPort.portHexAddress}\" in use");
+        Debug.Log($"TST \"{(int)SessionTrigger.CueOffsetTrigger}\" in use");
+        Debug.Log($"TI \"{(int)targetIndex + 1}\" in use");
 
         onSessionTrigger.Invoke(SessionTrigger.CueOffsetTrigger, targetIndex);
     }
@@ -350,9 +365,24 @@ public class LevelController : MonoBehaviour {
 
         if (success) {
             onSessionTrigger.Invoke(SessionTrigger.TrialEndedTrigger, targetIndex);
+
+            // kw edit direct call to parallelport, extracted from listener
+            Debug.Log("direct blank trial end call");
+            ParallelPort.TryOut32(parallelPort.portHexAddress, (int)SessionTrigger.TrialEndedTrigger + (int)targetIndex + 1);
+            Debug.Log($"PPA \"{parallelPort.portHexAddress}\" in use");
+            Debug.Log($"TST \"{(int)SessionTrigger.TrialEndedTrigger}\" in use");
+            Debug.Log($"TI \"{(int)targetIndex + 1}\" in use");
         }
         else {
             onSessionTrigger.Invoke(SessionTrigger.TimeoutTrigger, targetIndex);
+
+            // kw edit direct call to parallelport, extracted from listener
+            Debug.Log("direct blank trial expire call");
+            ParallelPort.TryOut32(parallelPort.portHexAddress, (int)SessionTrigger.TimeoutTrigger + (int)targetIndex + 1);
+            Debug.Log($"PPA \"{parallelPort.portHexAddress}\" in use");
+            Debug.Log($"TST \"{(int)SessionTrigger.TimeoutTrigger}\" in use");
+            Debug.Log($"TI \"{(int)targetIndex + 1}\" in use");
+
             PlayerAudio.instance.PlayErrorClip(); //play audio
         }
     }

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System;
 using System.Runtime.InteropServices;
 
@@ -27,15 +27,23 @@ public class ParallelPort : ConfigurableComponent {
     }
 
     public void TryWriteTrigger(SessionTrigger trigger, int rewardIndex) {
-        if (portHexAddress == -1) {
+        
+	// kw edit (debug)
+	Debug.Log("tryingtrigger");
+	Debug.Log($"Port \"{portHexAddress}\" being used");  
+	Debug.Log($"Value \"{(int)trigger + rewardIndex}\" being used");
+	
+	if (portHexAddress != -1) { // kw edit (flipped to !=)
+	    Debug.Log("entered if statement");
             Out32(portHexAddress, (int)trigger + rewardIndex);
-            Out32(portHexAddress, 0);
+	    Out32(portHexAddress, 0);
         }
+	
     }
 
     public void SimpleTest() {
         if (parallelflip) {
-            TryOut32(portHexAddress, 255);
+            TryOut32(portHexAddress, 222);
         }
         else {
             TryOut32(portHexAddress, 0);
