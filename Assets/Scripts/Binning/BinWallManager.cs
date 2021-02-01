@@ -31,8 +31,8 @@ public class BinWallManager {
 
     /* Reduces the density by this amount */
     private const int PRI_DENSITY_DIVISOR = 10;
-    public const int Default_Radius = 50;
-    public const int Default_Density = 220;
+    public const int Default_Radius = 250; //50
+    public const int Default_Density = 1; //220
 
     internal static void DestroyAllWalls() {
         foreach (List<BinWall> l in wallCache.Values) {

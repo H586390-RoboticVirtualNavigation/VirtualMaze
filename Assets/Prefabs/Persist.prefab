@@ -249,7 +249,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -425,7 +424,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -831,7 +829,6 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -8321,15 +8318,13 @@ MonoBehaviour:
 
     Up Arrow = Previous Trial
 
-    Down Arrow = Next
-    Trial
+    Down Arrow = Next Trial
 
     Left Arrow = Previous Frame
 
     Right Arrow = Next Frame
 
-    Space
-    Bar = Play'
+    Space Bar = Play'
 --- !u!1 &2572638593823455268
 GameObject:
   m_ObjectHideFlags: 0
@@ -9507,7 +9502,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2067402755136246532}
   m_HandleRect: {fileID: 8221805382395442019}
   m_Direction: 0
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -14885,15 +14880,13 @@ MonoBehaviour:
 
     Up Arrow = Previous Trial
 
-    Down Arrow = Next
-    Trial
+    Down Arrow = Next Trial
 
     Left Arrow = Previous Frame
 
     Right Arrow = Next Frame
 
-    Space
-    Bar = Play'
+    Space Bar = Play'
 --- !u!1 &5708436401027579607
 GameObject:
   m_ObjectHideFlags: 0
@@ -23697,6 +23690,11 @@ PrefabInstance:
       propertyPath: fb
       value: 
       objectReference: {fileID: 11478274}
+    - target: {fileID: 814602153708827362, guid: 79287dedb761e9349a1263a313a44cb9,
+        type: 3}
+      propertyPath: defaultPath
+      value: C:/Users/User/Documents/GitHub/VirtualMaze/Assets
+      objectReference: {fileID: 0}
     - target: {fileID: 2402914763293435722, guid: 79287dedb761e9349a1263a313a44cb9,
         type: 3}
       propertyPath: m_Text
@@ -24415,6 +24413,11 @@ PrefabInstance:
       propertyPath: fb
       value: 
       objectReference: {fileID: 11478274}
+    - target: {fileID: 814602153708827362, guid: 79287dedb761e9349a1263a313a44cb9,
+        type: 3}
+      propertyPath: defaultPath
+      value: C:/Users/User/Documents/GitHub/VirtualMaze/Assets
+      objectReference: {fileID: 0}
     - target: {fileID: 2402914763293435722, guid: 79287dedb761e9349a1263a313a44cb9,
         type: 3}
       propertyPath: m_Text
@@ -25446,6 +25449,11 @@ PrefabInstance:
       propertyPath: fb
       value: 
       objectReference: {fileID: 11478274}
+    - target: {fileID: 814602153708827362, guid: 79287dedb761e9349a1263a313a44cb9,
+        type: 3}
+      propertyPath: defaultPath
+      value: C:/Users/User/Documents/GitHub/VirtualMaze/Assets
+      objectReference: {fileID: 0}
     - target: {fileID: 2402914763293435722, guid: 79287dedb761e9349a1263a313a44cb9,
         type: 3}
       propertyPath: m_Text
@@ -25796,6 +25804,11 @@ PrefabInstance:
       propertyPath: fb
       value: 
       objectReference: {fileID: 11478274}
+    - target: {fileID: 814602153708827362, guid: 79287dedb761e9349a1263a313a44cb9,
+        type: 3}
+      propertyPath: defaultPath
+      value: C:/Users/User/Documents/GitHub/VirtualMaze/Assets
+      objectReference: {fileID: 0}
     - target: {fileID: 2402914763293435722, guid: 79287dedb761e9349a1263a313a44cb9,
         type: 3}
       propertyPath: m_Text
@@ -26515,7 +26528,7 @@ PrefabInstance:
     - target: {fileID: 7380630212920141058, guid: 3ee4b64493e2e40c0b1b852904531a46,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.0010070801
+      value: 0.0000034649827
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3ee4b64493e2e40c0b1b852904531a46, type: 3}
@@ -26859,6 +26872,11 @@ PrefabInstance:
       propertyPath: fb
       value: 
       objectReference: {fileID: 11478274}
+    - target: {fileID: 814602153708827362, guid: 79287dedb761e9349a1263a313a44cb9,
+        type: 3}
+      propertyPath: defaultPath
+      value: C:/Users/User/Documents/GitHub/VirtualMaze/Assets
+      objectReference: {fileID: 0}
     - target: {fileID: 2402914763293435722, guid: 79287dedb761e9349a1263a313a44cb9,
         type: 3}
       propertyPath: m_Text
@@ -27026,6 +27044,11 @@ PrefabInstance:
       propertyPath: fb
       value: 
       objectReference: {fileID: 11478274}
+    - target: {fileID: 814602153708827362, guid: 79287dedb761e9349a1263a313a44cb9,
+        type: 3}
+      propertyPath: defaultPath
+      value: C:/Users/User/Documents/GitHub/VirtualMaze/Assets
+      objectReference: {fileID: 0}
     - target: {fileID: 2402914763293435722, guid: 79287dedb761e9349a1263a313a44cb9,
         type: 3}
       propertyPath: m_Text
@@ -27183,6 +27206,11 @@ PrefabInstance:
       propertyPath: fb
       value: 
       objectReference: {fileID: 11478274}
+    - target: {fileID: 814602153708827362, guid: 79287dedb761e9349a1263a313a44cb9,
+        type: 3}
+      propertyPath: defaultPath
+      value: C:/Users/User/Documents/GitHub/VirtualMaze/Assets
+      objectReference: {fileID: 0}
     - target: {fileID: 2402914763293435722, guid: 79287dedb761e9349a1263a313a44cb9,
         type: 3}
       propertyPath: m_Text

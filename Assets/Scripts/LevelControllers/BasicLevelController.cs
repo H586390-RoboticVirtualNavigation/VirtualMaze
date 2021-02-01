@@ -172,7 +172,7 @@ public class BasicLevelController : MonoBehaviour {
 
             // checks if should pause else continue.
             if (isPaused) {
-                Console.Write("ExperimentPaused");
+                Console.Write("ExperimentPausedforrr");
             }
             yield return waitIfPaused;
 

@@ -162,6 +162,7 @@ public class LevelController : MonoBehaviour {
 
     IEnumerator MainLoop() {
         int trialCounter = 0;
+
         targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
 
         /* If this is true, it means that this session has multiple tasks and should restart fully */
