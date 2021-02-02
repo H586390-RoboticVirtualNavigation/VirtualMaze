@@ -298,7 +298,7 @@ public class LevelController : MonoBehaviour {
         cueController.ShowCue();
         onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
 
-        yield return new WaitForSecondsRealtime(1f);
+        yield return new WaitForSecondsRealtime(2f); //Original Cue Timing: 1f (1 second)
 
         cueController.HideCue();
         cueController.ShowHint();

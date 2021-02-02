@@ -55,10 +55,10 @@ public class NonTargetRaycast : MonoBehaviour
             RaycastHit checkright;
             //Vector3 straightline = cam.transform.forward;
             Vector3 straightline = Quaternion.AngleAxis(sweepValue / 2f, Vector3.up) * cam.transform.forward;
-            Vector3 leftline = Quaternion.AngleAxis(-100f / 2f, Vector3.up) * cam.transform.forward;
-            Vector3 rightline = Quaternion.AngleAxis(100f / 2f, Vector3.up) * cam.transform.forward;
-            Vector3 checkleftline = Quaternion.AngleAxis(-105f / 2f, Vector3.up) * cam.transform.forward;
-            Vector3 checkrightline = Quaternion.AngleAxis(105f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 leftline = Quaternion.AngleAxis(-97f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 rightline = Quaternion.AngleAxis(97f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 checkleftline = Quaternion.AngleAxis(-102f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 checkrightline = Quaternion.AngleAxis(102f / 2f, Vector3.up) * cam.transform.forward;
             straightline.y = 0;
             leftline.y = 0;
             rightline.y = 0;
@@ -68,7 +68,7 @@ public class NonTargetRaycast : MonoBehaviour
             //Debug.Log(isPosterInView);
             if (Physics.Raycast(cam.transform.position, checkleftline, out checkleft, 500))
             {
-                //Debug.DrawLine(cam.transform.position, checkleft.point, Color.green);
+                Debug.DrawLine(cam.transform.position, checkleft.point, Color.green);
                 if (checkleft.transform.name == "Poster")
                 {
                     isPosterInView = false;
@@ -77,7 +77,7 @@ public class NonTargetRaycast : MonoBehaviour
 
             if (Physics.Raycast(cam.transform.position, checkrightline, out checkright, 500))
             {
-                //Debug.DrawLine(cam.transform.position, checkright.point, Color.green);
+                Debug.DrawLine(cam.transform.position, checkright.point, Color.green);
                 if (checkright.transform.name == "Poster")
                 {
                     isPosterInView = false;
@@ -86,7 +86,7 @@ public class NonTargetRaycast : MonoBehaviour
 
             if (Physics.Raycast(cam.transform.position, leftline, out hitleft, 500))
             {
-                //Debug.DrawLine(cam.transform.position, hitleft.point);
+                Debug.DrawLine(cam.transform.position, hitleft.point);
                 //Debug.Log(hitleft.transform.name);
                 if (hitleft.transform.name == "Poster")
                 {
@@ -115,7 +115,7 @@ public class NonTargetRaycast : MonoBehaviour
 
             if (Physics.Raycast(cam.transform.position, rightline, out hitright, 500))
             {
-                //Debug.DrawLine(cam.transform.position, hitright.point);
+                Debug.DrawLine(cam.transform.position, hitright.point);
                 //Debug.Log(hitleft.transform.name);
                 if (hitright.transform.name == "Poster")
                 {
@@ -172,11 +172,11 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit1;
-            Vector3 line1 = Quaternion.AngleAxis(-90f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line1 = Quaternion.AngleAxis(-87f / 2f, Vector3.up) * cam.transform.forward;
             line1.y = 0;
             if (Physics.Raycast(cam.transform.position, line1, out hit1, 500))
             {
-                //Debug.DrawLine(cam.transform.position, hit1.point);
+                Debug.DrawLine(cam.transform.position, hit1.point);
                 if (hit1.transform.name == "Poster")
                 {
                     Flag1 = true;
@@ -201,11 +201,11 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit2;
-            Vector3 line2 = Quaternion.AngleAxis(-80f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line2 = Quaternion.AngleAxis(-77f / 2f, Vector3.up) * cam.transform.forward;
             line2.y = 0;
             if (Physics.Raycast(cam.transform.position, line2, out hit2, 500))
             {
-                //Debug.DrawLine(cam.transform.position, hit2.point);
+                Debug.DrawLine(cam.transform.position, hit2.point);
                 if (hit2.transform.name == "Poster")
                 {
                     Flag2 = true;
@@ -230,11 +230,11 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit3;
-            Vector3 line3 = Quaternion.AngleAxis(-70f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line3 = Quaternion.AngleAxis(-67f / 2f, Vector3.up) * cam.transform.forward;
             line3.y = 0;
             if (Physics.Raycast(cam.transform.position, line3, out hit3, 500))
             {
-                //Debug.DrawLine(cam.transform.position, hit3.point);
+                Debug.DrawLine(cam.transform.position, hit3.point);
                 if (hit3.transform.name == "Poster")
                 {
                     Flag3 = true;
@@ -259,7 +259,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit4;
-            Vector3 line4 = Quaternion.AngleAxis(-60f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line4 = Quaternion.AngleAxis(-57f / 2f, Vector3.up) * cam.transform.forward;
             line4.y = 0;
             if (Physics.Raycast(cam.transform.position, line4, out hit4, 500))
             {
@@ -288,7 +288,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit5;
-            Vector3 line5 = Quaternion.AngleAxis(-50f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line5 = Quaternion.AngleAxis(-47f / 2f, Vector3.up) * cam.transform.forward;
             line5.y = 0;
             if (Physics.Raycast(cam.transform.position, line5, out hit5, 500))
             {
@@ -317,7 +317,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit6;
-            Vector3 line6 = Quaternion.AngleAxis(-40f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line6 = Quaternion.AngleAxis(-37f / 2f, Vector3.up) * cam.transform.forward;
             line6.y = 0;
             if (Physics.Raycast(cam.transform.position, line6, out hit6, 500))
             {
@@ -346,7 +346,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit7;
-            Vector3 line7 = Quaternion.AngleAxis(-30f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line7 = Quaternion.AngleAxis(-27f / 2f, Vector3.up) * cam.transform.forward;
             line7.y = 0;
             if (Physics.Raycast(cam.transform.position, line7, out hit7, 500))
             {
@@ -375,7 +375,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit8;
-            Vector3 line8 = Quaternion.AngleAxis(-20f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line8 = Quaternion.AngleAxis(-17f / 2f, Vector3.up) * cam.transform.forward;
             line8.y = 0;
             if (Physics.Raycast(cam.transform.position, line8, out hit8, 500))
             {
@@ -404,7 +404,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit9;
-            Vector3 line9 = Quaternion.AngleAxis(-10f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line9 = Quaternion.AngleAxis(-7f / 2f, Vector3.up) * cam.transform.forward;
             line9.y = 0;
             if (Physics.Raycast(cam.transform.position, line9, out hit9, 500))
             {
@@ -433,7 +433,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit10;
-            Vector3 line10 = Quaternion.AngleAxis(10f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line10 = Quaternion.AngleAxis(7f / 2f, Vector3.up) * cam.transform.forward;
             line10.y = 0;
             if (Physics.Raycast(cam.transform.position, line10, out hit10, 500))
             {
@@ -462,7 +462,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit11;
-            Vector3 line11 = Quaternion.AngleAxis(20f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line11 = Quaternion.AngleAxis(17f / 2f, Vector3.up) * cam.transform.forward;
             line11.y = 0;
             if (Physics.Raycast(cam.transform.position, line11, out hit11, 500))
             {
@@ -492,7 +492,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit12;
-            Vector3 line12 = Quaternion.AngleAxis(30f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line12 = Quaternion.AngleAxis(27f / 2f, Vector3.up) * cam.transform.forward;
             line12.y = 0;
             if (Physics.Raycast(cam.transform.position, line12, out hit12, 500))
             {
@@ -521,7 +521,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit13;
-            Vector3 line13 = Quaternion.AngleAxis(40f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line13 = Quaternion.AngleAxis(37f / 2f, Vector3.up) * cam.transform.forward;
             line13.y = 0;
             if (Physics.Raycast(cam.transform.position, line13, out hit13, 500))
             {
@@ -550,7 +550,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit14;
-            Vector3 line14 = Quaternion.AngleAxis(50f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line14 = Quaternion.AngleAxis(47f / 2f, Vector3.up) * cam.transform.forward;
             line14.y = 0;
             if (Physics.Raycast(cam.transform.position, line14, out hit14, 500))
             {
@@ -579,7 +579,7 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit15;
-            Vector3 line15 = Quaternion.AngleAxis(60f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line15 = Quaternion.AngleAxis(57f / 2f, Vector3.up) * cam.transform.forward;
             line15.y = 0;
             if (Physics.Raycast(cam.transform.position, line15, out hit15, 500))
             {
@@ -608,11 +608,11 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit16;
-            Vector3 line16 = Quaternion.AngleAxis(70f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line16 = Quaternion.AngleAxis(67f / 2f, Vector3.up) * cam.transform.forward;
             line16.y = 0;
             if (Physics.Raycast(cam.transform.position, line16, out hit16, 500))
             {
-                //Debug.DrawLine(cam.transform.position, hit16.point);
+                Debug.DrawLine(cam.transform.position, hit16.point);
                 if (hit16.transform.name == "Poster")
                 {
                     Flag16 = true;
@@ -637,11 +637,11 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit17;
-            Vector3 line17 = Quaternion.AngleAxis(80f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line17 = Quaternion.AngleAxis(77f / 2f, Vector3.up) * cam.transform.forward;
             line17.y = 0;
             if (Physics.Raycast(cam.transform.position, line17, out hit17, 500))
             {
-                //Debug.DrawLine(cam.transform.position, hit17.point);
+                Debug.DrawLine(cam.transform.position, hit17.point);
                 if (hit17.transform.name == "Poster")
                 {
                     Flag17 = true;
@@ -666,11 +666,11 @@ public class NonTargetRaycast : MonoBehaviour
             }
 
             RaycastHit hit18;
-            Vector3 line18 = Quaternion.AngleAxis(90f / 2f, Vector3.up) * cam.transform.forward;
+            Vector3 line18 = Quaternion.AngleAxis(87f / 2f, Vector3.up) * cam.transform.forward;
             line18.y = 0;
             if (Physics.Raycast(cam.transform.position, line18, out hit18, 500))
             {
-                //Debug.DrawLine(cam.transform.position, hit18.point);
+                Debug.DrawLine(cam.transform.position, hit18.point);
                 if (hit18.transform.name == "Poster")
                 {
                     Flag18 = true;
