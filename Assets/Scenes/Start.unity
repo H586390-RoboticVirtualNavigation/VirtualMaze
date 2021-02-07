@@ -142,7 +142,9 @@ MonoBehaviour:
   cam: {fileID: 1750901562}
   checkPoster: {fileID: 970793812}
   errorClip: {fileID: 8300000, guid: 9867167ea89524c9cb9a1c5d11cbfd3f, type: 3}
-  levelController: {fileID: 0}
+  levelController: {fileID: 226892008}
+  cueController: {fileID: 1160995684}
+  maxAngle: 97
 --- !u!20 &190697398 stripped
 Camera:
   m_CorrespondingSourceObject: {fileID: 2084128, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
@@ -298,6 +300,22 @@ MonoBehaviour:
   checkPoster: {fileID: 0}
   errorClip: {fileID: 0}
   levelController: {fileID: 0}
+  cueController: {fileID: 0}
+  maxAngle: 97
+--- !u!114 &362525637
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 362525635}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9095e5fa69e84e14f9c665016eac8362, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  errorClip: {fileID: 0}
+  rewardArea: {fileID: 0}
 --- !u!1 &488890023 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2296856355228995290, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
@@ -7830,6 +7848,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: aa1b4192074926247b9711507173d20f, type: 3}
+--- !u!114 &1160995684 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7489421944467076256, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
+    type: 3}
+  m_PrefabInstance: {fileID: 683878198}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fdf0f83be6456c45bd821ee97fccfaf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1432621917 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7480294688975215961, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
