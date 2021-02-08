@@ -127,7 +127,7 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 683878198}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &158159960
+--- !u!114 &158159957
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4417,6 +4417,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_TagString
       value: MainCamera
+      objectReference: {fileID: 0}
+    - target: {fileID: 4491432112984593903, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4637468121302950154, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
         type: 3}

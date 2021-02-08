@@ -413,7 +413,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9095e5fa69e84e14f9c665016eac8362, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  checkPoster: {fileID: 0}
   errorClip: {fileID: 8300000, guid: 9867167ea89524c9cb9a1c5d11cbfd3f, type: 3}
   rewardArea: {fileID: 206425369}
 --- !u!1 &243891677
@@ -2088,6 +2087,21 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 21300000, guid: 6beae3df032f5724aaa099d0041d721e,
         type: 3}
+    - target: {fileID: 3249004728069940807, guid: 542c5d0a9da094d3f8a72a738144e05b,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7076260192325755700, guid: 542c5d0a9da094d3f8a72a738144e05b,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7076260192325755700, guid: 542c5d0a9da094d3f8a72a738144e05b,
+        type: 3}
+      propertyPath: m_TagString
+      value: RewardArea
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 11497916, guid: 542c5d0a9da094d3f8a72a738144e05b, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 542c5d0a9da094d3f8a72a738144e05b, type: 3}
@@ -2127,7 +2141,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9095e5fa69e84e14f9c665016eac8362, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  checkPoster: {fileID: 0}
   errorClip: {fileID: 8300000, guid: 9867167ea89524c9cb9a1c5d11cbfd3f, type: 3}
   rewardArea: {fileID: 2003096711}
 --- !u!1 &2113675098

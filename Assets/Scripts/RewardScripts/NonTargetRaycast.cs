@@ -157,7 +157,7 @@ public class NonTargetRaycast : MonoBehaviour
                     string posterImage = hitstraight.transform.GetComponent<Renderer>().material.name;
                     //Debug.Log(posterImage);
                     string strcheck = cueImage + " (Instance)";
-                    //Debug.Log(strcheck);
+                    Debug.Log(strcheck);
                     if (posterImage == strcheck)
                     {
                         //Debug.Log("Correct Poster");
@@ -166,6 +166,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
+                        //Debug.Log("isSoundTriggered:" + isSoundTriggered);
                         isSoundTriggered = true;
                     }
                 }
@@ -683,24 +684,39 @@ public class NonTargetRaycast : MonoBehaviour
         timer = 0f;
     }
 
-    float overallBlinkDuration = 1f;
+    float overallBlinkDuration = 0.5f;
 
     private void HintBlink() //2 off/on cycles
     {
-        if (timer >= 0 && timer < (overallBlinkDuration / 4))
+        if (timer >= 0 && timer < (overallBlinkDuration / 2))
         {
             cueController.HideHint();
         }
-        if (timer >= (overallBlinkDuration / 4) && timer < (overallBlinkDuration / 2))
+        if (timer >= (overallBlinkDuration / 2) && timer < (overallBlinkDuration))
         {
             cueController.ShowHint();
-            Debug.Log("Test");
         }
-        if (timer >= (overallBlinkDuration / 2) && timer < (3 * overallBlinkDuration / 4))
+        if (timer >= (overallBlinkDuration) && timer < (3 * overallBlinkDuration / 2))
         {
             cueController.HideHint();
         }
-        if (timer >= (3*overallBlinkDuration / 4) && timer < overallBlinkDuration)
+        if (timer >= (3 * overallBlinkDuration / 2) && timer < (2 * overallBlinkDuration))
+        {
+            cueController.ShowHint();
+        }
+        if (timer >= (2 * overallBlinkDuration) && timer < (5 * overallBlinkDuration / 2))
+        {
+            cueController.HideHint();
+        }
+        if (timer >= (5 * overallBlinkDuration / 2) && timer < (3 * overallBlinkDuration))
+        {
+            cueController.ShowHint();
+        }
+        if (timer >= (3 * overallBlinkDuration) && timer < (7 * overallBlinkDuration / 2))
+        {
+            cueController.HideHint();
+        }
+        if (timer >= (7 * overallBlinkDuration / 2) && timer < (4 * overallBlinkDuration))
         {
             cueController.ShowHint();
         }

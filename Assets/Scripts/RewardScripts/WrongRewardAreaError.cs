@@ -7,7 +7,7 @@ public class WrongRewardAreaError : MonoBehaviour
     public RewardArea rewardArea;
     private static CueController cueController;
     private float timer = 100f;
-    private float overallBlinkDuration = 1f;
+    private float overallBlinkDuration = 0.5f;
 
     void Start()
     {
@@ -35,22 +35,37 @@ public class WrongRewardAreaError : MonoBehaviour
 
     private void HintBlink() //2 off/on cycles
     {
-        if (timer >= 0 && timer < (overallBlinkDuration / 4))
+        if (timer >= 0 && timer < (overallBlinkDuration / 2))
         {
             cueController.HideHint();
         }
-        if (timer >= (overallBlinkDuration / 4) && timer < (overallBlinkDuration / 2))
+        if (timer >= (overallBlinkDuration / 2) && timer < (overallBlinkDuration))
         {
             cueController.ShowHint();
-            Debug.Log("Test2");
         }
-        if (timer >= (overallBlinkDuration / 2) && timer < (3 * overallBlinkDuration / 4))
+        if (timer >= (overallBlinkDuration) && timer < (3 * overallBlinkDuration / 2))
         {
             cueController.HideHint();
         }
-        if (timer >= (3 * overallBlinkDuration / 4) && timer < overallBlinkDuration)
+        if (timer >= (3 * overallBlinkDuration / 2) && timer < (2 * overallBlinkDuration))
         {
            cueController.ShowHint();
+        }
+        if (timer >= (2 * overallBlinkDuration) && timer < (5 * overallBlinkDuration / 2))
+        {
+            cueController.HideHint();
+        }
+        if (timer >= (5 * overallBlinkDuration / 2) && timer < (3 * overallBlinkDuration))
+        {
+            cueController.ShowHint();
+        }
+        if (timer >= (3 * overallBlinkDuration) && timer < (7 * overallBlinkDuration / 2))
+        {
+            cueController.HideHint();
+        }
+        if (timer >= (7 * overallBlinkDuration / 2) && timer < (4 * overallBlinkDuration))
+        {
+            cueController.ShowHint();
         }
     }
 }
