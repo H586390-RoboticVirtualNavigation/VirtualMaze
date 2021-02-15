@@ -57,9 +57,12 @@ EditorBuildSettings:
     path: Assets/Scenes/Step3.unity
     guid: 8cec198788c77fc4e9ef2272d2998c18
   - enabled: 1
+    path: Assets/Scenes/Step4.unity
+    guid: 98f514d78ac944843a1e2571e2f60b0e
+  - enabled: 1
     path: Assets/Scenes/OpenMaze.unity
     guid: c59ac06088a61644bbe347ad374b28f3
-  - enabled: 1
-    path: Assets/Scenes/Double Tee Two.unity
-    guid: 98f514d78ac944843a1e2571e2f60b0e
+  - enabled: 0
+    path: Assets/Scenes/Step4A.unity
+    guid: 0184be96112e5b64b9575029d06f4ea1
   m_configObjects: {}

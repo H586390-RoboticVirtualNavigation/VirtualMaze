@@ -4461,7 +4461,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 193934, guid: 542c5d0a9da094d3f8a72a738144e05b, type: 3}
       propertyPath: m_Name
-      value: CrocodileReward
+      value: BluebirdReward
       objectReference: {fileID: 0}
     - target: {fileID: 426442, guid: 542c5d0a9da094d3f8a72a738144e05b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4510,12 +4510,12 @@ PrefabInstance:
     - target: {fileID: 2392802, guid: 542c5d0a9da094d3f8a72a738144e05b, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 7afebd764e37f574a8dc8c55984e01b7, type: 2}
+      objectReference: {fileID: 2100000, guid: fd6cebae2528b3c468cc88038bb427b3, type: 2}
     - target: {fileID: 3249004728069940807, guid: 542c5d0a9da094d3f8a72a738144e05b,
         type: 3}
       propertyPath: cueImage
       value: 
-      objectReference: {fileID: 21300000, guid: b8ce0dcfc5da6ea45a7cf75fc28f8e1f,
+      objectReference: {fileID: 21300000, guid: 40033b04959610b488111cac50079dca,
         type: 3}
     - target: {fileID: 3249004728069940807, guid: 542c5d0a9da094d3f8a72a738144e05b,
         type: 3}
@@ -4859,7 +4859,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 193934, guid: 542c5d0a9da094d3f8a72a738144e05b, type: 3}
       propertyPath: m_Name
-      value: RabbitReward
+      value: FoxReward
       objectReference: {fileID: 0}
     - target: {fileID: 426442, guid: 542c5d0a9da094d3f8a72a738144e05b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4908,12 +4908,12 @@ PrefabInstance:
     - target: {fileID: 2392802, guid: 542c5d0a9da094d3f8a72a738144e05b, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 8fc8ec353d42bd744a9a97166ee99ce7, type: 2}
+      objectReference: {fileID: 2100000, guid: 1b68cbfe4ee2f534e80ad33be0bb5ee8, type: 2}
     - target: {fileID: 3249004728069940807, guid: 542c5d0a9da094d3f8a72a738144e05b,
         type: 3}
       propertyPath: cueImage
       value: 
-      objectReference: {fileID: 21300000, guid: 047ea24ea9ef79e4c99478a8fb85b7cf,
+      objectReference: {fileID: 21300000, guid: f9007b8e95f28f643a4656536c0365d8,
         type: 3}
     m_RemovedComponents:
     - {fileID: 11497916, guid: 542c5d0a9da094d3f8a72a738144e05b, type: 3}
