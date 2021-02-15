@@ -105,7 +105,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -134,7 +134,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -157,16 +157,15 @@ public class NonTargetRaycast : MonoBehaviour
                     string posterImage = hitstraight.transform.GetComponent<Renderer>().material.name;
                     //Debug.Log(posterImage);
                     string strcheck = cueImage + " (Instance)";
-                    Debug.Log(strcheck);
+                    //Debug.Log(strcheck);
                     if (posterImage == strcheck)
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
-                        //Debug.Log("isSoundTriggered:" + isSoundTriggered);
                         isSoundTriggered = true;
                     }
                 }
@@ -190,7 +189,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -217,7 +216,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -244,7 +243,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -271,7 +270,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -298,7 +297,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -325,7 +324,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -352,7 +351,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -379,7 +378,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -406,7 +405,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -433,7 +432,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -460,7 +459,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -487,7 +486,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -514,7 +513,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -541,7 +540,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -568,7 +567,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -595,7 +594,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -622,7 +621,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();
@@ -649,7 +648,7 @@ public class NonTargetRaycast : MonoBehaviour
                     {
                         //Debug.Log("Correct Poster");
                     }
-                    else if (posterImage != strcheck && isSoundTriggered == false)
+                    else if (posterImage != strcheck && !isSoundTriggered)
                     {
                         //Debug.Log("Wrong Poster");
                         WrongPoster();

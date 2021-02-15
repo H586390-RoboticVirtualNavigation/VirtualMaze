@@ -244,7 +244,7 @@ public class LevelController : MonoBehaviour {
                 }
             }
 
-            PrepareNextTask(success || !restartOnTaskFail || targetIndex == MazeLogic.NullRewardIndex); // continue with next task or reward.
+            PrepareNextTask((success || !restartOnTaskFail || targetIndex == MazeLogic.NullRewardIndex) && (trialCounter < numTrials)); // continue with next task or reward.
 
             success = false; //reset the success
         }
