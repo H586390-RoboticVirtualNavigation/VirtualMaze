@@ -134,17 +134,29 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 158159956}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 16da9ca3013a23b47a71f24ad304e0f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 1750901562}
-  checkPoster: {fileID: 970793812}
   errorClip: {fileID: 8300000, guid: 9867167ea89524c9cb9a1c5d11cbfd3f, type: 3}
   levelController: {fileID: 226892008}
   cueController: {fileID: 1160995684}
   maxAngle: 97
+--- !u!114 &158159961
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 158159956}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3ac7b5d870242149bd25781f197ffaf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  checkPoster: {fileID: 970793812}
 --- !u!20 &190697398 stripped
 Camera:
   m_CorrespondingSourceObject: {fileID: 2084128, guid: 7554bfb7c2ebf456e8e9c0a45a6b9ee0,
@@ -297,7 +309,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 0}
-  checkPoster: {fileID: 0}
   errorClip: {fileID: 0}
   levelController: {fileID: 0}
   cueController: {fileID: 0}

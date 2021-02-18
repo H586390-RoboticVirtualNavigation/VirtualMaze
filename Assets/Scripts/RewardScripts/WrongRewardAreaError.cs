@@ -24,8 +24,8 @@ public class WrongRewardAreaError : MonoBehaviour
     {
         string areaPosterImage = rewardArea.cueImage.name;
         //Debug.Log(areaPosterImage);
-        string cueImage = NonTargetRaycast.cueImage;
-        //Debug.Log(cueImage);
+        string cueImage = CueImage.cueImage;
+        Debug.Log(cueImage);
         if (areaPosterImage != cueImage)
         {
             PlayerAudio.instance.PlayErrorClip();

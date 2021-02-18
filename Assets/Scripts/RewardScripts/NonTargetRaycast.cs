@@ -4,7 +4,7 @@ using System.Collections;
 public class NonTargetRaycast : MonoBehaviour
 {
     public Camera cam;
-    public CheckPoster checkPoster;
+    //public CheckPoster checkPoster;
     public AudioClip errorClip;
     public LevelController levelController;
     public CueController cueController;
@@ -33,7 +33,7 @@ public class NonTargetRaycast : MonoBehaviour
     private bool Flag17;
     private bool Flag18;
     private float timer = 100f;
-    public static string cueImage { get; private set; }
+    //public static string cueImage { get; private set; }
 
     [SerializeField]
     private float maxAngle = 97f; // Range: 45 - 100
@@ -57,7 +57,8 @@ public class NonTargetRaycast : MonoBehaviour
         void Shoot()
         {
             timer += Time.deltaTime;
-            cueImage = checkPoster.GetCueImageName();
+            //cueImage = checkPoster.GetCueImageName();
+            string cueImage = CueImage.cueImage;
 
             //Vector3 straightline = cam.transform.forward;
             Vector3 straightline = Quaternion.AngleAxis(0f / 2f, Vector3.up) * cam.transform.forward;
@@ -127,7 +128,6 @@ public class NonTargetRaycast : MonoBehaviour
                     FlagRight = true;
                     string posterImage = hitright.transform.GetComponent<Renderer>().material.name;
                     //Debug.Log(posterImage);
-                    string cueImage = checkPoster.GetCueImageName();
                     string strcheck = cueImage + " (Instance)";
                     //Debug.Log(strcheck);
                     if (posterImage == strcheck)
