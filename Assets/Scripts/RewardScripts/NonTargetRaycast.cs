@@ -33,6 +33,7 @@ public class NonTargetRaycast : MonoBehaviour
     private bool Flag17;
     private bool Flag18;
     private float timer = 100f;
+    private float minDist = 6;
     //public static string cueImage { get; private set; }
 
     [SerializeField]
@@ -95,7 +96,7 @@ public class NonTargetRaycast : MonoBehaviour
             {
                 Debug.DrawLine(cam.transform.position, hitleft.point);
                 //Debug.Log(hitleft.transform.name);
-                if (hitleft.transform.name == "Poster")
+                if (hitleft.transform.name == "Poster" && hitleft.distance < minDist)
                 {
                     FlagLeft = true;
                     string posterImage = hitleft.transform.GetComponent<Renderer>().material.name;
@@ -123,7 +124,7 @@ public class NonTargetRaycast : MonoBehaviour
             {
                 Debug.DrawLine(cam.transform.position, hitright.point);
                 //Debug.Log(hitleft.transform.name);
-                if (hitright.transform.name == "Poster")
+                if (hitright.transform.name == "Poster" && hitright.distance < minDist)
                 {
                     FlagRight = true;
                     string posterImage = hitright.transform.GetComponent<Renderer>().material.name;
@@ -151,13 +152,14 @@ public class NonTargetRaycast : MonoBehaviour
             {
                 //Debug.DrawLine(cam.transform.position, hitstraight.point);
                 //Debug.Log(hitstraight.transform.name);
-                if (hitstraight.transform.name == "Poster")
+                if (hitstraight.transform.name == "Poster" && hitstraight.distance < minDist)
                 {
                     FlagStraight = true;
                     string posterImage = hitstraight.transform.GetComponent<Renderer>().material.name;
                     //Debug.Log(posterImage);
                     string strcheck = cueImage + " (Instance)";
                     //Debug.Log(strcheck);
+                    //Debug.Log(hitstraight.distance);
                     if (posterImage == strcheck)
                     {
                         //Debug.Log("Correct Poster");
@@ -180,7 +182,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line1, out RaycastHit hit1, 500))
             {
                 Debug.DrawLine(cam.transform.position, hit1.point);
-                if (hit1.transform.name == "Poster")
+                if (hit1.transform.name == "Poster" && hit1.distance < minDist)
                 {
                     Flag1 = true;
                     string posterImage = hit1.transform.GetComponent<Renderer>().material.name;
@@ -207,7 +209,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line2, out RaycastHit hit2, 500))
             {
                 Debug.DrawLine(cam.transform.position, hit2.point);
-                if (hit2.transform.name == "Poster")
+                if (hit2.transform.name == "Poster" && hit2.distance < minDist)
                 {
                     Flag2 = true;
                     string posterImage = hit2.transform.GetComponent<Renderer>().material.name;
@@ -234,7 +236,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line3, out RaycastHit hit3, 500))
             {
                 Debug.DrawLine(cam.transform.position, hit3.point);
-                if (hit3.transform.name == "Poster")
+                if (hit3.transform.name == "Poster" && hit3.distance < minDist)
                 {
                     Flag3 = true;
                     string posterImage = hit3.transform.GetComponent<Renderer>().material.name;
@@ -261,7 +263,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line4, out RaycastHit hit4, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit4.point);
-                if (hit4.transform.name == "Poster")
+                if (hit4.transform.name == "Poster" && hit4.distance < minDist)
                 {
                     Flag4 = true;
                     string posterImage = hit4.transform.GetComponent<Renderer>().material.name;
@@ -288,7 +290,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line5, out RaycastHit hit5, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit5.point);
-                if (hit5.transform.name == "Poster")
+                if (hit5.transform.name == "Poster" && hit5.distance < minDist)
                 {
                     Flag5 = true;
                     string posterImage = hit5.transform.GetComponent<Renderer>().material.name;
@@ -315,7 +317,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line6, out RaycastHit hit6, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit6.point);
-                if (hit6.transform.name == "Poster")
+                if (hit6.transform.name == "Poster" && hit6.distance < minDist)
                 {
                     Flag6 = true;
                     string posterImage = hit6.transform.GetComponent<Renderer>().material.name;
@@ -342,7 +344,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line7, out RaycastHit hit7, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit7.point);
-                if (hit7.transform.name == "Poster")
+                if (hit7.transform.name == "Poster" && hit7.distance < minDist)
                 {
                     Flag7 = true;
                     string posterImage = hit7.transform.GetComponent<Renderer>().material.name;
@@ -369,7 +371,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line8, out RaycastHit hit8, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit8.point);
-                if (hit8.transform.name == "Poster")
+                if (hit8.transform.name == "Poster" && hit8.distance < minDist)
                 {
                     Flag8 = true;
                     string posterImage = hit8.transform.GetComponent<Renderer>().material.name;
@@ -396,7 +398,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line9, out RaycastHit hit9, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit9.point);
-                if (hit9.transform.name == "Poster")
+                if (hit9.transform.name == "Poster" && hit9.distance < minDist)
                 {
                     Flag9 = true;
                     string posterImage = hit9.transform.GetComponent<Renderer>().material.name;
@@ -423,7 +425,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line10, out RaycastHit hit10, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit10.point);
-                if (hit10.transform.name == "Poster")
+                if (hit10.transform.name == "Poster" && hit10.distance < minDist)
                 {
                     Flag10 = true;
                     string posterImage = hit10.transform.GetComponent<Renderer>().material.name;
@@ -450,7 +452,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line11, out RaycastHit hit11, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit11.point);
-                if (hit11.transform.name == "Poster")
+                if (hit11.transform.name == "Poster" && hit11.distance < minDist)
                 {
                     Flag11 = true;
                     string posterImage = hit11.transform.GetComponent<Renderer>().material.name;
@@ -477,7 +479,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line12, out RaycastHit hit12, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit12.point);
-                if (hit12.transform.name == "Poster")
+                if (hit12.transform.name == "Poster" && hit12.distance < minDist)
                 {
                     Flag12 = true;
                     string posterImage = hit12.transform.GetComponent<Renderer>().material.name;
@@ -504,7 +506,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line13, out RaycastHit hit13, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit13.point);
-                if (hit13.transform.name == "Poster")
+                if (hit13.transform.name == "Poster" && hit13.distance < minDist)
                 {
                     Flag13 = true;
                     string posterImage = hit13.transform.GetComponent<Renderer>().material.name;
@@ -531,7 +533,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line14, out RaycastHit hit14, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit14.point);
-                if (hit14.transform.name == "Poster")
+                if (hit14.transform.name == "Poster" && hit14.distance < minDist)
                 {
                     Flag14 = true;
                     string posterImage = hit14.transform.GetComponent<Renderer>().material.name;
@@ -558,7 +560,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line15, out RaycastHit hit15, 500))
             {
                 //Debug.DrawLine(cam.transform.position, hit15.point);
-                if (hit15.transform.name == "Poster")
+                if (hit15.transform.name == "Poster" && hit15.distance < minDist)
                 {
                     Flag15 = true;
                     string posterImage = hit15.transform.GetComponent<Renderer>().material.name;
@@ -585,7 +587,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line16, out RaycastHit hit16, 500))
             {
                 Debug.DrawLine(cam.transform.position, hit16.point);
-                if (hit16.transform.name == "Poster")
+                if (hit16.transform.name == "Poster" && hit16.distance < minDist)
                 {
                     Flag16 = true;
                     string posterImage = hit16.transform.GetComponent<Renderer>().material.name;
@@ -612,7 +614,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line17, out RaycastHit hit17, 500))
             {
                 Debug.DrawLine(cam.transform.position, hit17.point);
-                if (hit17.transform.name == "Poster")
+                if (hit17.transform.name == "Poster" && hit17.distance < minDist)
                 {
                     Flag17 = true;
                     string posterImage = hit17.transform.GetComponent<Renderer>().material.name;
@@ -639,7 +641,7 @@ public class NonTargetRaycast : MonoBehaviour
             if (Physics.Raycast(cam.transform.position, line18, out RaycastHit hit18, 500))
             {
                 Debug.DrawLine(cam.transform.position, hit18.point);
-                if (hit18.transform.name == "Poster")
+                if (hit18.transform.name == "Poster" && hit18.distance < minDist)
                 {
                     Flag18 = true;
                     string posterImage = hit18.transform.GetComponent<Renderer>().material.name;
