@@ -52,9 +52,12 @@ public class NonTargetRaycast : MonoBehaviour
         {
             Shoot();
         }*/
-
-        Shoot();
-        HintBlink();
+        
+        if (LevelController.sessionStarted)
+        {
+            Shoot();
+            HintBlink();
+        }
 
         void Shoot()
         {

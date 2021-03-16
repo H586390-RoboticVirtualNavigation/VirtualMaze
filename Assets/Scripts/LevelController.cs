@@ -49,7 +49,7 @@ public class LevelController : MonoBehaviour {
     /// the trial.
     /// </summary>
     public bool restartOnTaskFail = true;
-    public bool resetRobotPositionDuringInterTrial = false;
+    public bool resetRobotPositionDuringInterTrial = true;
     protected int numTrials { get; private set; } = 0;
 
     /// <summary>
@@ -79,8 +79,10 @@ public class LevelController : MonoBehaviour {
 
     //Strings
     private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent";
+    
+    public static bool sessionStarted { get; private set; }
 
-	private void Awake() {
+    private void Awake() {
         waitIfPaused = new WaitUntil(() => !isPaused);
 
         RewardArea.OnEnteredTriggerZone += OnZoneEnter;
@@ -94,6 +96,7 @@ public class LevelController : MonoBehaviour {
         onSessionTrigger.AddListener(EyeLink.OnSessionTrigger);
         //kw edit (commented out)
         //onSessionTrigger.AddListener(parallelPort.TryWriteTrigger);
+        sessionStarted = false;
     }
 
     private void InProximity(RewardArea rewardArea) {
@@ -147,6 +150,7 @@ public class LevelController : MonoBehaviour {
             yield return null;
         }
 
+        sessionStarted = true;
         rewards = RewardArea.GetAllRewardsFromScene();
         startWaypoint = FindObjectOfType<StartWaypoint>().transform;
 
