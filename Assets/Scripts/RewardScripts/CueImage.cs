@@ -8,6 +8,9 @@ public class CueImage : MonoBehaviour
 
     void Update()
     {
-        cueImage = checkPoster.GetCueImageName();
+        if (LevelController.sessionStarted)
+        {
+            cueImage = checkPoster.GetCueImageName();
+        }
     }
 }

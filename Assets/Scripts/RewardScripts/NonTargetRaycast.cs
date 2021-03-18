@@ -6,7 +6,6 @@ public class NonTargetRaycast : MonoBehaviour
     public Camera cam;
     //public CheckPoster checkPoster;
     public AudioClip errorClip;
-    public LevelController levelController;
     public CueController cueController;
     private bool isSoundTriggered = false;
     private bool isPosterInView = false;
@@ -33,7 +32,7 @@ public class NonTargetRaycast : MonoBehaviour
     private bool Flag16;
     private bool Flag17;
     private bool Flag18;
-    private float timer = 100f;
+    private float timer = 1000f;
     private float maxDist = 6;
     //public static string cueImage { get; private set; }
 
@@ -52,18 +51,24 @@ public class NonTargetRaycast : MonoBehaviour
         {
             Shoot();
         }*/
-        
+
+        // Checks if a session is currently running
         if (LevelController.sessionStarted)
         {
             Shoot();
             HintBlink();
         }
+        else
+        {
+            Reset();
+        }
 
+        // Raycasts to check whether rays are colliding with poster
         void Shoot()
         {
             timer += Time.deltaTime;
             //cueImage = checkPoster.GetCueImageName();
-            string cueImage = CueImage.cueImage;
+            string cueImage = CueImage.cueImage; // Retrieves name of cue image from CueImage
 
             //Vector3 straightline = cam.transform.forward;
             Vector3 straightline = Quaternion.AngleAxis(0f / 2f, Vector3.up) * cam.transform.forward;
@@ -691,7 +696,7 @@ public class NonTargetRaycast : MonoBehaviour
 
             if (FlagLeft || FlagRight || FlagStraight || Flag1 || Flag2 || Flag3 || Flag4 || Flag5 || Flag6 || Flag7 || Flag8 || Flag9 || Flag10 || Flag11 || Flag12 || Flag13 || Flag14 || Flag15 || Flag16 || Flag17 || Flag18)
             {
-                isPosterInView = true;
+                isPosterInView = true; // At least one of the rays is hitting a poster
             }
             else if (!FlagLeft && !FlagRight && !FlagStraight && !Flag1 && !Flag2 && !Flag3 && !Flag4 && !Flag5 && !Flag6 && !Flag7 && !Flag8 && !Flag9 && !Flag10 && !Flag11 && !Flag12 && !Flag13 && !Flag14 && !Flag15 && !Flag16 && !Flag17 && !Flag18)
             {
@@ -701,7 +706,7 @@ public class NonTargetRaycast : MonoBehaviour
 
             if (isPosterInView == false)
             {
-                isSoundTriggered = false;
+                isSoundTriggered = false; // Resets error sound flag so that next correct poster detected will trigger error sound
             }
         }
     }
@@ -709,44 +714,33 @@ public class NonTargetRaycast : MonoBehaviour
     private void WrongPoster()
     {
         PlayerAudio.instance.PlayErrorClip();
-        timer = 0f;
+        timer = 0f; // For resetting the blinking timer
     }
 
+    // Number and duration of blinks
+    int numBlinks = 4;
     float overallBlinkDuration = 0.5f;
-
-    private void HintBlink() //2 off/on cycles
+    
+    private void HintBlink()
     {
-        if (timer >= 0 && timer < (overallBlinkDuration / 2))
+        for (int i = 0; i < numBlinks; i++)
         {
-            cueController.HideHint();
+            if (timer >= (i * overallBlinkDuration)  && timer < (((2 * i) + 1) * overallBlinkDuration / 2))
+            {
+                cueController.HideHint();
+            }
+            if (timer >= (((2 * i) + 1) * overallBlinkDuration / 2) && timer < ((i + 1) * overallBlinkDuration))
+            {
+                cueController.ShowHint();
+            }
         }
-        if (timer >= (overallBlinkDuration / 2) && timer < (overallBlinkDuration))
-        {
-            cueController.ShowHint();
-        }
-        if (timer >= (overallBlinkDuration) && timer < (3 * overallBlinkDuration / 2))
-        {
-            cueController.HideHint();
-        }
-        if (timer >= (3 * overallBlinkDuration / 2) && timer < (2 * overallBlinkDuration))
-        {
-            cueController.ShowHint();
-        }
-        if (timer >= (2 * overallBlinkDuration) && timer < (5 * overallBlinkDuration / 2))
-        {
-            cueController.HideHint();
-        }
-        if (timer >= (5 * overallBlinkDuration / 2) && timer < (3 * overallBlinkDuration))
-        {
-            cueController.ShowHint();
-        }
-        if (timer >= (3 * overallBlinkDuration) && timer < (7 * overallBlinkDuration / 2))
-        {
-            cueController.HideHint();
-        }
-        if (timer >= (7 * overallBlinkDuration / 2) && timer < (4 * overallBlinkDuration))
-        {
-            cueController.ShowHint();
-        }
+    }
+
+    private void Reset()
+    {
+        timer = 1000f;
+        isSoundTriggered = false;
+        isPosterInView = false;
+        isCorrectPoster = false;
     }
 }

@@ -79,8 +79,8 @@ public class LevelController : MonoBehaviour {
 
     //Strings
     private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent";
-    
-    public static bool sessionStarted { get; private set; }
+
+    public static bool sessionStarted { get; private set; } = false;
 
     private void Awake() {
         waitIfPaused = new WaitUntil(() => !isPaused);
@@ -90,13 +90,11 @@ public class LevelController : MonoBehaviour {
         RewardArea.InTriggerZoneListener += WhileInTriggerZone;
         RewardArea.OnProximityTriggered += InProximity;
 
-
         //Prepare Eyelink
         EyeLink.Initialize();
         onSessionTrigger.AddListener(EyeLink.OnSessionTrigger);
         //kw edit (commented out)
         //onSessionTrigger.AddListener(parallelPort.TryWriteTrigger);
-        sessionStarted = false;
     }
 
     private void InProximity(RewardArea rewardArea) {
@@ -134,6 +132,7 @@ public class LevelController : MonoBehaviour {
     public void StopLevel() {
         numTrials = 0;
         success = false;
+        sessionStarted = false;
         targetIndex = MazeLogic.NullRewardIndex;
         logicProvider?.Cleanup(rewards);
         cueController.HideAll();
@@ -150,7 +149,6 @@ public class LevelController : MonoBehaviour {
             yield return null;
         }
 
-        sessionStarted = true;
         rewards = RewardArea.GetAllRewardsFromScene();
         startWaypoint = FindObjectOfType<StartWaypoint>().transform;
 
@@ -174,6 +172,7 @@ public class LevelController : MonoBehaviour {
 
         yield return waitIfPaused;
         yield return FadeInAndStartSession();
+        sessionStarted = true;
 
         PrepareNextTask(true); //first task is always true
 
