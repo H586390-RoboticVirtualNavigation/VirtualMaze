@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Double Tee.unity
     guid: 8c414064fb7f8af45bf9100262f9b4b8
   - enabled: 1
+    path: Assets/Scenes/Double Tee (Large).unity
+    guid: 805526e13b392cd4cabd2d820c763de2
+  - enabled: 1
     path: Assets/Scenes/Back and Forth3.unity
     guid: 992afb0f01d1bec4285cca1fef9349e7
   - enabled: 1
@@ -62,7 +65,4 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/OpenMaze.unity
     guid: c59ac06088a61644bbe347ad374b28f3
-  - enabled: 0
-    path: Assets/Scenes/Step4A.unity
-    guid: 0184be96112e5b64b9575029d06f4ea1
   m_configObjects: {}

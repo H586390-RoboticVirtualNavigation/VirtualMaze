@@ -33,11 +33,13 @@ public class NonTargetRaycast : MonoBehaviour
     private bool Flag17;
     private bool Flag18;
     private float timer = 1000f;
-    private float maxDist = 6;
     //public static string cueImage { get; private set; }
 
     [SerializeField]
     private float maxAngle = 97f; // Range: 45 - 100
+
+    [SerializeField]
+    private float maxDist = 2;
 
     void Update()
     {
