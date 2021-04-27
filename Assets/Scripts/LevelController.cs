@@ -252,7 +252,7 @@ public class LevelController : MonoBehaviour {
             success = false; //reset the success
         }
 
-
+        yield return new WaitForSecondsRealtime(2f);
         yield return FadeCanvas.fadeCanvas.AutoFadeOut();
 
         //double check
@@ -328,8 +328,8 @@ public class LevelController : MonoBehaviour {
     }
 
     protected virtual IEnumerator InterTrial() {
+        yield return new WaitForSecondsRealtime(2f);
         if (resetRobotPositionDuringInterTrial) {
-            yield return new WaitForSecondsRealtime(2f);
             //fadeout and wait for fade out to finish.
             yield return FadeCanvas.fadeCanvas.AutoFadeOut();
             robotMovement.MoveToWaypoint(startWaypoint);
