@@ -50,6 +50,7 @@ public class LevelController : MonoBehaviour {
     /// </summary>
     public bool restartOnTaskFail = true;
     public bool resetRobotPositionDuringInterTrial = true;
+    public bool faceRandomDirectionOnStart = true;
     protected int numTrials { get; private set; } = 0;
 
     /// <summary>
@@ -265,7 +266,11 @@ public class LevelController : MonoBehaviour {
     private IEnumerator FadeInAndStartSession() {
         onSessionTrigger.Invoke(SessionTrigger.ExperimentVersionTrigger, GameController.versionNum);
 
-        robotMovement.MoveToWaypoint(startWaypoint);
+        if (faceRandomDirectionOnStart) {
+            robotMovement.RandomiseWaypointDirection(startWaypoint);
+        } else {
+            robotMovement.MoveToWaypoint(startWaypoint);
+        }
 
         //fade in and wait for fadein to complete
         yield return FadeCanvas.fadeCanvas.FadeToScreen();
@@ -332,7 +337,11 @@ public class LevelController : MonoBehaviour {
         if (resetRobotPositionDuringInterTrial) {
             //fadeout and wait for fade out to finish.
             yield return FadeCanvas.fadeCanvas.AutoFadeOut();
-            robotMovement.MoveToWaypoint(startWaypoint);
+            if (faceRandomDirectionOnStart) {
+                robotMovement.RandomiseWaypointDirection(startWaypoint);
+            } else {
+                robotMovement.MoveToWaypoint(startWaypoint);
+            }
         }
 
         yield return PauseIfRequired();

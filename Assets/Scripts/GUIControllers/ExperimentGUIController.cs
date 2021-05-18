@@ -27,6 +27,7 @@ public class ExperimentGUIController : DataGUIController {
     public Toggle willPauseAtNextTrialToggle;
     public Toggle restartOnTrialFailToggle;
     public Toggle resetPositionOnTrialToggle;
+    public Toggle faceRandomDirectionOnStartToggle;
 
     public Button startStopButton;
     public Button pauseButton;
@@ -54,6 +55,7 @@ public class ExperimentGUIController : DataGUIController {
 
         restartOnTrialFailToggle.onValueChanged.AddListener(toggleRestartOnTrialFail);
         resetPositionOnTrialToggle.onValueChanged.AddListener(toggleResetPosition);
+        faceRandomDirectionOnStartToggle.onValueChanged.AddListener(toggleFaceRandomDirectionOnStart);
     }
 
     private void toggleRestartOnTrialFail(bool isOn) {
@@ -62,6 +64,11 @@ public class ExperimentGUIController : DataGUIController {
 
     private void toggleResetPosition(bool isOn) {
         experimentController.resetPositionOnTrial = isOn;
+    }
+
+    private void toggleFaceRandomDirectionOnStart(bool isOn)
+    {
+        experimentController.faceRandomDirectionOnStart = isOn;
     }
 
     private void OnPauseButtonClicked() {
@@ -195,6 +202,7 @@ public class ExperimentGUIController : DataGUIController {
 
         resetPositionOnTrialToggle.isOn = experimentController.resetPositionOnTrial;
         restartOnTrialFailToggle.isOn = experimentController.restartOnTrialFail;
+        faceRandomDirectionOnStartToggle.isOn = experimentController.faceRandomDirectionOnStart;
         IsValidSaveLocation(experimentController.SaveLocation);
         sessionIntermissionValid.isOn = IsValidDuration(experimentController.SessionIntermissionDuration);
         timeoutDurationValid.isOn = IsValidDuration(Session.trialTimeLimit);
