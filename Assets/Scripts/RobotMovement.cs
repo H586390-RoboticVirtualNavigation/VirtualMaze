@@ -153,7 +153,7 @@ public class RobotMovement : ConfigurableComponent {
 
         transform.position = startpos;
 
-        int y_rotation = 90 * Random.Range(0, 4);
+        int y_rotation = Random.Range(0, 360);
         Quaternion startrot = transform.rotation;
         startrot.y = waypoint.rotation.y;
         transform.rotation = startrot;
