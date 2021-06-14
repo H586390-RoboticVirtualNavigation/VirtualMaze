@@ -64,7 +64,7 @@ public class RewardsController : ConfigurableComponent {
 
     public void Reward() {
         StartCoroutine(RewardRoutine());
-        Debug.Log("Reward Given");
+        // Debug.Log("Reward Given");
     }
 
     private IEnumerator RewardRoutine() {

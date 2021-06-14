@@ -205,7 +205,7 @@ public class RewardArea : MonoBehaviour {
         if (angle < s_requiredViewAngle * 0.5f) {
             //checks if close enough
             if (distance <= RequiredDistance) {
-                //Debug.Log("Reward!!!");
+                Debug.Log("Reward!!!");
                 OnRewardTriggered?.Invoke(this);
             }
         }

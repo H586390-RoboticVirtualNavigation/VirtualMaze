@@ -10,6 +10,9 @@ public class CueImage : MonoBehaviour
     {
         if (LevelController.sessionStarted)
         {
+            if (checkPoster == null) {
+                Debug.Log("Poster is null");
+            }
             cueImage = checkPoster.GetCueImageName();
         }
     }

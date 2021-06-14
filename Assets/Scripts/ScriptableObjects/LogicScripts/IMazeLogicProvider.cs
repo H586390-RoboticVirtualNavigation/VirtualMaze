@@ -1,4 +1,7 @@
 ﻿using UnityEngine;
+public delegate void OnRewardTriggered (RewardArea rewardArea);
+
+public delegate void OnWrongRewardTriggered ();
 
 public interface IMazeLogicProvider {
     /// <summary>
@@ -54,4 +57,15 @@ public interface IMazeLogicProvider {
     /// <param name="targetIndex">Current target given to the subject</param>
     /// <returns></returns>
     Sprite GetTargetImage(RewardArea[] rewards, int targetIndex);
+
+    /// <summary>
+    /// Triggers when reward is processed
+    /// </summary>
+    /// <param name="rewardArea">RewardArea that is processed</param>
+    event OnRewardTriggered RewardTriggered;
+
+    /// <summary>
+    /// Triggers when wrong reward is chosen
+    /// </summary>
+    event OnWrongRewardTriggered WrongRewardTriggered;
 }
