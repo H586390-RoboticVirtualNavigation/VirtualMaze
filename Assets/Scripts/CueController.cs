@@ -9,6 +9,17 @@ public class CueController : MonoBehaviour {
     private Image cueImage = null;
     private BoxCollider cueBoxCollider = null;
 
+    /*public string PosterName
+    {
+        get
+        {
+            return "Test";
+            //return this.cueImage.name;
+        }
+    }*/
+
+    //string posterName = cueImage.sprite.name
+
     [SerializeField]
     private Image hintImage = null;
     private BoxCollider hintBoxCollider = null;
@@ -123,7 +134,6 @@ public class CueController : MonoBehaviour {
         HideHint();
         HideCue();
     }
-
     public static void ProcessTrigger(SessionTrigger trigger, CueController cueController, ITriggerActions actions = null) {
         switch (trigger) {
             case SessionTrigger.CueOffsetTrigger:

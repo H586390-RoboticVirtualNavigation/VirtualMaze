@@ -36,6 +36,15 @@ public class LevelController : MonoBehaviour {
     public delegate void InRewardProximity(RewardArea rewardArea, bool isTarget);
     public static event InRewardProximity InRewardProximityEvent;
 
+    /// <summary>
+    /// Checks the field of view of the robot in respect to target when in proximity
+    /// Used so MazeLogic can override CheckFieldOfView in RewardArea
+    /// </summary>
+    /// <param name="rewardArea">RewardArea of the trigger zone entered</param>
+    /// <param name="isTarget">If the area the current target</param>
+    public delegate void CheckFieldOfViewInProximity (Transform robot, RewardArea target, float reqProxDist, float reqDist, float reqAngle);
+    public static event CheckFieldOfViewInProximity CheckViewInProximityEvent;
+
     // Broadcasts when any sessionTriggers happens.
     public SessionTriggerEvent onSessionTrigger = new SessionTriggerEvent();
 
@@ -49,7 +58,8 @@ public class LevelController : MonoBehaviour {
     /// the trial.
     /// </summary>
     public bool restartOnTaskFail = true;
-    public bool resetRobotPositionDuringInterTrial = false;
+    public bool resetRobotPositionDuringInterTrial = true;
+    public bool faceRandomDirectionOnStart = true;
     protected int numTrials { get; private set; } = 0;
 
     /// <summary>
@@ -80,14 +90,15 @@ public class LevelController : MonoBehaviour {
     //Strings
     private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent";
 
-	private void Awake() {
+    public static bool sessionStarted { get; private set; } = false;
+
+    private void Awake() {
         waitIfPaused = new WaitUntil(() => !isPaused);
 
         RewardArea.OnEnteredTriggerZone += OnZoneEnter;
         RewardArea.OnExitedTriggerZone += OnZoneExit;
         RewardArea.InTriggerZoneListener += WhileInTriggerZone;
         RewardArea.OnProximityTriggered += InProximity;
-
 
         //Prepare Eyelink
         EyeLink.Initialize();
@@ -99,6 +110,12 @@ public class LevelController : MonoBehaviour {
     private void InProximity(RewardArea rewardArea) {
         if (targetIndex != MazeLogic.NullRewardIndex) {
             InRewardProximityEvent?.Invoke(rewardArea, rewardArea.Equals(rewards[targetIndex]));
+        }
+    }
+
+    private void InFieldOfView(Transform robot, RewardArea reward, float s_proximityDistance, float RequiredDistance, float s_requiredViewAngle) {
+        if (targetIndex != MazeLogic.NullRewardIndex) {
+            CheckViewInProximityEvent?.Invoke(robot, reward, s_proximityDistance, RequiredDistance, s_requiredViewAngle);
         }
     }
 
@@ -131,10 +148,13 @@ public class LevelController : MonoBehaviour {
     public void StopLevel() {
         numTrials = 0;
         success = false;
+        sessionStarted = false;
         targetIndex = MazeLogic.NullRewardIndex;
         logicProvider?.Cleanup(rewards);
         cueController.HideAll();
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
+        logicProvider.RewardTriggered -= OnRewardTriggered;
+        logicProvider.WrongRewardTriggered -= OnWrongRewardTriggered;
         FadeCanvas.fadeCanvas.AutoFadeOut();
         StopAllCoroutines();
     }
@@ -151,9 +171,13 @@ public class LevelController : MonoBehaviour {
         startWaypoint = FindObjectOfType<StartWaypoint>().transform;
 
         logicProvider = session.MazeLogic;
+        logicProvider.RewardTriggered += OnRewardTriggered;
+        logicProvider.WrongRewardTriggered += OnWrongRewardTriggered;
+
+        RewardArea.CheckViewInProximity += logicProvider.CheckFieldOfView;
         numTrials = session.numTrials;
 
-        logicProvider.Setup(rewards);
+        logicProvider.Setup(rewards); 
 
         //disable robot movement
         robotMovement.SetMovementActive(false);
@@ -162,13 +186,16 @@ public class LevelController : MonoBehaviour {
 
     IEnumerator MainLoop() {
         int trialCounter = 0;
+
         targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
+
 
         /* If this is true, it means that this session has multiple tasks and should restart fully */
         bool shouldFullyRestart = false;
 
         yield return waitIfPaused;
         yield return FadeInAndStartSession();
+        sessionStarted = true;
 
         PrepareNextTask(true); //first task is always true
 
@@ -196,8 +223,12 @@ public class LevelController : MonoBehaviour {
             }
 
             logicProvider.ProcessReward(rewards[targetIndex], success);
-
+            
             if (!success) {
+                if (logicProvider.ExecuteDeathScene()) { // wait till Death Scene finishes
+                        yield return new WaitUntil(() => logicProvider.DeathSceneComplete());
+                }
+
                 if (shouldFullyRestart) {
                     targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
                 }
@@ -211,7 +242,7 @@ public class LevelController : MonoBehaviour {
                 float timeoutDuration = Session.timeoutDuration / 1000f;
                 yield return SessionStatusDisplay.Countdown("Timeout", timeoutDuration);
 
-                if (trialCounter < numTrials) {
+                if (trialCounter < numTrials) {  
                     yield return InterTrial();
                 }
 
@@ -234,6 +265,9 @@ public class LevelController : MonoBehaviour {
                     yield return PauseIfRequired();
 
                     if (trialCounter < numTrials) {
+                        if (logicProvider.ExecuteDeathScene()) {
+                            yield return new WaitUntil(() => logicProvider.DeathSceneComplete());
+                        } 
                         yield return InterTrial();
                     }
                 }
@@ -243,12 +277,13 @@ public class LevelController : MonoBehaviour {
                 }
             }
 
-            PrepareNextTask(success || !restartOnTaskFail || targetIndex == MazeLogic.NullRewardIndex); // continue with next task or reward.
+            PrepareNextTask((success || !restartOnTaskFail || targetIndex == MazeLogic.NullRewardIndex) && (trialCounter < numTrials)); // continue with next task or reward.
 
             success = false; //reset the success
+
         }
 
-
+        yield return new WaitForSecondsRealtime(2f);
         yield return FadeCanvas.fadeCanvas.AutoFadeOut();
 
         //double check
@@ -261,7 +296,11 @@ public class LevelController : MonoBehaviour {
     private IEnumerator FadeInAndStartSession() {
         onSessionTrigger.Invoke(SessionTrigger.ExperimentVersionTrigger, GameController.versionNum);
 
-        robotMovement.MoveToWaypoint(startWaypoint);
+        if (faceRandomDirectionOnStart) {
+            robotMovement.RandomiseWaypointDirection(startWaypoint);
+        } else {
+            robotMovement.MoveToWaypoint(startWaypoint);
+        }
 
         //fade in and wait for fadein to complete
         yield return FadeCanvas.fadeCanvas.FadeToScreen();
@@ -280,7 +319,11 @@ public class LevelController : MonoBehaviour {
         rewards[targetIndex].IsActivated = true; // enable reward
         rewards[targetIndex].StartBlinking(); // start blinking if target has light
         RewardArea.OnRewardTriggered += OnRewardTriggered;
+        logicProvider.RewardTriggered += OnRewardTriggered;
+        logicProvider.WrongRewardTriggered += OnWrongRewardTriggered;
 
+        RewardArea.CheckViewInProximity += logicProvider.CheckFieldOfView;
+        logicProvider.TrialSetup(rewards, targetIndex);
     }
 
     private IEnumerator ShowCues() {
@@ -297,7 +340,7 @@ public class LevelController : MonoBehaviour {
         cueController.ShowCue();
         onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
 
-        yield return new WaitForSecondsRealtime(1f);
+        yield return new WaitForSecondsRealtime(2f); //Original Cue Timing: 1f (1 second)
 
         cueController.HideCue();
         cueController.ShowHint();
@@ -320,27 +363,35 @@ public class LevelController : MonoBehaviour {
         //temporarily disable listener as occasionally this will be triggered twice.
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
 
+        Debug.Log("Test in");
+
         success = true;
     }
 
+
     protected virtual IEnumerator InterTrial() {
+        yield return new WaitForSeconds(2f);
         if (resetRobotPositionDuringInterTrial) {
             //fadeout and wait for fade out to finish.
             yield return FadeCanvas.fadeCanvas.AutoFadeOut();
-            robotMovement.MoveToWaypoint(startWaypoint);
+            if (faceRandomDirectionOnStart) {
+                robotMovement.RandomiseWaypointDirection(startWaypoint);
+            } else {
+                robotMovement.MoveToWaypoint(startWaypoint);
+            }
         }
 
         yield return PauseIfRequired();
 
         //delay for inter trial window
-        float countDownTime = Session.getTrailIntermissionDuration() / 1000.0f;
+        float countDownTime = Session.getTrailIntermissionDuration() / 1000f;
 
         yield return SessionStatusDisplay.Countdown("InterTrial Countdown", countDownTime);
 
+        logicProvider.Cleanup(rewards);
 
         //fade in and wait for fade in to finish
         yield return FadeCanvas.fadeCanvas.FadeToScreen();
-
     }
 
     private IEnumerator PauseIfRequired() {
@@ -350,15 +401,81 @@ public class LevelController : MonoBehaviour {
         yield return waitIfPaused;
     }
 
+    private void OnWrongRewardTriggered() {
+        if(logicProvider.ExecuteDeathScene()) {
+            StartCoroutine(DeathScene());
+        }
+    }
+
+    private IEnumerator DeathScene() {
+        // disable robot movement
+        robotMovement.SetMovementActive(false);
+
+        RewardArea reward = rewards[targetIndex]; 
+        
+        yield return new WaitForSecondsRealtime(1f);
+
+        // reward.StartBlinking();
+        
+        reward.target.gameObject.SetActive(true);
+
+        // calculate rotation to reveal correct reward
+        var originalPos = robotMovement.getRobotTransform().position;
+        var originalRotation = robotMovement.getRobotTransform().rotation;
+
+        var rewardPos = reward.target.position;
+        rewardPos.y = originalPos.y;
+
+        var rotation = Quaternion.LookRotation (rewardPos - originalPos);
+
+        // rotate camera to correct reward
+        yield return robotMovement.RotateTo(rotation);
+
+        // Blink cue
+        yield return BlinkCue();
+
+        // rotate back to original position
+        yield return robotMovement.RotateTo(originalRotation);
+
+        reward.target.gameObject.SetActive(false);
+        
+        logicProvider.SetDeathSceneStatus(true);
+
+        yield return null;
+    }
+
+    private IEnumerator BlinkCue() {
+        int numBlinks = 4;
+        float overallBlinkDuration = 0.5f;
+
+        for (int i = 0; i < numBlinks; i++) {
+            cueController.HideHint();
+            yield return new WaitForSeconds(overallBlinkDuration / 2);
+            cueController.ShowHint();
+            yield return new WaitForSeconds(overallBlinkDuration / 2);
+        }
+
+        cueController.HideHint();
+    }
     private IEnumerator TrialTimer() {
         // convert to seconds
         float trialTimeLimit = Session.trialTimeLimit / 1000f;
         SessionStatusDisplay.DisplaySessionStatus("Trial Running");
 
         while (trialTimeLimit > 0 && !success) {
+            // trial listener for maze logic
+            logicProvider.TrialListener(rewards[targetIndex]);
+
+            // end trial according to MazeLogic
+            if (logicProvider.EndTrial()) {
+               break;
+            }
+            
             yield return SessionStatusDisplay.Tick(trialTimeLimit, out trialTimeLimit);
         }
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
+        logicProvider.RewardTriggered -= OnRewardTriggered;
+        logicProvider.WrongRewardTriggered -= OnWrongRewardTriggered;
 
         //disable robot movement
         robotMovement.SetMovementActive(false);
@@ -374,6 +491,7 @@ public class LevelController : MonoBehaviour {
             Debug.Log($"TI \"{(int)targetIndex + 1}\" in use");
         }
         else {
+
             onSessionTrigger.Invoke(SessionTrigger.TimeoutTrigger, targetIndex);
 
             // kw edit direct call to parallelport, extracted from listener
@@ -386,6 +504,8 @@ public class LevelController : MonoBehaviour {
             PlayerAudio.instance.PlayErrorClip(); //play audio
         }
     }
+
+
 
     //inner classes
     /// <summary>

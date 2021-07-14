@@ -39,7 +39,9 @@ public class HiddenRewardMazeLogic : StandardMazeLogic {
         if (isTarget && !rewardArea.target.gameObject.activeInHierarchy) {
             SetRewardTargetVisible(rewardArea, true);
         }
-        LevelController.InTriggerZoneListener -= WhileInTriggerZone;
+        if (Input.GetKeyDown("space")) {
+            LevelController.InTriggerZoneListener -= WhileInTriggerZone;
+            }
     }
 
     private void TriggerZoneExit(RewardArea rewardArea, bool isTarget) {
@@ -47,7 +49,7 @@ public class HiddenRewardMazeLogic : StandardMazeLogic {
     }
 
     private void TriggerZoneEnter(RewardArea rewardArea, bool isTarget) {
-        if (isTarget) {
+        if (isTarget && Input.GetKeyDown("space")) {
             SetRewardTargetVisible(rewardArea, true);
         }
     }

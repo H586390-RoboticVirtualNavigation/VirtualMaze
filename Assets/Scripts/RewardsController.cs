@@ -85,7 +85,7 @@ public class RewardsController : ConfigurableComponent {
     }
 
     public override ComponentSettings GetDefaultSettings() {
-        return new Settings("", 1000, 0.8f, 1f, 1f);
+        return new Settings("", 1000, 45f, 1f, 1f); //1000, 0.8f, 1f, 1f
     }
 
     public override Type GetSettingsType() {

@@ -8,6 +8,7 @@ public class ExperimentController : ConfigurableComponent {
         public bool isTrialIntermissionFixed;
         public bool restartOnTrialFail;
         public bool resetPositionOnTrial;
+        public bool faceRandomDirectionOnStart;
 
         public int fixedTrialIntermissionDuration;
         public int maxTrialIntermissionDuration;
@@ -33,6 +34,7 @@ public class ExperimentController : ConfigurableComponent {
             this.isTrialIntermissionFixed = isTrialIntermissionFixed;
             this.restartOnTrialFail = restartOnTrialFail;
             this.resetPositionOnTrial = resetPositionOnTrial;
+            this.faceRandomDirectionOnStart = faceRandomDirectionOnStart;
             this.saveLocation = saveLocation;
 
             this.fixedTrialIntermissionDuration = fixedTrialIntermissionDuration;
@@ -46,6 +48,7 @@ public class ExperimentController : ConfigurableComponent {
 
     public bool restartOnTrialFail;
     public bool resetPositionOnTrial;
+    public bool faceRandomDirectionOnStart;
     public string SaveLocation { get; set; }
     public int SessionIntermissionDuration { get; set; }
 
@@ -168,6 +171,7 @@ public class ExperimentController : ConfigurableComponent {
             lvlController.isPaused = isPaused;
             lvlController.resetRobotPositionDuringInterTrial = resetPositionOnTrial;
             lvlController.restartOnTaskFail = restartOnTrialFail;
+            lvlController.faceRandomDirectionOnStart = faceRandomDirectionOnStart;
         }
     }
 
@@ -242,6 +246,7 @@ public class ExperimentController : ConfigurableComponent {
         Session.isTrailIntermissionRandom = settings.isTrialIntermissionFixed;
         restartOnTrialFail = settings.restartOnTrialFail;
         resetPositionOnTrial = settings.resetPositionOnTrial;
+        faceRandomDirectionOnStart = settings.faceRandomDirectionOnStart;
         Session.fixedTrialIntermissionDuration = settings.fixedTrialIntermissionDuration;
         Session.maxTrialIntermissionDuration = settings.maxTrialIntermissionDuration;
         Session.minTrialIntermissionDuration = settings.minTrialIntermissionDuration;
