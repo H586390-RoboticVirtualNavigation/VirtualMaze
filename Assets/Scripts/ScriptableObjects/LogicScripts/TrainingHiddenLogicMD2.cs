@@ -132,6 +132,10 @@ public class TrainingHiddenLogicMD2 : HiddenRewardMazeLogicMD2 {
 
     // Continously called in while loop in LevelController. Used to listen for Spacebar press
     public override void TrialListener(RewardArea target) {
+        if (!inView) {
+            target.StopBlinkingReward(target);
+        }
+
         if (Input.GetKeyDown("space")) {
             base.IsTrialOver(true);
             if (!inView) {
