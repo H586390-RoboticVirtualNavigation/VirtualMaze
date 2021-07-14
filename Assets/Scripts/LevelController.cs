@@ -225,6 +225,10 @@ public class LevelController : MonoBehaviour {
             logicProvider.ProcessReward(rewards[targetIndex], success);
             
             if (!success) {
+                if (logicProvider.ExecuteDeathScene()) { // wait till Death Scene finishes
+                        yield return new WaitUntil(() => logicProvider.DeathSceneComplete());
+                }
+
                 if (shouldFullyRestart) {
                     targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
                 }
@@ -235,13 +239,10 @@ public class LevelController : MonoBehaviour {
 
                 cueController.HideHint();
 
-                float timeoutDuration = Session.timeoutDuration / 0;
+                float timeoutDuration = Session.timeoutDuration / 1000f;
                 yield return SessionStatusDisplay.Countdown("Timeout", timeoutDuration);
 
-                if (trialCounter < numTrials) {
-                    if (logicProvider.ExecuteDeathScene()) {
-                        yield return new WaitUntil(() => logicProvider.DeathSceneComplete() == true);
-                    }        
+                if (trialCounter < numTrials) {  
                     yield return InterTrial();
                 }
 
@@ -265,7 +266,7 @@ public class LevelController : MonoBehaviour {
 
                     if (trialCounter < numTrials) {
                         if (logicProvider.ExecuteDeathScene()) {
-                            yield return new WaitUntil(() => logicProvider.DeathSceneComplete() == true);
+                            yield return new WaitUntil(() => logicProvider.DeathSceneComplete());
                         } 
                         yield return InterTrial();
                     }
@@ -436,8 +437,6 @@ public class LevelController : MonoBehaviour {
         // rotate back to original position
         yield return robotMovement.RotateTo(originalRotation);
 
-        logicProvider.Cleanup(rewards);
-
         reward.target.gameObject.SetActive(false);
         
         logicProvider.SetDeathSceneStatus(true);
@@ -464,10 +463,12 @@ public class LevelController : MonoBehaviour {
         SessionStatusDisplay.DisplaySessionStatus("Trial Running");
 
         while (trialTimeLimit > 0 && !success) {
-            // end trial based on maze logic
+            // trial listener for maze logic
             logicProvider.TrialListener(rewards[targetIndex]);
-            if(logicProvider.EndTrial()) {
-                break;
+
+            // end trial according to MazeLogic
+            if (logicProvider.EndTrial()) {
+               break;
             }
             
             yield return SessionStatusDisplay.Tick(trialTimeLimit, out trialTimeLimit);

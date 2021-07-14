@@ -88,6 +88,16 @@ public interface IMazeLogicProvider {
     /// <param name="rewards">Array of all the rewards in the trials</param>
     /// <param name="target">index of target reward in array</param>
     void TrialSetup(RewardArea[] rewards, int target);
+
+    /// <summary>
+    /// Sets endTrial boolean to status; determines if trial should end
+    /// </summary>
+    /// <param name="status">status of trial</param>
+    void IsTrialOver(bool status);
+
+    /// <summary>
+    /// Returns endTrial boolean
+    /// </summary>
     bool EndTrial();
 
     bool DeathSceneComplete();

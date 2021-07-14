@@ -273,7 +273,6 @@ public class RewardArea : MonoBehaviour {
     // Used by TrainingHiddenLogicMD2 to stop reward from blinking
     public void StopBlinkingReward(RewardArea reward) {
         blinkState = false;
-        reward.target.gameObject.SetActive(true);
     }
 
     public void StopBlinking() {

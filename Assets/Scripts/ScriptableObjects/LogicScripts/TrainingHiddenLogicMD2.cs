@@ -10,6 +10,8 @@ public class TrainingHiddenLogicMD2 : HiddenRewardMazeLogicMD2 {
     int[] order;
     int index = 0;
 
+    private RewardArea targetReward;
+
     public override void Setup(RewardArea[] rewards) {
         base.Setup(rewards);
         foreach (RewardArea area in rewards) {
@@ -57,14 +59,7 @@ public class TrainingHiddenLogicMD2 : HiddenRewardMazeLogicMD2 {
         inZone = true;
         if (Input.GetKeyDown("space")) {
             TrackInTriggerZone(false);
-            base.IsTrialOver(true);
-            Debug.Log("InZone: " + inView + ", " + isTarget);
-            if (inView & isTarget) {
-                ProcessReward(rewardArea, true);
-            } else {
-                base.StartDeathScene(true);
-                base.OnWrongRewardTriggered();
-            }
+            ProcessReward(rewardArea, inView && isTarget);
         }
     }
 
@@ -78,19 +73,27 @@ public class TrainingHiddenLogicMD2 : HiddenRewardMazeLogicMD2 {
 
         foreach (RewardArea area in rewards) {
             SetRewardTargetVisible(area, false);
+            area.StopBlinkingReward(area);
         }
+        inView = false;
         TrackEnterProximity(false);
         TrackExitTriggerZone(false);        
 
     }
 
     public override void ProcessReward(RewardArea rewardArea, bool success) {
-        if (success) {
+        base.IsTrialOver(true);
+        targetReward.StopBlinkingReward(targetReward);     
+
+        if (success && targetReward == rewardArea) {
             base.StartDeathScene(false);
+            base.OnRewardTriggered(targetReward);
+        } else {
+            base.StartDeathScene(true);
+            base.OnWrongRewardTriggered();
         }
         //Prints to console which reward is processed
-        base.ProcessReward(rewardArea, success);
-        base.OnRewardTriggered(rewardArea);
+        base.ProcessReward(targetReward, success);
     }
 
     public override void CheckFieldOfView(Transform robot, RewardArea reward, float s_proximityDistance, float RequiredDistance, float s_requiredViewAngle) {
@@ -120,6 +123,10 @@ public class TrainingHiddenLogicMD2 : HiddenRewardMazeLogicMD2 {
                 //checks if close enough
                 inView = true;
                 reward.StartBlinkingReward(reward);
+                Debug.Log("In zone");
+                if (Input.GetKeyDown("space")) {
+                    ProcessReward(reward, true);
+                }
             } else {
                 inView = false;
                 reward.StopBlinkingReward(reward);
@@ -132,24 +139,22 @@ public class TrainingHiddenLogicMD2 : HiddenRewardMazeLogicMD2 {
 
     // Continously called in while loop in LevelController. Used to listen for Spacebar press
     public override void TrialListener(RewardArea target) {
+        targetReward = target;
         if (!inView) {
             target.StopBlinkingReward(target);
         }
 
-        if (Input.GetKeyDown("space")) {
-            base.IsTrialOver(true);
-            if (!inView) {
-                base.StartDeathScene(true);
-                base.OnWrongRewardTriggered();
-            } else {
-                base.OnRewardTriggered(target);
-            }
+        Debug.Log("End trial: " + EndTrial());
+        if (Input.GetKeyDown("space")) { 
+            IsTrialOver(true);
+            ProcessReward(target, inView);
         }
     }
     
 
     // Setup right before trial begins
     public override void TrialSetup(RewardArea[] rewards, int target) {
+        inView = false;
         foreach (RewardArea area in rewards) {
             SetRewardTargetVisible(area, false);
         }
