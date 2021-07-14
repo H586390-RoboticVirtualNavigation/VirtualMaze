@@ -195,7 +195,7 @@ public class RobotMovement : ConfigurableComponent {
         var start = transform.rotation;
 
         float timer = 0.0f;
-        float transitionDuration = 1000f;
+        float transitionDuration = 1500f;
         float inTime = 0.8f;
 
         for (var t = 0f; t <= 1; t += Time.deltaTime/inTime) {

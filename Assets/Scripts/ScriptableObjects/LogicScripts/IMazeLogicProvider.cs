@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
 public delegate void OnRewardTriggered (RewardArea rewardArea);
-
 public delegate void OnWrongRewardTriggered ();
-
 public interface IMazeLogicProvider {
+
     /// <summary>
     /// Allow preprocessing of the rewards in the maze before the trial starts
     /// </summary>
@@ -68,4 +67,32 @@ public interface IMazeLogicProvider {
     /// Triggers when wrong reward is chosen
     /// </summary>
     event OnWrongRewardTriggered WrongRewardTriggered;
+
+    /// <summary>
+    /// Checks the field of view of the robot in respect to target when in proximity
+    /// </summary>
+    void CheckFieldOfView(Transform robot, RewardArea reward, float s_proximityDistance, float RequiredDistance, float s_requiredViewAngle);
+
+
+    /// <summary>
+    /// Decides if trial should end based on maze logic.
+    /// 
+    /// ** Used for ending trials in LevelController
+    /// </summary>
+    /// <param name="reward">Target reward in the trials</param>
+    void TrialListener(RewardArea target);
+
+    /// <summary>
+    /// Allow preprocessing of the rewards in the maze before each trial starts
+    /// </summary>
+    /// <param name="rewards">Array of all the rewards in the trials</param>
+    /// <param name="target">index of target reward in array</param>
+    void TrialSetup(RewardArea[] rewards, int target);
+    bool EndTrial();
+
+    bool DeathSceneComplete();
+    bool ExecuteDeathScene();
+    void StartDeathScene(bool status);
+
+    void SetDeathSceneStatus(bool complete);
 }

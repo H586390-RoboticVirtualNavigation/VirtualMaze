@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b78289a3c9436044bb99264965340dd1, type: 3}
-  m_Name: OpenMazeMD2
+  m_Name: New Maze
   m_EditorClassIdentifier: 
   numTrials: 0
-  mazeName: Open Maze MD2
-  scene: OpenMazeMD2
-  logic: {fileID: 11400000, guid: c537d881fe9de45788042e3c39a3cb43, type: 2}
+  mazeName: Open Maze MD2 Temp
+  scene: OpenMazeMD2Temp
+  logic: {fileID: 11400000, guid: ad1f52b7d60deb44a84447969049dce3, type: 2}

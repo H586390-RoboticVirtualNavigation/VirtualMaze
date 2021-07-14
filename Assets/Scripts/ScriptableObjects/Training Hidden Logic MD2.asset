@@ -9,10 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b78289a3c9436044bb99264965340dd1, type: 3}
-  m_Name: OpenMazeMD2
+  m_Script: {fileID: 11500000, guid: f8ca1f7c5f95d4851a29699285b45e8b, type: 3}
+  m_Name: Training Hidden Logic MD2
   m_EditorClassIdentifier: 
-  numTrials: 0
-  mazeName: Open Maze MD2
-  scene: OpenMazeMD2
-  logic: {fileID: 11400000, guid: c537d881fe9de45788042e3c39a3cb43, type: 2}
+  endTrial: 0

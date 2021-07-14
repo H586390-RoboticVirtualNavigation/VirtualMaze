@@ -1,17 +1,21 @@
 using UnityEngine;
+using System.Collections;
+using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
-[CreateAssetMenu(menuName = "MazeLogic/HiddenRewardMazeLogicMD2")]
-public class HiddenRewardMazeLogicMD2 : StandardMazeLogic {
+[CreateAssetMenu(menuName = "MazeLogic/TrainingHiddenLogicMD2")]
+public class TrainingHiddenLogicMD2 : HiddenRewardMazeLogicMD2 {
 
     private bool inView = false;
-
-    public bool inZone = false;
+    int[] order;
+    int index = 0;
 
     public override void Setup(RewardArea[] rewards) {
         base.Setup(rewards);
         foreach (RewardArea area in rewards) {
             SetRewardTargetVisible(area, false);
         }
+
         base.StartDeathScene(false);
 
         base.SetDeathSceneStatus(false);
@@ -20,56 +24,42 @@ public class HiddenRewardMazeLogicMD2 : StandardMazeLogic {
         TrackExitTriggerZone(true);
         TrackFieldOfView(true);
         TrackInTriggerZone(true);
+
         RewardArea.RequiredViewAngle = 180f;
+        
+        order = new int[rewards.Length];
+        for (int i = 0; i < order.Length; i++) {
+            order[i] = i;
+        }
+
+        ShuffledMazeLogic.Shuffle(order);
     }
 
-    protected void TrackExitTriggerZone(bool enable) {
-        if (enable) {
-            LevelController.OnExitedTriggerZone += TriggerZoneExit;
-        }
-        else {
-            LevelController.OnExitedTriggerZone -= TriggerZoneExit;
-        }
-    }
-
-    protected void TrackEnterProximity(bool enable) {
-        if (enable) {
-            LevelController.InRewardProximityEvent += TriggerZoneEnter;
-        }
-        else {
-            LevelController.InRewardProximityEvent -= TriggerZoneEnter;
-        }
-    }
-
-    protected void TrackFieldOfView(bool enable) {
-        if (enable) {
-            LevelController.CheckViewInProximityEvent += CheckFieldOfView;
-        }
-        else {
-            LevelController.CheckViewInProximityEvent -= CheckFieldOfView;
-        }
-    }
-
-    protected void TrackInTriggerZone(bool enable) {
-        if (enable) {
-            LevelController.InTriggerZoneListener += WhileInTriggerZone;
-        }
-        else {
-            LevelController.InTriggerZoneListener -= WhileInTriggerZone;
-        }
-    }
     public override int GetNextTarget(int currentTarget, RewardArea[] rewards) {
-        LevelController.InTriggerZoneListener += WhileInTriggerZone;
-        return base.GetNextTarget(currentTarget, rewards);
+        Debug.Log("Target is changing");
+        int target = -1;
+        if (index == order.Length) { //reshuffle if all rewards are completed
+            ShuffledMazeLogic.Shuffle(order);
+            while (order[0] == currentTarget) { //keep shuffling till the next target is not the same as the current
+                ShuffledMazeLogic.Shuffle(order);
+            }
+            index = 0;
+        }
+
+        target = order[index];
+
+        index++;
+
+        return target;
     }
 
-    protected virtual void WhileInTriggerZone(RewardArea rewardArea, bool isTarget) {
+    protected override void WhileInTriggerZone(RewardArea rewardArea, bool isTarget) {
         inZone = true;
         if (Input.GetKeyDown("space")) {
             TrackInTriggerZone(false);
             base.IsTrialOver(true);
-            if (isTarget & inView) {
-                SetRewardTargetVisible(rewardArea, true);
+            Debug.Log("InZone: " + inView + ", " + isTarget);
+            if (inView & isTarget) {
                 ProcessReward(rewardArea, true);
             } else {
                 base.StartDeathScene(true);
@@ -80,27 +70,18 @@ public class HiddenRewardMazeLogicMD2 : StandardMazeLogic {
 
     private void TriggerZoneExit(RewardArea rewardArea, bool isTarget) {
         inZone = false;
-        SetRewardTargetVisible(rewardArea, false);
-    }
-
-    private void TriggerZoneEnter(RewardArea rewardArea, bool isTarget) {
-        inZone = true;
-        if (Input.GetKeyDown("space")) {
-            SetRewardTargetVisible(rewardArea, true);
-        }
-    }
-
-    protected void SetRewardTargetVisible(RewardArea area, bool visible) {
-        area.target.gameObject.SetActive(visible);
+        rewardArea.StopBlinkingReward(rewardArea);
     }
 
     public override void Cleanup(RewardArea[] rewards) {
+        base.Cleanup(rewards);
+
         foreach (RewardArea area in rewards) {
             SetRewardTargetVisible(area, false);
         }
-        base.Cleanup(rewards);
         TrackEnterProximity(false);
-        TrackExitTriggerZone(false);
+        TrackExitTriggerZone(false);        
+
     }
 
     public override void ProcessReward(RewardArea rewardArea, bool success) {
@@ -129,21 +110,24 @@ public class HiddenRewardMazeLogicMD2 : StandardMazeLogic {
         }
 
         float distance = Vector3.Magnitude(direction);
-        Debug.Log($"dist:{distance} / {s_proximityDistance}");
-        Debug.Log($"angle:{angle} / {s_requiredViewAngle}");
+        // Debug.Log($"dist:{distance} / {s_proximityDistance}");
+        // Debug.Log($"angle:{angle} / {s_requiredViewAngle}");
         if (distance <= s_proximityDistance) {
-            Debug.Log("RewardProx");
             reward.OnProximityEntered();
-        }
 
-        //check if in view angle
-        if (angle < s_requiredViewAngle * 0.5f || (distance < 1)) {
-            //checks if close enough
-            Debug.Log("In View!!!");
-            inView = true;
+            //check if in view angle
+            if (angle < s_requiredViewAngle * 0.5f || (distance <  1)) {
+                //checks if close enough
+                inView = true;
+                reward.StartBlinkingReward(reward);
+            } else {
+                inView = false;
+                reward.StopBlinkingReward(reward);
+            }
         } else {
             inView = false;
         }
+
     }
 
     // Continously called in while loop in LevelController. Used to listen for Spacebar press
@@ -151,17 +135,22 @@ public class HiddenRewardMazeLogicMD2 : StandardMazeLogic {
         if (Input.GetKeyDown("space")) {
             base.IsTrialOver(true);
             if (!inView) {
+                base.StartDeathScene(true);
                 base.OnWrongRewardTriggered();
             } else {
                 base.OnRewardTriggered(target);
             }
         }
     }
+    
 
     // Setup right before trial begins
     public override void TrialSetup(RewardArea[] rewards, int target) {
         foreach (RewardArea area in rewards) {
             SetRewardTargetVisible(area, false);
         }
+        SetRewardTargetVisible(rewards[target], true);
+
     }
+
 }
