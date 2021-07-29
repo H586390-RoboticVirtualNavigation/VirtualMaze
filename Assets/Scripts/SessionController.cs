@@ -24,11 +24,11 @@ public class SessionController : ConfigurableComponent {
             }
         }
     }
-
+    
     public MazeList masterList;
     public List<Session> sessions { get; private set; } = new List<Session>();
     public int index { get; private set; } = 0;
-
+    
     public void RestartIndex() {
         index = 0;
     }

@@ -27,6 +27,11 @@ public class ExperimentGUIController : DataGUIController {
     public Toggle willPauseAtNextTrialToggle;
     public Toggle restartOnTrialFailToggle;
     public Toggle resetPositionOnTrialToggle;
+    public Toggle faceRandomDirectionOnStartToggle;
+    public Toggle multipleWaypointsToggle;
+    public Toggle disableInterSessionBlackoutToggle;
+    public Toggle resetPositionOnSessionToggle;
+    public Toggle enableDirectionErrorToggle;
 
     public Button startStopButton;
     public Button pauseButton;
@@ -54,6 +59,11 @@ public class ExperimentGUIController : DataGUIController {
 
         restartOnTrialFailToggle.onValueChanged.AddListener(toggleRestartOnTrialFail);
         resetPositionOnTrialToggle.onValueChanged.AddListener(toggleResetPosition);
+        faceRandomDirectionOnStartToggle.onValueChanged.AddListener(toggleFaceRandomDirectionOnStart);
+        multipleWaypointsToggle.onValueChanged.AddListener(toggleMultipleWaypoints);
+        disableInterSessionBlackoutToggle.onValueChanged.AddListener(toggleDisableInterSessionBlackout);
+        resetPositionOnSessionToggle.onValueChanged.AddListener(toggleResetPositionOnSession);
+        enableDirectionErrorToggle.onValueChanged.AddListener(toggleEnableDirectionError);
     }
 
     private void toggleRestartOnTrialFail(bool isOn) {
@@ -64,6 +74,29 @@ public class ExperimentGUIController : DataGUIController {
         experimentController.resetPositionOnTrial = isOn;
     }
 
+    private void toggleFaceRandomDirectionOnStart(bool isOn) {
+        experimentController.faceRandomDirectionOnStart = isOn;
+    }
+
+    private void toggleMultipleWaypoints(bool isOn) {
+        experimentController.multipleWaypoints = isOn;
+    }
+
+    private void toggleDisableInterSessionBlackout(bool isOn)
+    {
+        experimentController.disableInterSessionBlackout = isOn;
+    }
+    
+    private void toggleResetPositionOnSession(bool isOn)
+    {
+        experimentController.resetPositionOnSession = isOn;
+    }
+
+    private void toggleEnableDirectionError(bool isOn)
+    {
+        experimentController.enableDirectionError = isOn;
+    }
+    
     private void OnPauseButtonClicked() {
         willPauseAtNextTrialToggle.isOn = experimentController.TogglePause();
     }
@@ -81,6 +114,7 @@ public class ExperimentGUIController : DataGUIController {
         else {
             Console.Write("Experiment Stopped");
             startStopBtnTxt.text = "Start Experiment";
+            FadeCanvas.fadeCanvas.AutoFadeOut();
             experimentController.StopExperiment();
         }
     }
@@ -195,6 +229,11 @@ public class ExperimentGUIController : DataGUIController {
 
         resetPositionOnTrialToggle.isOn = experimentController.resetPositionOnTrial;
         restartOnTrialFailToggle.isOn = experimentController.restartOnTrialFail;
+        faceRandomDirectionOnStartToggle.isOn = experimentController.faceRandomDirectionOnStart;
+        multipleWaypointsToggle.isOn = experimentController.multipleWaypoints;
+        disableInterSessionBlackoutToggle.isOn = experimentController.disableInterSessionBlackout;
+        resetPositionOnSessionToggle.isOn = experimentController.resetPositionOnSession;
+        enableDirectionErrorToggle.isOn = experimentController.enableDirectionError;
         IsValidSaveLocation(experimentController.SaveLocation);
         sessionIntermissionValid.isOn = IsValidDuration(experimentController.SessionIntermissionDuration);
         timeoutDurationValid.isOn = IsValidDuration(Session.trialTimeLimit);

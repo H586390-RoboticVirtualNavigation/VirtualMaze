@@ -11,14 +11,16 @@ public class RewardsController : ConfigurableComponent {
         public float requiredViewAngle;
         public float requiredDistance;
         public float proximityDistance;
+        public float directionErrorDistance;
 
 
-        public Settings(string portNum, int rewardDurationMilliSecs, float requiredViewAngle, float requiredDistance, float proximityDistance) {
+        public Settings(string portNum, int rewardDurationMilliSecs, float requiredViewAngle, float requiredDistance, float proximityDistance, float directionErrorDistance) {
             this.proximityDistance = proximityDistance;
             this.portNum = portNum;
             this.rewardDurationMilliSecs = rewardDurationMilliSecs;
             this.requiredViewAngle = requiredViewAngle;
             this.requiredDistance = requiredDistance;
+            this.directionErrorDistance = directionErrorDistance;
         }
     }
 
@@ -81,11 +83,11 @@ public class RewardsController : ConfigurableComponent {
     }
 
     public override ComponentSettings GetCurrentSettings() {
-        return new Settings(portNum, rewardDurationMilliSecs, RewardArea.RequiredViewAngle, RewardArea.RequiredDistance, RewardArea.ProximityDistance);
+        return new Settings(portNum, rewardDurationMilliSecs, RewardArea.RequiredViewAngle, RewardArea.RequiredDistance, RewardArea.ProximityDistance, DirectionError.distanceRange);
     }
 
     public override ComponentSettings GetDefaultSettings() {
-        return new Settings("", 1000, 0.8f, 1f, 1f);
+        return new Settings("", 1000, 45f, 1f, 1f, 0.5f); //1000, 0.8f, 1f, 1f, 0.5f
     }
 
     public override Type GetSettingsType() {
@@ -103,5 +105,6 @@ public class RewardsController : ConfigurableComponent {
         RewardArea.RequiredViewAngle = settings.requiredViewAngle;
         RewardArea.ProximityDistance = settings.proximityDistance;
         RewardArea.RequiredDistance = settings.requiredDistance;
+        DirectionError.distanceRange = settings.directionErrorDistance;
     }
 }

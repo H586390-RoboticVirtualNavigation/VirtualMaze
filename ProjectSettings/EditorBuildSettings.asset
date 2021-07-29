@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Double Tee.unity
     guid: 8c414064fb7f8af45bf9100262f9b4b8
   - enabled: 1
+    path: Assets/Scenes/DTLR.unity
+    guid: 805526e13b392cd4cabd2d820c763de2
+  - enabled: 1
     path: Assets/Scenes/Back and Forth3.unity
     guid: 992afb0f01d1bec4285cca1fef9349e7
   - enabled: 1
@@ -57,12 +60,27 @@ EditorBuildSettings:
     path: Assets/Scenes/Step3.unity
     guid: 8cec198788c77fc4e9ef2272d2998c18
   - enabled: 1
+    path: Assets/Scenes/Step4.unity
+    guid: 98f514d78ac944843a1e2571e2f60b0e
+  - enabled: 1
     path: Assets/Scenes/OpenMaze.unity
     guid: c59ac06088a61644bbe347ad374b28f3
   - enabled: 1
-    path: Assets/Scenes/Step1T.unity
-    guid: bd16b9994c49543a995a5af33a30bbf4
+    path: Assets/Scenes/DTLR Cam.unity
+    guid: fdf3a8c283f694a5187886c8bfdaa106
   - enabled: 1
-    path: Assets/Scenes/Step2T.unity
-    guid: 0d1cbbabe31f54312bdf091d489e576e
+    path: Assets/Scenes/DTLR Cat.unity
+    guid: 79553283fc11b451cabb551c1c31e8d0
+  - enabled: 1
+    path: Assets/Scenes/DTLR Croc.unity
+    guid: 811f84293bf994e759be4003659f4935
+  - enabled: 1
+    path: Assets/Scenes/DTLR Donk.unity
+    guid: ef9631ff0d6cf465e9bab8d9cc6b70f1
+  - enabled: 1
+    path: Assets/Scenes/DTLR Pig.unity
+    guid: 2ada55f06a90d4f5e9727d72a6d2ea06
+  - enabled: 1
+    path: Assets/Scenes/DTLR Rab.unity
+    guid: 1c9942f89cb1649daa3b1a780af2d0c8
   m_configObjects: {}

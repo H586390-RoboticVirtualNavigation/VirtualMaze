@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class CheckPoster : MonoBehaviour
 {
-    public string IsPosterSame()
+    public string GetCueImageName()
     {
         GameObject cueImage = GameObject.Find("cueImage");
         //Debug.Log(gameObject.GetComponent<Image>().sprite.name);

@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Step1
   m_EditorClassIdentifier: 
   numTrials: 0
-  mazeName: Step1T
-  scene: Step1T
+  mazeName: Step1
+  scene: Step1
   logic: {fileID: 11400000, guid: ad1f52b7d60deb44a84447969049dce3, type: 2}

@@ -155,7 +155,6 @@ public class RewardArea : MonoBehaviour {
         }
     }
 
-
     /* only checks for proximity when the subject enters the collider */
     protected virtual void OnTriggerStay(Collider other) {
         if (target == null && IsActivated) { //RewardAreas used as checkpoints (without posters)
@@ -195,10 +194,11 @@ public class RewardArea : MonoBehaviour {
         }
 
         float distance = Vector3.Magnitude(direction);
-        Debug.Log($"dist:{distance} / {s_proximityDistance}");
+        // Debug.Log($"dist:{distance} / {s_proximityDistance}");
+        // Debug.Log($"angle:{angle} / {s_requiredViewAngle}");
         if (distance <= s_proximityDistance) {
             OnProximityTriggered?.Invoke(this);
-            Debug.Log("RewardProx");
+            // Debug.Log("RewardProx");
         }
 
         //check if in view angle

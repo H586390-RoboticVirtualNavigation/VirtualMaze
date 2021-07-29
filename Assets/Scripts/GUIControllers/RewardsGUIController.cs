@@ -12,6 +12,7 @@ public class RewardsGUIController : DataGUIController {
     public InputField requiredViewAngleInput;
     public InputField requiredDistanceInput;
     public InputField proximityDistanceInput;
+    public InputField directionErrorDistanceInput;
     public RewardsController rewardsController;
 
     private void Awake() {
@@ -21,6 +22,7 @@ public class RewardsGUIController : DataGUIController {
         requiredViewAngleInput.onEndEdit.AddListener(OnRequiredViewAngleChanged);
         requiredDistanceInput.onEndEdit.AddListener(OnRequiredDistanceChanged);
         proximityDistanceInput.onEndEdit.AddListener(OnProximityDistanceChanged);
+        directionErrorDistanceInput.onEndEdit.AddListener(OnDirectionErrorDistanceChanged);
     }
 
     private void OnRequiredViewAngleChanged(string value) {
@@ -82,6 +84,19 @@ public class RewardsGUIController : DataGUIController {
         proximityDistanceInput.text = RewardArea.ProximityDistance.ToString();
     }
 
+    public void OnDirectionErrorDistanceChanged(string value)
+    {
+        if (float.TryParse(value, out float distance))
+        {
+            DirectionError.distanceRange = distance;
+        }
+        else
+        {
+            Console.WriteError("Invaild direction error distance");
+        }
+        proximityDistanceInput.text = DirectionError.distanceRange.ToString();
+    }
+
     public override void UpdateSettingsGUI() {
         portNumField.text = rewardsController.portNum;
         SetInputFieldNeutral(portNumField);
@@ -93,6 +108,7 @@ public class RewardsGUIController : DataGUIController {
         requiredViewAngleInput.text = RewardArea.RequiredViewAngle.ToString();
         requiredDistanceInput.text = RewardArea.RequiredDistance.ToString();
         proximityDistanceInput.text = RewardArea.ProximityDistance.ToString();
+        directionErrorDistanceInput.text = DirectionError.distanceRange.ToString();
     }
 
     private bool IsDurationInputValid(string duration) {

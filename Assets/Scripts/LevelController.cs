@@ -49,8 +49,13 @@ public class LevelController : MonoBehaviour {
     /// the trial.
     /// </summary>
     public bool restartOnTaskFail = true;
-    public bool resetRobotPositionDuringInterTrial = false;
+    public bool resetRobotPositionDuringInterTrial = true;
+    public bool faceRandomDirectionOnStart = false;
+    public bool multipleWaypoints = false;
+    public bool disableInterSessionBlackout = false;
+    public bool resetPositionOnSession = false;
     protected int numTrials { get; private set; } = 0;
+    public int trialCounter = 0;
 
     /// <summary>
     /// Gameobjects tagged as "RewardArea" in the scene will be populated in here.
@@ -71,23 +76,27 @@ public class LevelController : MonoBehaviour {
     [SerializeField]
     private RewardsController rewardsCtrl = null;
 
+    [SerializeField]
+    private SessionController sessionController = null;
+    
     // cache waitForUnpause for efficiency
     private WaitUntil waitIfPaused;
 
-    private int targetIndex;
-    private bool success = false;
+    public int targetIndex;
+    public bool success = false;
 
     //Strings
     private const string Format_NoRewardAreaComponentFound = "{0} does not have a RewardAreaComponent";
 
-	private void Awake() {
+    public static bool sessionStarted { get; private set; } = false;
+
+    private void Awake() {
         waitIfPaused = new WaitUntil(() => !isPaused);
 
         RewardArea.OnEnteredTriggerZone += OnZoneEnter;
         RewardArea.OnExitedTriggerZone += OnZoneExit;
         RewardArea.InTriggerZoneListener += WhileInTriggerZone;
         RewardArea.OnProximityTriggered += InProximity;
-
 
         //Prepare Eyelink
         EyeLink.Initialize();
@@ -131,11 +140,16 @@ public class LevelController : MonoBehaviour {
     public void StopLevel() {
         numTrials = 0;
         success = false;
+        sessionStarted = false;
+        trialCounter = 0;
         targetIndex = MazeLogic.NullRewardIndex;
         logicProvider?.Cleanup(rewards);
         cueController.HideAll();
         RewardArea.OnRewardTriggered -= OnRewardTriggered;
-        FadeCanvas.fadeCanvas.AutoFadeOut();
+        if (!disableInterSessionBlackout || sessionController.index == sessionController.sessions.Count)
+        {
+            FadeCanvas.fadeCanvas.AutoFadeOut();
+        }
         StopAllCoroutines();
     }
 
@@ -148,7 +162,8 @@ public class LevelController : MonoBehaviour {
         }
 
         rewards = RewardArea.GetAllRewardsFromScene();
-        startWaypoint = FindObjectOfType<StartWaypoint>().transform;
+        //startWaypoint = FindObjectOfType<StartWaypoint>().transform;
+        startWaypoint = StartWaypoint.GetWaypoint(multipleWaypoints);
 
         logicProvider = session.MazeLogic;
         numTrials = session.numTrials;
@@ -161,7 +176,6 @@ public class LevelController : MonoBehaviour {
     }
 
     IEnumerator MainLoop() {
-        int trialCounter = 0;
         targetIndex = MazeLogic.NullRewardIndex;//reset targetindex for MazeLogic
 
         /* If this is true, it means that this session has multiple tasks and should restart fully */
@@ -169,6 +183,7 @@ public class LevelController : MonoBehaviour {
 
         yield return waitIfPaused;
         yield return FadeInAndStartSession();
+        sessionStarted = true;
 
         PrepareNextTask(true); //first task is always true
 
@@ -182,6 +197,7 @@ public class LevelController : MonoBehaviour {
                 cueController.ShowHint();
             }
 
+            yield return new WaitForSecondsRealtime(0f); // Wait time after hint is shown
             robotMovement.SetMovementActive(true); // enable robot
             yield return TrialTimer();
 
@@ -243,13 +259,17 @@ public class LevelController : MonoBehaviour {
                 }
             }
 
-            PrepareNextTask(success || !restartOnTaskFail || targetIndex == MazeLogic.NullRewardIndex); // continue with next task or reward.
+            PrepareNextTask((success || !restartOnTaskFail || targetIndex == MazeLogic.NullRewardIndex) && (trialCounter < numTrials)); // continue with next task or reward.
 
             success = false; //reset the success
         }
 
+        yield return new WaitForSecondsRealtime(2f); // Wait time at the end of trial
 
-        yield return FadeCanvas.fadeCanvas.AutoFadeOut();
+        if (!disableInterSessionBlackout)
+        {
+            yield return FadeCanvas.fadeCanvas.AutoFadeOut();
+        }
 
         //double check
         while (FadeCanvas.fadeCanvas.isTransiting) {
@@ -260,11 +280,19 @@ public class LevelController : MonoBehaviour {
 
     private IEnumerator FadeInAndStartSession() {
         onSessionTrigger.Invoke(SessionTrigger.ExperimentVersionTrigger, GameController.versionNum);
+        int sessionIndex = sessionController.index;
+        Debug.Log("Session Index: " + sessionIndex);
 
-        robotMovement.MoveToWaypoint(startWaypoint);
+        if (resetPositionOnSession || sessionIndex == 1) {
+            robotMovement.MoveToWaypoint(startWaypoint);
+        }
+        if (faceRandomDirectionOnStart) {
+            robotMovement.RandomiseDirection(startWaypoint);
+        }
 
         //fade in and wait for fadein to complete
-        yield return FadeCanvas.fadeCanvas.FadeToScreen();
+        yield return FadeCanvas.fadeCanvas.AutoFadeIn();
+
     }
 
     /// <summary>
@@ -275,6 +303,7 @@ public class LevelController : MonoBehaviour {
         if (success) {
             targetIndex = logicProvider.GetNextTarget(targetIndex, rewards);
             cueController.SetTargetImage(logicProvider.GetTargetImage(rewards, targetIndex));
+            startWaypoint = StartWaypoint.GetWaypoint(multipleWaypoints);
         }
 
         rewards[targetIndex].IsActivated = true; // enable reward
@@ -297,7 +326,7 @@ public class LevelController : MonoBehaviour {
         cueController.ShowCue();
         onSessionTrigger.Invoke(SessionTrigger.TrialStartedTrigger, targetIndex);
 
-        yield return new WaitForSecondsRealtime(1f);
+        yield return new WaitForSecondsRealtime(2f); // Wait time for showing cue before minimising
 
         cueController.HideCue();
         cueController.ShowHint();
@@ -324,10 +353,16 @@ public class LevelController : MonoBehaviour {
     }
 
     protected virtual IEnumerator InterTrial() {
+        yield return new WaitForSecondsRealtime(2f); // Wait time in-between trials
+        cueController.HideHint();
         if (resetRobotPositionDuringInterTrial) {
             //fadeout and wait for fade out to finish.
             yield return FadeCanvas.fadeCanvas.AutoFadeOut();
             robotMovement.MoveToWaypoint(startWaypoint);
+            if (faceRandomDirectionOnStart)
+            {
+                robotMovement.RandomiseDirection(startWaypoint);
+            }
         }
 
         yield return PauseIfRequired();
@@ -339,7 +374,7 @@ public class LevelController : MonoBehaviour {
 
 
         //fade in and wait for fade in to finish
-        yield return FadeCanvas.fadeCanvas.FadeToScreen();
+        yield return FadeCanvas.fadeCanvas.AutoFadeIn();
 
     }
 

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9095e5fa69e84e14f9c665016eac8362
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - checkPoster: {instanceID: 0}
+  - errorClip: {instanceID: 0}
+  - rewardArea: {instanceID: 0}
+  - nonTargetRaycast: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

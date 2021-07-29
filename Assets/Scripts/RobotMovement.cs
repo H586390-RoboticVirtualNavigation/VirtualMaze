@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 /// <summary>
 /// Script to control the movement of the robot
@@ -139,6 +140,21 @@ public class RobotMovement : ConfigurableComponent {
     }
 
     /// <summary>
+    /// Randomise direction of waypoint. 
+    /// 
+    /// </summary>
+    /// <param name="waypoint"></param>
+    public void RandomiseDirection(Transform waypoint)
+    {
+        int y_rotation = Random.Range(0, 360);
+        //Vector3 v = transform.rotation.eulerAngles;
+        //transform.rotation = Quaternion.Euler(v.x, y_rotation, v.z);
+        transform.Rotate(0.0f, y_rotation, 0.0f, Space.Self);
+
+        OnRobotMoved?.Invoke(transform);
+    }
+
+    /// <summary>
     /// Move robot to the specified waypoint. 
     /// 
     /// The rotation of the robot follows the Y rotation of the waypoint.
@@ -152,7 +168,7 @@ public class RobotMovement : ConfigurableComponent {
         transform.position = startpos;
 
         Quaternion startrot = transform.rotation;
-        startrot.y = waypoint.rotation.y;
+        startrot = waypoint.rotation;
         transform.rotation = startrot;
 
         OnRobotMoved?.Invoke(transform);
@@ -200,6 +216,11 @@ public class RobotMovement : ConfigurableComponent {
         Quaternion newrot = Quaternion.Euler(orientation);
 
         robot.SetPositionAndRotation(pos, newrot);
+    }
+
+    public Transform getRobotTransform()
+    {
+        return transform;
     }
 }
 

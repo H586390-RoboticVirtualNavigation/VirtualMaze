@@ -18,6 +18,7 @@ public static class Tags {
     // user defined tags
     public static readonly string Reward = "Reward";
     public static readonly string CalibPoint = "CalibPoint";
+    public static readonly string Waypoint = "Waypoint";
 
     // All rewardAreas Gameobjects should be tagged as a RewardArea so that BasicLevelControllers
     //and their extended classes can find them easily.

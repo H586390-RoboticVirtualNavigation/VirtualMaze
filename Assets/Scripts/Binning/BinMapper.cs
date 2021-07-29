@@ -2,7 +2,7 @@
 
 public abstract class BinMapper {
     public const int NoGroup = -1;
-    public const int DEFAULT_NUM_BIN_LENGTH = 40;
+    public const int DEFAULT_NUM_BIN_LENGTH = 40; //40
 
     /// <summary>
     /// Returns the groupID of the object to assign a binwall
